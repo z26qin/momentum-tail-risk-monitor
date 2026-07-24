@@ -2,12 +2,17 @@
 
 This repository estimates the probability of sharp reversals in the US equity
 momentum factor. Phase 1 is deliberately market-only: it uses momentum,
-broad-market, volatility, and momentum-leg information. Text and positioning
-data are deferred.
+broad-market, volatility, and momentum-leg information. Phase 2 adds a small
+aggregate GDELT news panel and tests whether it improves on the same-sample
+market baseline. Positioning data remains deferred.
 
 The fixed research vintage is `AS_OF_DATE=2026-05-29`. The model sample begins
 on 1990-01-02, when unfilled VIX observations become available. This is a lean
 research prototype, not a trading system or investment recommendation.
+
+Phase 2 uses `AS_OF_DATE=2026-06-30`; the underlying Ken French daily files
+available at that vintage end on 2026-05-29, so label maturity determines the
+earlier final usable date for each horizon.
 
 ## Research target
 
@@ -84,6 +89,7 @@ saved results without fitting or predicting.
 | Six size–momentum portfolios | [Ken French six portfolios ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_Prior_12_2_Daily_CSV.zip) | Winner and loser leg reconstruction |
 | Ten momentum deciles | [Ken French ten portfolios ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_Daily_CSV.zip) | Decile-based formation spread |
 | VIX close | [FRED VIXCLS](https://fred.stlouisfed.org/series/VIXCLS) and [CSV endpoint](https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS) | Option-implied market stress and model-sample boundary |
+| Aggregate public news | [GDELT DOC 2.0 API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) | Five fixed narrative queries, raw volume/count denominators, and aggregate tone |
 
 Ken French returns are converted from percent to decimal. VIX remains in
 index points.
@@ -112,7 +118,7 @@ Important artifacts:
 
 ## Tests
 
-The seven-test suite covers:
+The 12-test suite covers:
 
 - forward-return alignment with a planted crash;
 - point-in-time threshold maturity and future-data invariance;
@@ -121,6 +127,29 @@ The seven-test suite covers:
 - fold-specific imputation/scaling statistics;
 - real-data winner/loser reconstruction against published UMD;
 - stable Parquet and audit hashes under a fixed `AS_OF_DATE`.
+- Phase 2 calendar-bucket mapping across weekdays, weekends, and holidays;
+- strictly prior-only news normalization;
+- zero-news versus GDELT failure handling;
+- identical B2c/B3 test dates;
+- final-sample label maturity.
+
+## Reproduce Phase 2
+
+After the Phase 1 processed artifacts exist, run:
+
+```bash
+uv run python -m src.features.gdelt \
+  --as-of-date 2026-06-30
+uv run python -m src.modeling.phase2 \
+  --as-of-date 2026-06-30
+uv run pytest
+```
+
+GDELT responses are cached under `data/raw/gdelt_phase2`. The public endpoint
+is deliberately queried serially and may throttle; cached responses make a
+restart incremental. The frozen queries and model settings are in
+`config/phase2_queries.yaml`. The accepted research conclusion is summarized
+in `outputs/phase2_research_review.md`.
 
 ## Limitations
 
