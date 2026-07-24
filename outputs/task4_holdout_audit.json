@@ -1,0 +1,102 @@
+{
+  "aggregate_only_holdout_contamination_accepted": true,
+  "artifact_sha256": {
+    "calibration": "ccf6e2d0c520af72f4c7e64e57c05da5933cf8307f0f68291a5c5ed7191298da",
+    "coefficients": "cc275e7d708adbebc4ff4dad9f0b82a99365397d4d1cdeca2bc0b3c8b3b93ad3",
+    "fold_metrics": "fcbff1a423b2e77ad4b68db193a864f7baf73cd1115de8efa6bd58bfa8d10c6e",
+    "manifest": "f3d9a6ff3621d503cc26b98d0f5ac7ab320def8f98877d866efe2ffb4d5e586e",
+    "metrics": "ec7a1e7dc2b3c1a8ab19c08d2bded718c5452da58fcc2dedd58d972878660673",
+    "predictions": "209eef9f3a449921a5a92cfa1acaefdea8f3deca8ff5bd9843222b92812fd9f0",
+    "preprocessing": "241fe4a7a505bcdf16bffb156fd9327e1744d40e465ab2b8eb037493d62eab42"
+  },
+  "artifacts": {
+    "calibration": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_calibration.csv",
+    "coefficients": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_coefficients.csv",
+    "fold_metrics": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_fold_metrics.csv",
+    "manifest": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_manifest.csv",
+    "metrics": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_metrics.csv",
+    "predictions": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_predictions.parquet",
+    "preprocessing": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/holdout_preprocessing.csv"
+  },
+  "as_of_date": "2026-05-29",
+  "combined_artifacts": {
+    "baseline_metrics": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/baseline_metrics.csv",
+    "baseline_predictions": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/baseline_predictions.parquet",
+    "calibration_table": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/calibration_table.csv",
+    "model_coefficients": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/model_coefficients.csv",
+    "preprocessing_statistics": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/outputs/preprocessing_statistics.csv"
+  },
+  "holdout_evaluation_status": "reported once after development specification freeze",
+  "model_specification": {
+    "B0": "constant event rate in the purged training rows; every contributing label is mature before the test begins",
+    "alert_threshold": null,
+    "baselines": {
+      "B0": [],
+      "B1": [
+        "bear_state",
+        "mkt_variance_126d",
+        "bear_x_mkt_variance_126d"
+      ],
+      "B2": [
+        "mom_return_21d",
+        "mom_return_63d",
+        "mom_return_126d",
+        "mom_drawdown_252d",
+        "mom_vol_21d",
+        "mom_vol_63d",
+        "vix_close",
+        "mkt_return_504d",
+        "bear_state",
+        "mkt_variance_126d",
+        "bear_x_mkt_variance_126d",
+        "mkt_vol_percentile_126d",
+        "mkt_return_1d",
+        "mkt_return_5d",
+        "mkt_return_20d",
+        "stress_rebound",
+        "loser_leg_return_5d",
+        "loser_leg_return_20d",
+        "loser_leg_vol_21d",
+        "loser_minus_winner_vol_21d",
+        "formation_spread",
+        "mom_mkt_beta_126d",
+        "mom_mkt_corr_126d",
+        "beta_change_21d"
+      ]
+    },
+    "calibration_regression": "unpenalized logistic regression of event on predicted log odds",
+    "logistic": {
+      "C": 1.0,
+      "class_weight": null,
+      "max_iter": 2000,
+      "penalty": "L2 through sklearn default",
+      "random_state": 0,
+      "solver": "lbfgs"
+    },
+    "metrics": [
+      "log_loss",
+      "brier_score",
+      "pr_auc",
+      "roc_auc",
+      "calibration_intercept",
+      "calibration_slope",
+      "event_capture_top_risk_decile"
+    ],
+    "preprocessing": {
+      "imputation": "training-fold median",
+      "pipeline_scope": "fit independently inside every split",
+      "scaling": "training-fold StandardScaler"
+    },
+    "probability_buckets": 10,
+    "top_risk_share": 0.1,
+    "validation": {
+      "holdout_years": 3,
+      "initial_train_years": 10,
+      "purge_rule": "drop train row when label_end_date >= test_start",
+      "step_years": 6,
+      "test_block_years": 6
+    }
+  },
+  "scope": "holdout",
+  "specification_hash": "43cd6360ea342331d2da13bcdac56c7c0d9706e278c4c89c531aa682a9270c2a"
+}

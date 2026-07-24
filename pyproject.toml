@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "momentum-tail-risk"
+version = "0.1.0"
+description = "Point-in-time monitoring research for US equity momentum tail risk"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "numpy==2.4.4",
+  "pandas==3.0.2",
+  "pyarrow==25.0.0",
+  "scikit-learn==1.8.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.0.3"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "ipykernel==7.3.0",
+    "matplotlib==3.11.1",
+    "nbclient==0.11.0",
+    "nbformat==5.10.4",
+]
+

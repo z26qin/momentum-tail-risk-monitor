@@ -1,0 +1,235 @@
+{
+  "all_features_complete_on_or_after_model_start": 9166,
+  "as_of_date": "2026-05-29",
+  "complete_rows": 9166,
+  "features": {
+    "bear_state": {
+      "first_usable_date": "1928-07-12",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.0,
+      "mechanism": "panic_state",
+      "minimum": 0.0,
+      "missing_full_history": 503,
+      "missing_on_or_after_model_start": 0
+    },
+    "bear_x_mkt_variance_126d": {
+      "first_usable_date": "1928-07-12",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.0012773430831746044,
+      "mechanism": "panic_state",
+      "minimum": 0.0,
+      "missing_full_history": 503,
+      "missing_on_or_after_model_start": 0
+    },
+    "beta_change_21d": {
+      "first_usable_date": "1927-04-29",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.3492306851193911,
+      "mechanism": "beta_instability",
+      "minimum": -1.2496092377224144,
+      "missing_full_history": 146,
+      "missing_on_or_after_model_start": 0
+    },
+    "formation_spread": {
+      "first_usable_date": "1927-09-28",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.8817484801401507,
+      "mechanism": "leg_structure",
+      "minimum": -3.366222456082837,
+      "missing_full_history": 272,
+      "missing_on_or_after_model_start": 0
+    },
+    "loser_leg_return_20d": {
+      "first_usable_date": "1926-11-26",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.0358116419475767,
+      "mechanism": "leg_structure",
+      "minimum": -0.43175024591561784,
+      "missing_full_history": 19,
+      "missing_on_or_after_model_start": 0
+    },
+    "loser_leg_return_5d": {
+      "first_usable_date": "1926-11-08",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.3687250434405506,
+      "mechanism": "leg_structure",
+      "minimum": -0.27519676227445283,
+      "missing_full_history": 4,
+      "missing_on_or_after_model_start": 0
+    },
+    "loser_leg_vol_21d": {
+      "first_usable_date": "1926-11-27",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.07210351495626006,
+      "mechanism": "leg_structure",
+      "minimum": 0.001442125580689356,
+      "missing_full_history": 20,
+      "missing_on_or_after_model_start": 0
+    },
+    "loser_minus_winner_vol_21d": {
+      "first_usable_date": "1926-11-27",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.04229506963466287,
+      "mechanism": "leg_structure",
+      "minimum": -0.020931165350376896,
+      "missing_full_history": 20,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_return_1d": {
+      "first_usable_date": "1926-11-03",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.1567,
+      "mechanism": "rebound_trigger",
+      "minimum": -0.1741,
+      "missing_full_history": 0,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_return_20d": {
+      "first_usable_date": "1926-11-26",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.5687744343450984,
+      "mechanism": "rebound_trigger",
+      "minimum": -0.39025876385990094,
+      "missing_full_history": 19,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_return_504d": {
+      "first_usable_date": "1928-07-12",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.7617878983624622,
+      "mechanism": "panic_state",
+      "minimum": -0.7396082490049399,
+      "missing_full_history": 503,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_return_5d": {
+      "first_usable_date": "1926-11-08",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.2414912050527232,
+      "mechanism": "rebound_trigger",
+      "minimum": -0.2443485049346161,
+      "missing_full_history": 4,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_variance_126d": {
+      "first_usable_date": "1927-04-04",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.0012773430831746044,
+      "mechanism": "panic_state",
+      "minimum": 7.531629841270508e-06,
+      "missing_full_history": 125,
+      "missing_on_or_after_model_start": 0
+    },
+    "mkt_vol_percentile_126d": {
+      "first_usable_date": "1927-04-04",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.0,
+      "mechanism": "panic_state",
+      "minimum": 9.592326139088728e-05,
+      "missing_full_history": 125,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_drawdown_252d": {
+      "first_usable_date": "1927-09-02",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.0,
+      "mechanism": "momentum_state",
+      "minimum": -0.6262005580257384,
+      "missing_full_history": 251,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_mkt_beta_126d": {
+      "first_usable_date": "1927-04-04",
+      "last_usable_date": "2026-05-29",
+      "maximum": 1.309432219979106,
+      "mechanism": "beta_instability",
+      "minimum": -1.3013115739946677,
+      "missing_full_history": 125,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_mkt_corr_126d": {
+      "first_usable_date": "1927-04-04",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.9284888399789649,
+      "mechanism": "beta_instability",
+      "minimum": -0.9167731254503944,
+      "missing_full_history": 125,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_return_126d": {
+      "first_usable_date": "1927-04-04",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.6111275713958452,
+      "mechanism": "momentum_state",
+      "minimum": -0.5480549979424032,
+      "missing_full_history": 125,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_return_21d": {
+      "first_usable_date": "1926-11-27",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.273451486326936,
+      "mechanism": "momentum_state",
+      "minimum": -0.3222530855082376,
+      "missing_full_history": 20,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_return_63d": {
+      "first_usable_date": "1927-01-18",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.4394668371243394,
+      "mechanism": "momentum_state",
+      "minimum": -0.5039507580275318,
+      "missing_full_history": 62,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_vol_21d": {
+      "first_usable_date": "1926-11-27",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.04341795601778029,
+      "mechanism": "momentum_state",
+      "minimum": 0.000936813240522371,
+      "missing_full_history": 20,
+      "missing_on_or_after_model_start": 0
+    },
+    "mom_vol_63d": {
+      "first_usable_date": "1927-01-18",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.03180936374905693,
+      "mechanism": "momentum_state",
+      "minimum": 0.0012747960490681904,
+      "missing_full_history": 62,
+      "missing_on_or_after_model_start": 0
+    },
+    "stress_rebound": {
+      "first_usable_date": "1928-07-12",
+      "last_usable_date": "2026-05-29",
+      "maximum": 0.21599119094281904,
+      "mechanism": "rebound_trigger",
+      "minimum": 0.0,
+      "missing_full_history": 503,
+      "missing_on_or_after_model_start": 0
+    },
+    "vix_close": {
+      "first_usable_date": "1990-01-02",
+      "last_usable_date": "2026-05-29",
+      "maximum": 82.69,
+      "mechanism": "panic_state",
+      "minimum": 9.14,
+      "missing_full_history": 16986,
+      "missing_on_or_after_model_start": 3
+    }
+  },
+  "first_date": "1926-11-03",
+  "last_date": "2026-05-29",
+  "mandatory_feature_count": 24,
+  "model_sample_start": "1990-01-02",
+  "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/market_features.parquet",
+  "rows": 26152,
+  "rows_on_or_after_model_start": 9169,
+  "vix_unexpected_missing_dates_on_or_after_model_start": [
+    "1991-03-01",
+    "1997-01-31",
+    "1997-11-26"
+  ]
+}
