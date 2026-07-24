@@ -1,0 +1,130 @@
+{
+  "as_of_date": "2024-01-05",
+  "as_of_timestamp": "2024-01-05T16:00:00-05:00",
+  "component_count": 0,
+  "components": [
+    {
+      "available": true,
+      "category": "precondition",
+      "comparison": "less_than_or_equal",
+      "component": "severe_prior_market_decline",
+      "previous_triggered": false,
+      "rationale": "A material two-year market decline is the transparent panic-state precondition; a marginally negative return is not enough.",
+      "threshold": -0.1,
+      "triggered": false,
+      "unit": "decimal_return",
+      "value": -0.009631416200273153
+    },
+    {
+      "available": true,
+      "category": "precondition",
+      "comparison": "greater_than_or_equal",
+      "component": "high_market_volatility",
+      "previous_triggered": false,
+      "rationale": "High point-in-time market volatility is the second panic-state precondition.",
+      "threshold": 0.8,
+      "triggered": false,
+      "unit": "expanding_percentile",
+      "value": 0.4995477248594014
+    },
+    {
+      "available": true,
+      "category": "trigger",
+      "comparison": "greater_than_or_equal",
+      "component": "sharp_market_rebound",
+      "previous_triggered": false,
+      "rationale": "A sharp short-window market rebound is the principal reversal trigger after a stressed market state.",
+      "threshold": 0.03,
+      "triggered": false,
+      "unit": "decimal_return",
+      "value": -0.022040716829741878
+    },
+    {
+      "available": true,
+      "category": "trigger",
+      "comparison": "greater_than_or_equal",
+      "component": "loser_snapback",
+      "previous_triggered": false,
+      "rationale": "Past losers outperforming past winners is the portfolio-leg signature most directly associated with a momentum reversal.",
+      "threshold": 0.03,
+      "triggered": false,
+      "unit": "decimal_return_spread",
+      "value": 0.019194910358886506
+    },
+    {
+      "available": true,
+      "category": "confirmation",
+      "comparison": "less_than_or_equal",
+      "component": "momentum_drawdown_confirmation",
+      "previous_triggered": false,
+      "rationale": "A deep momentum drawdown confirms that the factor is already under material pressure; it does not initiate the state alone.",
+      "threshold": -0.2,
+      "triggered": false,
+      "unit": "decimal_drawdown",
+      "value": -0.14674602225609248
+    },
+    {
+      "available": true,
+      "category": "confirmation",
+      "comparison": "absolute_greater_than_or_equal",
+      "component": "exposure_instability_confirmation",
+      "previous_triggered": false,
+      "rationale": "A large change in momentum market beta flags unstable exposure, but remains a confirmation rather than a core trigger.",
+      "threshold": 0.1,
+      "triggered": false,
+      "unit": "beta_change",
+      "value": -0.025637130083445203
+    },
+    {
+      "available": true,
+      "category": "proxy",
+      "comparison": "greater_than_or_equal",
+      "component": "stretched_momentum_structure_proxy",
+      "previous_triggered": false,
+      "rationale": "Extreme momentum-decile return dispersion is a stretching proxy, not observed positioning or leverage.",
+      "threshold": 0.9,
+      "triggered": false,
+      "unit": "expanding_percentile",
+      "value": 0.8314663951120163
+    }
+  ],
+  "data_quality_flags": [
+    "domain_state_is_not_a_calibrated_probability",
+    "core_state_requires_both_panic_preconditions",
+    "confirmations_do_not_trigger_state_without_panic_preconditions",
+    "legacy_b2_probability_is_secondary_only"
+  ],
+  "interpretation": "The paired market-decline and high-volatility preconditions are not both present. Isolated confirmations do not create a reversal state.",
+  "legacy_benchmark_limitations": [
+    "B2 development calibration slopes are approximately 0.17 and development log loss is worse than the constant baseline.",
+    "The 20-day holdout contains only one independent event episode.",
+    "Severity is a descriptive score percentile, not a validated alert or trading threshold."
+  ],
+  "legacy_benchmark_name": "B2 saved OOS probability (secondary benchmark)",
+  "legacy_benchmark_probability": 0.011176025072649668,
+  "legacy_benchmark_severity": "low",
+  "limitations": [
+    "Thresholds are transparent research heuristics, not fitted probability or trading thresholds.",
+    "The state operationalizes selected Daniel-Moskowitz mechanisms with public factor and market proxies rather than security-level portfolio holdings.",
+    "The dispersion component is not observed investor positioning.",
+    "Same-day market values use the approved post-close assessment and next-session action convention."
+  ],
+  "max_components": 7,
+  "mechanisms": [],
+  "previous_state": "normal",
+  "provenance": [
+    {
+      "path": "outputs/debug/structured_context_2024-01-05.json",
+      "role": "structured_market_context",
+      "sha256": "053c0a8a223d21f957d3e2fb68fe98e1dd81f996189ceeac2aa01f5479b5e0f6"
+    },
+    {
+      "path": "outputs/debug/risk_state_2024-01-05.json",
+      "role": "legacy_b2_risk_state",
+      "sha256": "d7e59df2d15906a1676fae59967083b04d9e0a1c0b592ce66eb266bb77ab8c27"
+    }
+  ],
+  "schema_version": "1.0",
+  "state": "normal",
+  "state_changed": false
+}

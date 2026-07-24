@@ -1,0 +1,374 @@
+{
+  "corpus_version": "momentum-evidence-v1",
+  "documents": [
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-02-23-bank-support",
+      "publication_timestamp": "2009-02-23T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official joint agency release cached as a short research passage.",
+        "timestamp_evidence": "Federal Reserve page records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "US authorities stated that the government stood firmly behind the banking system, while noting that banks needed enough capital and liquidity to keep lending in a severe downturn.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Joint statement on support for the banking system",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20090223a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-02-25-stress-tests",
+      "publication_timestamp": "2009-02-26T00:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Date-only official release assigned to next-day midnight for conservative availability.",
+        "timestamp_evidence": "Federal Reserve page gives February 25, 2009 but no time."
+      },
+      "snippet_or_passage": "Supervisors described forward-looking capital assessments intended to estimate losses and resources under a more adverse economic scenario.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Agencies announce bank capital assessment details",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20090225a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-02-aig",
+      "publication_timestamp": "2009-03-02T06:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official Federal Reserve release.",
+        "timestamp_evidence": "Federal Reserve page records 6:00 a.m. EST."
+      },
+      "snippet_or_passage": "The Federal Reserve described AIG as systemically important and restructured assistance to improve its capital and liquidity amid continuing market turbulence.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Federal Reserve restructures assistance to AIG",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/other20090302a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-03-talf",
+      "publication_timestamp": "2009-03-03T09:15:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official Federal Reserve and Treasury release.",
+        "timestamp_evidence": "Federal Reserve page records 9:15 a.m. EST."
+      },
+      "snippet_or_passage": "The Federal Reserve and Treasury launched TALF to support credit markets, noting that securitization markets were virtually shuttered and that the facility could expand substantially.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Federal Reserve and Treasury announce TALF launch",
+      "url_or_source_id": "https://www.federalreserve.gov/monetarypolicy/20090303a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-03-bernanke",
+      "publication_timestamp": "2009-03-04T00:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Date-only testimony assigned to next-day midnight for conservative availability.",
+        "timestamp_evidence": "Federal Reserve page gives March 3, 2009 but no time."
+      },
+      "snippet_or_passage": "Chairman Bernanke said financial stresses persisted, securitization markets remained impaired, and the Federal Reserve was using alternative credit tools including TALF.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Bernanke testimony on monetary policy and the economy",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/testimony/bernanke20090303a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-05-kohn-aig",
+      "publication_timestamp": "2009-03-06T00:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Date-only testimony assigned to next-day midnight for conservative availability.",
+        "timestamp_evidence": "Federal Reserve page gives March 5, 2009 but no time."
+      },
+      "snippet_or_passage": "Vice Chairman Kohn warned that an AIG failure could deepen market disruption, depress asset prices, and further constrict credit, explaining the liquidity support.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Kohn testimony on American International Group",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/testimony/kohn20090305a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-05-h41",
+      "publication_timestamp": "2009-03-05T16:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official weekly balance-sheet release.",
+        "timestamp_evidence": "H.4.1 regular publication schedule was 4:30 p.m. Eastern."
+      },
+      "snippet_or_passage": "The weekly balance sheet reported Reserve Bank credit and the scale of term auction credit and other liquidity facilities.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_scheduled",
+      "title": "Factors Affecting Reserve Balances, March 5, 2009",
+      "url_or_source_id": "https://www.federalreserve.gov/Releases/h41/20090305/h41.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-05-h3",
+      "publication_timestamp": "2009-03-05T16:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official statistical release.",
+        "timestamp_evidence": "Federal Reserve page records 4:30 p.m. Eastern."
+      },
+      "snippet_or_passage": "The H.3 release showed reserve balances and borrowings, including substantial term auction credit during the market stress episode.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Aggregate Reserves of Depository Institutions, March 5, 2009",
+      "url_or_source_id": "https://www.federalreserve.gov/Releases/H3/20090305/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-05-h6",
+      "publication_timestamp": "2009-03-05T16:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official statistical release.",
+        "timestamp_evidence": "Federal Reserve page records 4:30 p.m. Eastern."
+      },
+      "snippet_or_passage": "The weekly money-stock release reported continued growth in M1 and M2 while financial conditions remained strained.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Money Stock Measures, March 5, 2009",
+      "url_or_source_id": "https://www.federalreserve.gov/Releases/H6/20090305/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2009-03-06-employment",
+      "publication_timestamp": "2009-03-06T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06"],
+        "provenance_note": "Official archived employment release.",
+        "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "US payroll employment fell by 651,000 in February, unemployment rose to 8.1 percent, and job losses were widespread across major industries.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Employment Situation, February 2009",
+      "url_or_source_id": "https://www.bls.gov/news.release/archives/empsit_03062009.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2009-03-18-fomc-future",
+      "publication_timestamp": "2009-03-18T14:15:00-04:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06", "future_exclusion_fixture"],
+        "provenance_note": "Official later release included only to exercise cutoff exclusion.",
+        "timestamp_evidence": "Federal Reserve page records 2:15 p.m. EDT."
+      },
+      "snippet_or_passage": "The FOMC said it would purchase longer-term Treasury securities and expand agency debt and mortgage-backed security purchases to support credit markets.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "FOMC statement, March 18, 2009",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20090318a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "nyfed-2009-03-18-treasury-future",
+      "publication_timestamp": "2009-03-18T15:30:00-04:00",
+      "raw_metadata": {
+        "case_tags": ["2009-03-06", "future_exclusion_fixture"],
+        "provenance_note": "Official later operational announcement included only for cutoff testing.",
+        "timestamp_evidence": "New York Fed page is dated March 18, 2009."
+      },
+      "snippet_or_passage": "The New York Fed announced operational details for purchases of longer-term Treasury securities following the FOMC decision.",
+      "source": "Federal Reserve Bank of New York",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "New York Fed statement on Treasury purchases",
+      "url_or_source_id": "https://www.newyorkfed.org/newsevents/news/markets/2009/ma090318"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2023-12-13-fomc",
+      "publication_timestamp": "2023-12-13T14:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official FOMC statement.",
+        "timestamp_evidence": "Federal Reserve page records 2:00 p.m. EST."
+      },
+      "snippet_or_passage": "The FOMC said economic growth had slowed, job gains remained strong, inflation had eased but was still elevated, and the target range would remain at 5.25 to 5.5 percent.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "FOMC statement, December 13, 2023",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20231213a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bea-2023-12-21-gdp",
+      "publication_timestamp": "2023-12-21T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official GDP release.",
+        "timestamp_evidence": "BEA page records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "Real GDP increased at a 4.9 percent annual rate in the third quarter, reflecting gains that included consumer spending and private inventory investment.",
+      "source": "US Bureau of Economic Analysis",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Gross Domestic Product, Third Estimate, Third Quarter 2023",
+      "url_or_source_id": "https://www.bea.gov/news/2023/gross-domestic-product-third-estimate-corporate-profits-revised-estimate-and-gdp"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bea-2023-12-22-income-outlays",
+      "publication_timestamp": "2023-12-22T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official personal income and outlays release.",
+        "timestamp_evidence": "BEA release records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "Personal income and consumer spending increased in November, while the price index for personal consumption expenditures declined from the prior month.",
+      "source": "US Bureau of Economic Analysis",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Personal Income and Outlays, November 2023",
+      "url_or_source_id": "https://www.bea.gov/news/2023/personal-income-and-outlays-november-2023"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2024-01-03-jolts",
+      "publication_timestamp": "2024-01-03T10:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official archived JOLTS release.",
+        "timestamp_evidence": "BLS archive records 10:00 a.m. EST."
+      },
+      "snippet_or_passage": "Job openings were little changed at 8.8 million in November, with hires at 5.5 million and total separations at 5.3 million.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Job Openings and Labor Turnover, November 2023",
+      "url_or_source_id": "https://www.bls.gov/news.release/archives/jolts_01032024.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2024-01-03-minutes",
+      "publication_timestamp": "2024-01-03T14:00:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official release announcing FOMC minutes.",
+        "timestamp_evidence": "Federal Reserve page records 2:00 p.m. EST."
+      },
+      "snippet_or_passage": "The Federal Reserve released minutes of the December meeting, documenting the policy discussion based on information available at that meeting.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Minutes of the December 12-13, 2023 FOMC meeting",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240103a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2024-01-04-h41",
+      "publication_timestamp": "2024-01-04T16:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official weekly Federal Reserve balance-sheet release.",
+        "timestamp_evidence": "H.4.1 regular publication schedule was 4:30 p.m. Eastern."
+      },
+      "snippet_or_passage": "The weekly balance sheet reported Reserve Bank credit and outstanding funding through liquidity programs including the Bank Term Funding Program.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_scheduled",
+      "title": "Factors Affecting Reserve Balances, January 4, 2024",
+      "url_or_source_id": "https://www.federalreserve.gov/releases/h41/20240104/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2024-01-05-employment",
+      "publication_timestamp": "2024-01-05T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Official archived employment release.",
+        "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "US payroll employment increased by 216,000 in December, unemployment held at 3.7 percent, and employment continued to trend up in several sectors.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Employment Situation, December 2023",
+      "url_or_source_id": "https://www.bls.gov/news.release/archives/empsit_01052024.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "reuters-2024-01-05-wall-street",
+      "publication_timestamp": "2024-01-05T09:08:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05"],
+        "provenance_note": "Reuters report retained through a public syndication page.",
+        "timestamp_evidence": "Syndication page records January 5, 2024 at 9:08 a.m. EST."
+      },
+      "snippet_or_passage": "US stock indexes were set for a weaker open after stronger employment data reduced near-term rate-cut expectations; technology shares lagged while defensive sectors drew interest.",
+      "source": "Reuters via MarketScreener",
+      "source_category": "news",
+      "timestamp_status": "verified_exact",
+      "title": "Wall Street set for weak open after stronger jobs data",
+      "url_or_source_id": "https://www.marketscreener.com/news/latest/Wall-St-set-for-weak-open-after-hotter-than-expected-jobs-data-45681784/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "reuters-2024-01-05-wall-street-duplicate",
+      "publication_timestamp": "2024-01-05T09:08:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05", "duplicate_fixture"],
+        "provenance_note": "Intentional duplicate for deterministic deduplication testing.",
+        "timestamp_evidence": "Same syndication page and timestamp as the canonical record."
+      },
+      "snippet_or_passage": "US stock indexes were set for a weaker open after stronger employment data reduced near-term rate-cut expectations; technology shares lagged while defensive sectors drew interest.",
+      "source": "Reuters via MarketScreener",
+      "source_category": "news",
+      "timestamp_status": "verified_exact",
+      "title": "Wall Street set for weak open after stronger jobs data",
+      "url_or_source_id": "https://www.marketscreener.com/news/latest/Wall-St-set-for-weak-open-after-hotter-than-expected-jobs-data-45681784/"
+    },
+    {
+      "availability_status": "content_version_uncertain",
+      "document_id": "ap-2024-01-05-market-update-uncertain",
+      "publication_timestamp": "2024-01-05T09:53:43+00:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05", "uncertain_fixture"],
+        "provenance_note": "The accessible page includes later market-close material, so the visible passage cannot be proven available at the initial timestamp.",
+        "timestamp_evidence": "Initial page timestamp is visible but the update history is not reliably recoverable."
+      },
+      "snippet_or_passage": "The market report discusses the jobs release, Treasury yields, and a later stock-market close, making its historical content version uncertain.",
+      "source": "Associated Press",
+      "source_category": "news",
+      "timestamp_status": "uncertain_content_version",
+      "title": "Stocks react to jobs data and changing rate expectations",
+      "url_or_source_id": "https://apnews.com/article/stock-market-rates-jobs-ceb5a1f7589689f8aeccb164736b1255"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2024-01-11-cpi-future",
+      "publication_timestamp": "2024-01-11T08:30:00-05:00",
+      "raw_metadata": {
+        "case_tags": ["2024-01-05", "future_exclusion_fixture"],
+        "provenance_note": "Official later release included only to exercise cutoff exclusion.",
+        "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
+      },
+      "snippet_or_passage": "The consumer price index rose in December, while the index excluding food and energy also increased over the month.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Consumer Price Index, December 2023",
+      "url_or_source_id": "https://www.bls.gov/news.release/archives/cpi_01112024.htm"
+    }
+  ],
+  "schema_version": "1.0"
+}

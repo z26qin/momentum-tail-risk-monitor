@@ -1,0 +1,24 @@
+{
+  "aligned_first_observation": "1926-11-03",
+  "aligned_last_observation": "2026-05-29",
+  "aligned_rows": 26152,
+  "as_of_date": "2026-05-29",
+  "fill_sensitivity_written": true,
+  "filled_dates": [
+    "1991-03-01",
+    "1997-01-31",
+    "1997-11-26"
+  ],
+  "observed_rows": 9166,
+  "post_vix_coverage_rows": 0,
+  "pre_vix_coverage_rows": 16983,
+  "raw_first_observation": "1990-01-02",
+  "raw_last_observation": "2026-07-23",
+  "raw_manifest_entries": 5,
+  "sha256": "cd23b4782a91a5bf9be5782fdf9d90a9d2a91ed1b472fbc4486dd824e05b1149",
+  "unexpected_missing_momentum_dates_within_vix_coverage": [
+    "1991-03-01",
+    "1997-01-31",
+    "1997-11-26"
+  ]
+}

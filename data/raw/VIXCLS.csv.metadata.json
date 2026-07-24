@@ -1,0 +1,21 @@
+{
+  "alignment": "left join to momentum trading-date calendar; no weekend/holiday rows and no fill in the primary output",
+  "bytes": 160592,
+  "cached_path": "data/raw/VIXCLS.csv",
+  "conversion_applied": "none",
+  "processed_as_of_date": "2026-05-29",
+  "processed_first_observation": "1926-11-03",
+  "processed_last_observation": "2026-05-29",
+  "processed_observation_count": 26152,
+  "processed_path": "data/processed/vix_aligned.parquet",
+  "publication_timing": "FRED labels the series Daily, Close but the current release page updates the dated close the following morning; exact historical release timestamps are not supplied in the CSV",
+  "raw_first_observation": "1990-01-02",
+  "raw_last_observation": "2026-07-23",
+  "raw_observation_count": 9538,
+  "raw_units": "VIX index points (not percent; not converted)",
+  "retrieval_method": "direct_download",
+  "retrieval_timestamp_utc": "2026-07-24T15:21:35+00:00",
+  "sha256": "cd23b4782a91a5bf9be5782fdf9d90a9d2a91ed1b472fbc4486dd824e05b1149",
+  "source_key": "fred_vixcls",
+  "source_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS"
+}

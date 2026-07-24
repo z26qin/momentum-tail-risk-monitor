@@ -1,0 +1,72 @@
+{
+  "as_of_date": "2026-05-29",
+  "datasets": {
+    "french_10_momentum_portfolios_daily": {
+      "first_observation": "1926-11-03",
+      "last_observation": "2026-05-29",
+      "max_decimal": 0.28190000000000004,
+      "min_decimal": -0.1989,
+      "missing_values": {
+        "decile_1": 0,
+        "decile_10": 0,
+        "decile_2": 0,
+        "decile_3": 0,
+        "decile_4": 0,
+        "decile_5": 0,
+        "decile_6": 0,
+        "decile_7": 0,
+        "decile_8": 0,
+        "decile_9": 0
+      },
+      "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/french_10_momentum_portfolios_daily.parquet",
+      "rows": 26152,
+      "sha256": "a19daa6c84ef6232f3f867159e2752c2a437d5990d6f3bf673fd91317eab6093"
+    },
+    "french_6_size_momentum_portfolios_daily": {
+      "first_observation": "1926-11-03",
+      "last_observation": "2026-05-29",
+      "max_decimal": 0.2897,
+      "min_decimal": -0.1906,
+      "missing_values": {
+        "big_hi": 0,
+        "big_lo": 0,
+        "big_mid": 0,
+        "small_hi": 0,
+        "small_lo": 0,
+        "small_mid": 0
+      },
+      "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/french_6_size_momentum_portfolios_daily.parquet",
+      "rows": 26152,
+      "sha256": "55f0ca390ca3367313ce79d72c48e7cd2ba199d9df4807432cc0bd2a4a4cdd81"
+    },
+    "french_momentum_factor_daily": {
+      "first_observation": "1926-11-03",
+      "last_observation": "2026-05-29",
+      "max_decimal": 0.0712,
+      "min_decimal": -0.18230000000000002,
+      "missing_values": {
+        "umd_return": 0
+      },
+      "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/french_momentum_factor_daily.parquet",
+      "rows": 26152,
+      "sha256": "f4237e2e36dffa13fd7823f55376316a94b5ac663af951dd9eaca8ed2c678bcf"
+    },
+    "french_research_factors_daily": {
+      "first_observation": "1926-07-01",
+      "last_observation": "2026-05-29",
+      "max_decimal": 0.1567,
+      "min_decimal": -0.1744,
+      "missing_values": {
+        "hml": 0,
+        "mkt_rf": 0,
+        "mkt_total_return": 0,
+        "rf": 0,
+        "smb": 0
+      },
+      "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/french_research_factors_daily.parquet",
+      "rows": 26253,
+      "sha256": "af8aec07d55c98caa15045a77b87455be68cb8847b2ee5bd03bf5c2c8a3f96e2"
+    }
+  },
+  "raw_manifest_entries": 5
+}

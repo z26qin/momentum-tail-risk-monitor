@@ -1,0 +1,21 @@
+{
+  "formation_spread": {
+    "first_usable_date": "1927-09-28",
+    "formula": "compound(decile_10, 252 trading observations, shifted 21) - compound(decile_1, same window)",
+    "lookback_trading_days": 252,
+    "skip_recent_trading_days": 21,
+    "usable_rows": 25880
+  },
+  "processed_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/momentum-tail-risk/data/processed/momentum_leg_structure.parquet",
+  "tracking": {
+    "correlation": 0.9999865369096844,
+    "first_observation": "1926-11-03",
+    "last_observation": "2026-05-29",
+    "max_absolute_residual": 0.0001000000000000098,
+    "mean_absolute_residual": 2.9276919547262498e-05,
+    "mean_residual": 2.963444478433648e-07,
+    "residual_standard_deviation": 4.090835550859885e-05,
+    "root_mean_squared_residual": 4.0909428869756634e-05,
+    "rows": 26152
+  }
+}

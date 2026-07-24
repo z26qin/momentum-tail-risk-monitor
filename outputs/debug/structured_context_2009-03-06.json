@@ -1,0 +1,102 @@
+{
+  "as_of_date": "2009-03-06",
+  "as_of_timestamp": "2009-03-06T16:00:00-05:00",
+  "beta_change_21d": -0.026673464897492394,
+  "changes": [
+    {
+      "current_value": -0.4790279277461014,
+      "delta": 0.0020277356105690147,
+      "metric": "market_return_504d",
+      "previous_value": -0.48105566335667044
+    },
+    {
+      "current_value": 0.9999539021804269,
+      "delta": -4.6097819573098775e-05,
+      "metric": "market_volatility_percentile_126d",
+      "previous_value": 1.0
+    },
+    {
+      "current_value": -0.07049052418703437,
+      "delta": 0.020501157101264003,
+      "metric": "market_return_5d",
+      "previous_value": -0.09099168128829838
+    },
+    {
+      "current_value": 0.12614064393905106,
+      "delta": 0.01588792562735672,
+      "metric": "momentum_return_21d",
+      "previous_value": 0.11025271831169434
+    },
+    {
+      "current_value": -0.11939376283796727,
+      "delta": 0.005686975202735256,
+      "metric": "momentum_drawdown_252d",
+      "previous_value": -0.12508073804070252
+    },
+    {
+      "current_value": -0.07782817522509487,
+      "delta": 0.013378733939158144,
+      "metric": "loser_minus_winner_return_5d",
+      "previous_value": -0.09120690916425302
+    },
+    {
+      "current_value": -0.026673464897492394,
+      "delta": -0.004196706296968389,
+      "metric": "beta_change_21d",
+      "previous_value": -0.022476758600524005
+    },
+    {
+      "current_value": 0.990916597853014,
+      "delta": 0.0022484325091592927,
+      "metric": "positioning_proxy_percentile",
+      "previous_value": 0.9886681653438547
+    }
+  ],
+  "data_quality_flags": [
+    "structured_context_contains_descriptive_facts_not_a_probability",
+    "same_day_market_values_use_post_close_assessment_convention",
+    "positioning_value_is_a_return_dispersion_proxy",
+    "public_source_snapshots_may_contain_later_vendor_revisions"
+  ],
+  "loser_minus_winner_return_20d": -0.12165414500815766,
+  "loser_minus_winner_return_5d": -0.07782817522509487,
+  "loser_return_20d": -0.2939169695445962,
+  "loser_return_5d": -0.1416595970805425,
+  "loser_volatility_21d": 0.04379933191488743,
+  "market_return_1d": 0.002,
+  "market_return_20d": -0.1853134796015086,
+  "market_return_504d": -0.4790279277461014,
+  "market_return_5d": -0.07049052418703437,
+  "market_volatility_percentile_126d": 0.9999539021804269,
+  "momentum_drawdown_252d": -0.11939376283796727,
+  "momentum_market_beta_126d": -0.4857888222195572,
+  "momentum_market_correlation_126d": -0.7287737035146626,
+  "momentum_return_21d": 0.12614064393905106,
+  "momentum_return_63d": 0.02791147749434584,
+  "positioning_is_observed": false,
+  "positioning_proxy_name": "momentum_decile_return_dispersion_21d",
+  "positioning_proxy_percentile": 0.990916597853014,
+  "previous_as_of_date": "2009-03-05",
+  "provenance": [
+    {
+      "path": "data/processed/market_features.parquet",
+      "role": "market_features",
+      "sha256": "92e760b47167ba167f16de05208c07538d6cb8ce510ccee633b630e1e46ff5b9"
+    },
+    {
+      "path": "data/processed/momentum_leg_structure.parquet",
+      "role": "momentum_leg_structure",
+      "sha256": "62e358a2046f0936c597798c782f4110993ae7973c83067abb59ff828343a460"
+    },
+    {
+      "path": "data/processed/french_10_momentum_portfolios_daily.parquet",
+      "role": "momentum_decile_returns",
+      "sha256": "58fe335e356886938df5df838e0d0b67cd0e56966d8d6522399114434908db7f"
+    }
+  ],
+  "schema_version": "1.0",
+  "vix_close": 49.33,
+  "winner_return_20d": -0.1722628245364385,
+  "winner_return_5d": -0.06383142185544761,
+  "winner_volatility_21d": 0.02111379485865422
+}

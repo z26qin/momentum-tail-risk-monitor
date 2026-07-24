@@ -1,0 +1,7 @@
+split_id,split_kind,horizon_days,train_start,train_end,test_start,test_end,train_rows_before_purge,purged_rows,train_rows,test_rows,train_event_days,test_event_days,train_episode_count,test_episode_count
+dev_00,development,5,1990-01-02,1999-12-23,2000-01-03,2005-12-30,2528,5,2523,1508,75,181,17,39
+dev_01,development,5,1990-01-02,2005-12-22,2006-01-03,2011-12-30,4036,5,4031,1511,260,169,57,35
+dev_02,development,5,1990-01-02,2011-12-22,2012-01-03,2017-12-29,5547,5,5542,1509,425,66,91,26
+dev_00,development,20,1990-01-02,1999-12-02,2000-01-03,2005-12-30,2528,20,2508,1508,62,176,7,12
+dev_01,development,20,1990-01-02,2005-12-01,2006-01-03,2011-12-30,4036,20,4016,1511,238,175,19,13
+dev_02,development,20,1990-01-02,2011-12-01,2012-01-03,2017-12-29,5547,20,5527,1509,402,53,31,9
