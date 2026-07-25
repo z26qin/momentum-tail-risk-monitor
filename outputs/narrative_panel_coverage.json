@@ -27,6 +27,18 @@
     ],
     "coverage_source": "riskoff_timelinevolraw_substitute",
     "modes": {
+      "crowding": {
+        "inconsistent": 0,
+        "intersection": 3447,
+        "modes_present": [
+          "timelinevol"
+        ],
+        "timelinetone": 0,
+        "timelinevol": 3447,
+        "timelinevolraw": 0,
+        "tone_available": false,
+        "volume_source": "timelinevol"
+      },
       "panic": {
         "inconsistent": 0,
         "intersection": 3447,
@@ -53,11 +65,6 @@
       }
     },
     "skipped_queries": {
-      "crowding": [
-        "timelinevol",
-        "timelinetone",
-        "timelinevolraw"
-      ],
       "policy": [
         "timelinevol",
         "timelinetone",
@@ -71,6 +78,18 @@
   },
   "panel_path": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/processed/narrative_panel.parquet",
   "per_query": {
+    "crowding": {
+      "confirmed_zero_day_total": 0,
+      "rows": 2385,
+      "tone_available": 0,
+      "tone_max": null,
+      "tone_min": null,
+      "tone_z_available": 0,
+      "vol_intensity_available": 2369,
+      "vol_intensity_max": 0.3834,
+      "vol_intensity_min": 0.0004333333333333333,
+      "vol_z_available": 2269
+    },
     "panic": {
       "confirmed_zero_day_total": 0,
       "rows": 2385,
@@ -98,6 +117,8 @@
   },
   "per_year": {
     "2017": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 249,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 249,
@@ -106,6 +127,8 @@
       "trading_days": 251
     },
     "2018": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 251,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 251,
@@ -114,6 +137,8 @@
       "trading_days": 251
     },
     "2019": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 252,
@@ -122,6 +147,8 @@
       "trading_days": 252
     },
     "2020": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 252,
@@ -130,6 +157,8 @@
       "trading_days": 253
     },
     "2021": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 252,
@@ -138,6 +167,8 @@
       "trading_days": 252
     },
     "2022": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 251,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 251,
@@ -146,6 +177,8 @@
       "trading_days": 251
     },
     "2023": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 249,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 249,
@@ -154,6 +187,8 @@
       "trading_days": 250
     },
     "2024": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 252,
@@ -162,6 +197,8 @@
       "trading_days": 252
     },
     "2025": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 238,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 238,
@@ -170,6 +207,8 @@
       "trading_days": 250
     },
     "2026": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 123,
       "narrative_breadth_available": 0,
       "panic_tone_available": 0,
       "panic_vol_available": 123,
@@ -179,6 +218,24 @@
     }
   },
   "rolling_z_diagnostics": {
+    "crowding_tone_z": {
+      "available": 0,
+      "incomplete_window": 2385,
+      "min_observations": 100,
+      "missing_current_value": 0,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "crowding_vol_z": {
+      "available": 2269,
+      "incomplete_window": 101,
+      "min_observations": 100,
+      "missing_current_value": 15,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
     "panic_tone_z": {
       "available": 0,
       "incomplete_window": 2385,

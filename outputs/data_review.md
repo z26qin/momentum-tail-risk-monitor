@@ -201,6 +201,31 @@ Neither series has a flat stretch — the longest run of identical values is 1 i
 both. First-order autocorrelation is 0.990 and 0.976, appropriate for slow
 crowding measures.
 
+#### Volume-free crowding — added 2026-07-25
+
+Two further columns, `short_interest_ratio` (leg median of each symbol's print
+over its own trailing median print) and `short_interest_change`. Neither divides
+by volume. 2,085 and 2,136 rows available; `short_interest_ratio_z` from
+2018-10-05, 1,959 rows. Distributions: ratio median 1.044, range 0.844 to 1.386;
+change median +0.2%, range −12.0% to +16.4%. A leg median above ~1 is expected —
+this is the loser leg.
+
+Rationale and the point-in-time argument for the split adjustment are in
+`docs/DECISIONS.md`. The short version: `days_to_cover` carries volume in its
+denominator and so reads *less* crowded exactly when stress hits, which would
+make the evidence layer read the most dangerous moments as safe.
+
+**A data defect this surfaced.** FINRA reports short interest in the shares that
+existed on the settlement date. BKNG's 25:1 split in 2026 therefore produced a
+raw own-history ratio of **37×**, which alone dragged the 20-name leg mean to
+3.17 against a leg median of 1.17 and produced an 11σ reading. FINRA's own
+`stock_split_flag` was **blank** on those prints, so it cannot be relied on to
+detect splits; the price vendor's split factor is used instead. Two consequences
+were adopted: prints are put on a single share basis before any cross-time ratio
+is taken, and the leg is aggregated by **median** rather than mean, because
+these are ratios and one constituent can otherwise carry the average. This is
+the second such incident, after the CCZ debenture.
+
 ### 3.2 Narrative panel
 
 Not built. Had it been, coverage would have been bounded by the 21 archive gaps

@@ -146,3 +146,75 @@ uv run python -m src.data.gdelt_sanity               # 4 requests: precision fla
 
 Each command is fail-fast and resumable: one attempt per request, stops on the
 first refusal, never caches a refusal. Do not loop it.
+
+---
+
+# Addendum — 2026-07-25
+
+Two changes since the prototype was written: a volume-free crowding metric was
+added to the positioning panel, and the real `crowding` narrative query landed.
+
+## The `days_to_cover` inversion is fixed
+
+`short_interest_ratio` scales each symbol's print by its own trailing median
+print, so no volume enters. Correlation with `panic_vol_z` falls from **−0.196
+to −0.029**. Across the 139 days where `panic_vol_z > 2`, `days_to_cover_z`
+averages −0.66 — reading "uncrowded" in the middle of a panic — while
+`short_interest_ratio_z` averages −0.01.
+
+What it is *not*: a positive stress signal. It sits near zero during panic
+rather than going positive, and in March 2020 and April 2025 it still reads
+mildly negative because short interest genuinely falls as shorts cover. And
+removing volume removed the only daily-updating term — it takes 3 distinct
+values a month against `days_to_cover`'s 21, and lags publication by ~8 business
+days. It describes a **precondition**, not a trigger.
+
+Read that way it does its job. Measured 1–3 months ahead of each episode:
+
+| Episode | `short_interest_ratio_z` before | `days_to_cover_z` before |
+|---|---:|---:|
+| March 2020 COVID | +0.98 | +0.96 |
+| January 2021 squeeze | +1.11 | −0.54 |
+| August 2024 yen carry | +1.23 | +0.42 |
+| April 2025 tariff | +0.51 | −1.12 |
+
+All four positive on the volume-free measure; `days_to_cover` is negative going
+into two of them. Four episodes, no significance testing, nothing fitted — a
+description of four events, not evidence of predictive power.
+
+## The `crowding` query works, and measures something other than this universe
+
+The eight largest `crowding_vol_z` readings:
+
+| Date | `crowding_vol_z` | What it was |
+|---|---:|---|
+| 2021-01-28 | 21.91 | Robinhood restricts GME buying |
+| 2021-01-29 | 19.81 | GameStop squeeze |
+| 2021-01-26 | 12.49 | GameStop squeeze |
+| 2024-05-14 | 12.47 | Roaring Kitty returns, GME second spike |
+| 2021-01-27 | 11.14 | GameStop squeeze |
+| 2018-08-08 | 10.42 | Tesla "funding secured" |
+| 2023-01-23 | 10.40 | Meme-squeeze revival |
+| 2020-02-05 | 9.17 | Tesla parabolic squeeze |
+
+Every one is a genuine short-squeeze episode, from a query carrying **no
+episode-specific terms** — the hindsight rule holding up. This is the strongest
+evidence so far that the frozen queries measure what they claim, though it is
+still not a substitute for the semantic sanity check, which remains unrun.
+
+**But its correlation with the structured panel is essentially zero**: +0.009
+with `days_to_cover_z`, +0.022 with `short_interest_ratio_z`, +0.013 with
+`short_vol_share_z`.
+
+That is not a failure, and it is worth being precise about why. The universe
+here is large-cap — the January 2021 loser leg holds names like BKNG, CRM, NOW
+and ADBE. GME and AMC are not in it and never were. So the query is measuring
+**market-wide squeeze salience**, not crowding inside this particular leg, and
+the two are close to orthogonal by construction.
+
+Whether that is useful depends on the claim being made. January 2021 *was* a
+momentum crash driven by short-squeezed losers, and the two panels describe it
+in complementary registers: the structured panel showed crowding building over
+the preceding months (+1.11), and the narrative panel then registered the
+squeeze itself at 21.9σ. Slow precondition, fast trigger. That is one episode,
+and the honest summary is that the pairing is coherent rather than demonstrated.

@@ -7,12 +7,12 @@
   "empty_responses": [],
   "note": "Stopped on the first refusal by design. Re-run the same command later; cached chunks are kept and only the gaps are requested.",
   "raw_dir": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/raw/gdelt",
-  "requests_from_cache": 1,
-  "requests_from_network": 0,
+  "requests_from_cache": 0,
+  "requests_from_network": 1,
   "resolution_failures": [],
-  "stopped_at": "panic/timelinetone/full",
+  "stopped_at": "crowding/timelinetone/full",
   "stopped_early": true,
   "transient_failures": [
-    "panic/timelinetone/full"
+    "crowding/timelinetone/full"
   ]
 }

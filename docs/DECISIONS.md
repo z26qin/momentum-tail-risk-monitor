@@ -1018,3 +1018,61 @@ byte-identical `norm` on **all 366 overlapping days of 2020**. This licenses two
 things — using any cached `timelinevolraw` as the archive-availability calendar,
 and deriving volume intensity as `100 × value / norm` for a query that holds
 only `timelinevolraw`.
+
+## Volume-neutral crowding, and why `days_to_cover` alone is unsafe
+
+**Decision taken 2026-07-25.** The panel now carries `short_interest_ratio` and
+`short_interest_change` alongside `days_to_cover` and `short_vol_share`.
+
+**The defect being answered.** `days_to_cover` is short interest over 20-day
+average volume. Volume is in the denominator, so it mechanically falls whenever
+volume spikes — which is precisely when a momentum crash is unfolding. The leg
+mean of `days_to_cover_z` was **-2.23 in March 2020** and **-1.73 in the August
+2024 unwind**. A consumer that reads a high `days_to_cover_z` as "crowded"
+therefore reads the most dangerous moments as safe. This is a sign error in the
+semantics of the metric, not a data-quality problem, and no amount of cleaning
+fixes it.
+
+**What was built.** The textbook volume-free denominator is shares outstanding.
+FINRA does not report it and the price vendor does not carry it, so each symbol
+is scaled by **its own trailing median print** (12 prints ≈ 6 months, minimum 6)
+instead. That keeps the metric unit-free, which is what allows averaging across
+a leg of very differently sized companies. What it gives up is the
+cross-sectional level: it says a name is heavily shorted *relative to its own
+history*, not that 20% of its float is short. Acquiring true float would take
+roughly 200 SEC EDGAR `companyfacts` requests.
+
+**Leg aggregation is the median, not the mean.** These are ratios — bounded
+below by zero, unbounded above — so a single constituent can carry the mean.
+The mean is retained beside it as `short_interest_ratio_mean`; a wide gap
+between the two means one name is doing the talking.
+
+**A split defect found and fixed in the process.** FINRA reports short interest
+in the shares that existed on the settlement date, so comparing a print against
+its own history compares pre-split with post-split shares. BKNG's 25:1 split in
+2026 produced a raw ratio of **37x** on a leg whose median was 1.17, dragging
+the leg mean to 3.17 and producing an 11-sigma reading. **FINRA's own
+`stock_split_flag` was blank on those prints**, so that flag cannot be used to
+catch this; the price vendor's split factor can. Prints are now put on one share
+basis before any ratio is taken. This is the second time an unguarded leg *mean*
+has been hijacked by one constituent — the first was the CCZ debenture, fixed
+with a liquidity floor.
+
+**Point-in-time status of the split adjustment.** `split_factor_after` encodes
+splits that happen *after* a date, which is future information. Only its ratio
+between two dates inside one baseline window enters the metric, and that ratio
+reflects splits between those dates — all in the past by the time the numerator
+prints. Any split after `t` scales numerator and denominator alike and cancels.
+So the scaled series is not point-in-time and must never be published as a
+level, while ratios taken from it are. A test pins this.
+
+**What the metric shows, and its limitation.** Removing volume also removes the
+only daily-updating term: `days_to_cover` takes a median of 21 distinct values a
+month, `short_interest_ratio` takes 3. It is a slow, semi-monthly,
+publication-lagged measure. That makes it useless as a real-time trigger and
+well-suited to what Daniel-Moskowitz actually needs it for — a **precondition**.
+Measured 1-3 months ahead of each episode, `short_interest_ratio_z` was +0.98
+(March 2020), +1.11 (January 2021), +1.23 (August 2024) and +0.51 (April 2025);
+`days_to_cover_z` over the same windows was +0.96, -0.54, +0.42 and -1.12. Four
+episodes, no significance testing, and nothing here is fitted — this is a
+description of four events, not evidence of predictive power.

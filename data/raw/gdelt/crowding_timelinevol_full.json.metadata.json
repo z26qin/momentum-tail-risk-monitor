@@ -1,0 +1,21 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 165315,
+  "chunk_end": "2026-06-30",
+  "chunk_key": "full",
+  "chunk_start": "2017-01-01",
+  "gdelt_mode": "timelinevol",
+  "gdelt_query": "(\"short squeeze\" OR \"short sellers\" OR \"crowded trade\" OR deleveraging OR \"margin call\") (stock OR stocks OR equity OR equities OR \"stock market\" OR \"financial markets\") sourcelang:english",
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T15:06:38+00:00",
+  "sha256": "e45766ed48ea65a91505582eda0647969019eb67d04e75b9c876ea58925c3b28",
+  "source_key": "gdelt_crowding_timelinevol_full",
+  "source_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28%22short+squeeze%22+OR+%22short+sellers%22+OR+%22crowded+trade%22+OR+deleveraging+OR+%22margin+call%22%29+%28stock+OR+stocks+OR+equity+OR+equities+OR+%22stock+market%22+OR+%22financial+markets%22%29+sourcelang%3Aenglish&mode=timelinevol&format=json&startdatetime=20170101000000&enddatetime=20260630000000&timelinesmooth=0"
+}

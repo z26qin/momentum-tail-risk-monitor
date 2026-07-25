@@ -17,6 +17,15 @@ Two complementary metrics, deliberately not substitutes:
     Daily short volume divided by total volume in FINRA's daily files, 5-day
     mean — a **flow** measure of shorting activity. Available from 2018-08-01.
 
+``short_interest_ratio`` and ``short_interest_change``
+    **Volume-free** crowding. Both of the metrics above carry volume in the
+    denominator, so both mechanically fall during the volume spikes that
+    accompany stress — the leg mean of ``days_to_cover_z`` was -2.23 in March
+    2020, when crowding was not in fact unwinding. A consumer reading a high
+    ``days_to_cover_z`` as "crowded" therefore reads the most dangerous moments
+    as safe. These two never divide by volume, so they cannot invert for that
+    reason. See ``short_interest_intensity``.
+
 The single most important line in this module is the short-interest join. The
 naive implementation joins on ``settlement_date`` and looks completely
 innocuous while embedding roughly two weeks of look-ahead. Everything here
@@ -62,6 +71,14 @@ LOSER_DECILE_FRACTION = 0.10
 ADV_WINDOW = 20
 SHORT_VOL_WINDOW = 5
 MINIMUM_MATCH_RATE = 0.70
+
+#: Prints of short interest forming a symbol's own baseline. FINRA publishes
+#: semi-monthly, so 12 prints is roughly six months — long enough to be a
+#: stable reference, short enough to track share issuance and buybacks.
+SHORT_INTEREST_BASELINE_PRINTS = 12
+#: Prints required inside that window before the baseline is usable. An
+#: availability rule, not imputation: below this the ratio is NaN.
+SHORT_INTEREST_MIN_PRINTS = 6
 
 
 # --------------------------------------------------------------------------
@@ -176,22 +193,25 @@ def short_interest_step_function(
     ).to_frame(index=False)
     grid = grid.sort_values(["trading_date", "symbol"])
 
+    required = [
+        "publication_date",
+        "symbol",
+        "short_interest_shares",
+        "settlement_date",
+        "finra_average_daily_volume",
+        "finra_days_to_cover",
+        "publication_date_rule",
+        "stock_split_flag",
+        "revision_flag",
+    ]
+    # Carried when the volume-free metrics have been derived upstream. Optional
+    # so this function stays usable on a bare FINRA frame.
+    optional = ["short_interest_ratio", "short_interest_change"]
+    columns = required + [name for name in optional if name in joined.columns]
+
     merged = pd.merge_asof(
         grid,
-        joined.loc[
-            :,
-            [
-                "publication_date",
-                "symbol",
-                "short_interest_shares",
-                "settlement_date",
-                "finra_average_daily_volume",
-                "finra_days_to_cover",
-                "publication_date_rule",
-                "stock_split_flag",
-                "revision_flag",
-            ],
-        ],
+        joined.loc[:, columns],
         left_on="trading_date",
         right_on="publication_date",
         by="symbol",
@@ -247,6 +267,115 @@ def short_volume_share(daily: pd.DataFrame, window: int = SHORT_VOL_WINDOW) -> p
     return frame.rename(columns={"trade_date": "trading_date"})
 
 
+def split_consistent_short_interest(
+    short_interest: pd.DataFrame, prices: pd.DataFrame
+) -> pd.DataFrame:
+    """Put every print on one share basis so a split cannot fake a crowding jump.
+
+    FINRA reports short interest in the shares that existed on the settlement
+    date. Comparing a print against its own history therefore compares
+    pre-split shares with post-split shares: BKNG's 25:1 split in 2026 lifted
+    its raw ratio to 37x on a leg whose median was 1.17, and dragged the whole
+    leg mean to 3.17. FINRA's ``stock_split_flag`` was **blank** on those
+    prints, so the flag cannot be used to catch this; the price vendor's split
+    factor can.
+
+    Look-ahead. ``split_factor_after`` encodes splits that happen after a date,
+    which is future information — but only its *ratio between two dates inside
+    one baseline window* enters the metric, and that ratio reflects splits
+    between those two dates, all of which are in the past by the time the
+    numerator prints. Any split after ``t`` scales numerator and denominator
+    alike and cancels. So the scaled series is not point-in-time, and must not
+    be published as a level, while ratios taken from it are.
+    """
+
+    factors = prices.loc[:, ["date", "symbol", "split_factor_after"]].dropna(
+        subset=["split_factor_after"]
+    )
+    frame = short_interest.copy()
+    # The two sources carry different datetime resolutions (ms and us), which
+    # merge_asof refuses to join.
+    factors["date"] = factors["date"].astype("datetime64[ns]")
+    frame["settlement_date"] = frame["settlement_date"].astype("datetime64[ns]")
+    factors = factors.sort_values(["date", "symbol"])
+    frame = frame.sort_values(["settlement_date", "symbol"])
+    merged = pd.merge_asof(
+        frame,
+        factors,
+        left_on="settlement_date",
+        right_on="date",
+        by="symbol",
+        direction="backward",
+        allow_exact_matches=True,
+    )
+    shares = pd.to_numeric(merged["short_interest_shares"], errors="coerce")
+    merged["short_interest_shares_adjusted"] = shares.where(shares > 0) * merged[
+        "split_factor_after"
+    ].where(merged["split_factor_after"] > 0)
+    return merged.drop(columns=["date"])
+
+
+def short_interest_intensity(
+    short_interest: pd.DataFrame,
+    baseline_prints: int = SHORT_INTEREST_BASELINE_PRINTS,
+    min_prints: int = SHORT_INTEREST_MIN_PRINTS,
+) -> pd.DataFrame:
+    """Volume-free crowding: short interest against its own recent baseline.
+
+    ``days_to_cover`` puts volume in the denominator, so it mechanically
+    collapses in exactly the volume spikes this panel most needs to describe —
+    measured leg-mean ``days_to_cover_z`` was -2.23 in March 2020. Neither
+    metric added here touches volume at any point.
+
+    The textbook denominator is shares outstanding. FINRA does not report it
+    and the price vendor does not carry it, so each symbol is scaled by its own
+    trailing median print instead. That keeps the result unit-free, which is
+    what lets it average across a leg of very differently sized companies. What
+    it gives up is the cross-sectional level: this says a name is heavily
+    shorted *relative to its own history*, not that 20% of its float is short.
+
+    Two series, measuring different things:
+
+    ``short_interest_ratio``
+        Level. The current print over the lagged median of the preceding
+        ``baseline_prints``. The median is lagged one print, so only short
+        interest already published when the numerator printed can enter the
+        denominator.
+
+    ``short_interest_change``
+        Accumulation. Print-over-print growth on the same adjusted basis.
+
+    Both are computed from ``short_interest_shares_adjusted``, so both are
+    immune to splits; see ``split_consistent_short_interest`` for why taking a
+    ratio of that series stays point-in-time.
+    """
+
+    if "short_interest_shares_adjusted" not in short_interest.columns:
+        raise KeyError(
+            "short_interest_intensity requires split_consistent_short_interest "
+            "to have run first: raw prints change basis across a split."
+        )
+
+    frame = short_interest.sort_values(["symbol", "settlement_date"]).copy()
+    shares = frame["short_interest_shares_adjusted"]
+
+    baseline = (
+        shares.groupby(frame["symbol"], sort=False)
+        .shift(1)
+        .groupby(frame["symbol"], sort=False)
+        .rolling(baseline_prints, min_periods=min_prints)
+        .median()
+        .reset_index(level=0, drop=True)
+    )
+    frame["short_interest_baseline"] = baseline.where(baseline > 0)
+    frame["short_interest_ratio"] = shares / frame["short_interest_baseline"]
+
+    previous = shares.groupby(frame["symbol"], sort=False).shift(1)
+    frame["short_interest_change"] = shares / previous.where(previous > 0) - 1.0
+
+    return frame
+
+
 def build_panel(
     *,
     processed_dir: Path = DEFAULT_PROCESSED_DIR,
@@ -297,6 +426,13 @@ def build_panel(
             daily, symbol_column="symbol", date_column="trade_date"
         )
 
+    # Volume-free crowding is derived here, after the symbol map and the
+    # identity guard, so a reused ticker cannot contribute another company's
+    # prints to a symbol's own baseline.
+    short_interest = short_interest_intensity(
+        split_consistent_short_interest(short_interest, prices)
+    )
+
     # --- publication dates -------------------------------------------------
     publication_map = attach_publication_dates(
         short_interest["settlement_date"].unique(), schedule
@@ -342,8 +478,17 @@ def build_panel(
             leg_constituent_count=("symbol", "nunique"),
             days_to_cover=("days_to_cover", "mean"),
             short_vol_share=("short_volume_share_5d", "mean"),
+            # Median, not mean. These are ratios — bounded below by zero and
+            # unbounded above — so one name can carry the leg mean on its own,
+            # which is how the BKNG split surfaced. The mean is kept beside it
+            # as a diagnostic; a wide gap between the two means one constituent
+            # is doing the talking.
+            short_interest_ratio=("short_interest_ratio", "median"),
+            short_interest_ratio_mean=("short_interest_ratio", "mean"),
+            short_interest_change=("short_interest_change", "median"),
             days_to_cover_matched=("days_to_cover", "count"),
             short_vol_share_matched=("short_volume_share_5d", "count"),
+            short_interest_ratio_matched=("short_interest_ratio", "count"),
             finra_reported_days_to_cover=("finra_reported_days_to_cover", "mean"),
         )
         .reset_index()
@@ -354,6 +499,10 @@ def build_panel(
     aggregated["short_vol_share_match_rate"] = (
         aggregated["short_vol_share_matched"] / aggregated["leg_constituent_count"]
     )
+    aggregated["short_interest_ratio_match_rate"] = (
+        aggregated["short_interest_ratio_matched"]
+        / aggregated["leg_constituent_count"]
+    )
 
     panel = pd.DataFrame({"trading_date": trading_dates}).merge(
         aggregated, on="trading_date", how="left"
@@ -363,8 +512,12 @@ def build_panel(
     short_vol_share_z, svs_stats = rolling_z_pit(
         panel["short_vol_share"], ROLLING_WINDOW
     )
+    short_interest_ratio_z, sir_stats = rolling_z_pit(
+        panel["short_interest_ratio"], ROLLING_WINDOW
+    )
     panel["days_to_cover_z"] = days_to_cover_z.to_numpy()
     panel["short_vol_share_z"] = short_vol_share_z.to_numpy()
+    panel["short_interest_ratio_z"] = short_interest_ratio_z.to_numpy()
 
     dominant_rule = (
         max(rule_counts, key=rule_counts.get) if rule_counts else "none"
@@ -407,9 +560,16 @@ def build_panel(
         "short_vol_share_available": int(panel["short_vol_share"].notna().sum()),
         "days_to_cover_z_available": int(panel["days_to_cover_z"].notna().sum()),
         "short_vol_share_z_available": int(panel["short_vol_share_z"].notna().sum()),
+        "short_interest_ratio_available": int(
+            panel["short_interest_ratio"].notna().sum()
+        ),
+        "short_interest_ratio_z_available": int(
+            panel["short_interest_ratio_z"].notna().sum()
+        ),
         "rolling_z_diagnostics": {
             "days_to_cover_z": dtc_stats.as_dict(),
             "short_vol_share_z": svs_stats.as_dict(),
+            "short_interest_ratio_z": sir_stats.as_dict(),
         },
         "leg_size_range": [
             int(membership["leg_size"].min()),

@@ -8,27 +8,38 @@ plumbing.
 
 | Panel | Status |
 |---|---|
-| Positioning | Complete. 2,402 dates, 200/200 symbol match, days-to-cover reconciled to FINRA's own figure at 0.974 median. |
+| Positioning | Complete. 2,402 dates, 200/200 symbol match, days-to-cover reconciled to FINRA's own figure at 0.974 median. Now carries volume-free crowding alongside. |
 | Narrative | Prototype. 2,385 dates, two mechanisms (`panic`, `riskoff`), **volume only — no tone**, breadth undefined. |
 
-106 tests pass, 1 skip (the tone-dependent assertion).
+115 tests pass, 1 skip (the tone-dependent assertion).
 
-## 1. Decide what the `days_to_cover` sign behaviour means for the evidence layer
+## 1. ~~Decide what the `days_to_cover` sign behaviour means~~ — **settled 2026-07-25**
 
-The most consequential open question, and the prototype sharpened it rather than
-settling it.
+Resolved by carrying a volume-neutral variant alongside. The panel now has
+`short_interest_ratio` (level, versus each symbol's own trailing median print)
+and `short_interest_change` (accumulation), neither of which touches volume.
+See `docs/DECISIONS.md`.
 
-`days_to_cover` mechanically **falls** during stress because volume is its
-denominator: mean `days_to_cover_z` was −2.23 in March 2020 and −1.73 in the
-August 2024 unwind. The narrative overlay rises in exactly those windows
-(+3.09 and +4.06). So the pair is informative, but **only if the consumer knows
-the structured metric inverts under stress.** If the evidence layer reads a high
-`days_to_cover_z` as "crowded", it will read the most dangerous moments as safe.
+Correlation with the panic narrative fell from **−0.196** to **−0.029**; in the
+139 days where `panic_vol_z > 2`, `days_to_cover_z` averages −0.66 while
+`short_interest_ratio_z` averages −0.01. The false "safe" reading is gone.
 
-Options: carry a volume-neutral variant alongside; document the inversion and
-require the consumer to handle it; or combine the two overlays into one state
-that is explicitly conditioned on the volume regime. This is a design decision
-about what the overlay is *for*.
+Two things this **did not** buy, both important:
+
+- It is not a positive stress signal. It goes to roughly zero during panic, not
+  positive. In March 2020 and April 2025 it still reads mildly negative, because
+  short interest genuinely falls as shorts cover — a real effect, unlike the
+  volume artifact.
+- Removing volume removed the only daily-updating term. It takes 3 distinct
+  values a month against `days_to_cover`'s 21, and lags publication by ~8
+  business days. It is a **precondition** measure, not a trigger.
+
+**Still open:** the panel does not carry short interest as a fraction of shares
+outstanding, which is the textbook measure. FINRA does not report float and the
+price vendor does not carry it; roughly 200 SEC EDGAR `companyfacts` requests
+would supply it. That would add the cross-sectional level the current
+own-history scaling deliberately gives up. SEC requires a contact email in the
+User-Agent, so it needs a decision before anyone runs it.
 
 ## 2. Acquire `crowding` when GDELT access returns (3 requests)
 
