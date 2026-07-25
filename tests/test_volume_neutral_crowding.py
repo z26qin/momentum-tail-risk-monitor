@@ -14,9 +14,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from src.data.sec_edgar import point_in_time_shares_outstanding
 from src.features.positioning_panel import (
     SHORT_INTEREST_MIN_PRINTS,
     short_interest_intensity,
+    short_interest_utilisation,
     split_consistent_short_interest,
 )
 from src.utils.io import DEFAULT_PROCESSED_DIR
@@ -206,3 +208,99 @@ def test_the_volume_free_metric_does_not_invert_like_days_to_cover(panel: pd.Dat
     assert len(stressed) > 100
     assert stressed["days_to_cover_z"].mean() < -1.0
     assert stressed["short_interest_ratio_z"].mean() > -0.5
+
+
+# --------------------------------------------------------------------------
+# Short interest as a fraction of float
+# --------------------------------------------------------------------------
+
+
+def _shares(rows: list[tuple[str, str, float]]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "symbol": "AAA",
+            "end_date": pd.to_datetime([r[0] for r in rows]),
+            "filed_date": pd.to_datetime([r[1] for r in rows]),
+            "shares_outstanding": [r[2] for r in rows],
+            "shares_source": "EntityCommonStockSharesOutstanding",
+        }
+    )
+
+
+def test_shares_outstanding_is_visible_only_from_its_filing_date():
+    """The balance-sheet date is weeks before the filing date. Using it would
+    hand the panel a number nobody could have read yet."""
+
+    shares = _shares([("2024-03-31", "2024-04-25", 1_000_000.0)])
+    short_interest = pd.DataFrame(
+        {
+            "symbol": ["AAA", "AAA"],
+            "settlement_date": pd.to_datetime(["2024-04-15", "2024-04-30"]),
+            # One publishes between the period end and the filing, one after.
+            "publication_date": pd.to_datetime(["2024-04-20", "2024-05-08"]),
+            "short_interest_shares_adjusted": [50_000.0, 50_000.0],
+        }
+    )
+    out = short_interest_utilisation(short_interest, shares, _prices())
+    by_date = out.set_index("publication_date")["short_interest_utilisation"]
+
+    assert pd.isna(by_date.loc[pd.Timestamp("2024-04-20")])
+    assert by_date.loc[pd.Timestamp("2024-05-08")] == pytest.approx(0.05)
+
+
+def test_a_restated_prior_period_does_not_become_the_current_count():
+    """Airbnb's FY2021 10-K carries FY2019 shares as a comparative, filed 787
+    days after that period ended. Taking the latest *filing* would make a
+    three-year-old count the current one."""
+
+    shares = _shares(
+        [
+            ("2023-12-31", "2024-02-01", 1_000_000.0),
+            ("2021-12-31", "2024-02-01", 400_000.0),  # comparative, same filing
+        ]
+    )
+    kept = point_in_time_shares_outstanding(shares)
+    assert list(kept["end_date"].dt.year) == [2023]
+    assert kept["shares_outstanding"].tolist() == [1_000_000.0]
+
+
+def test_a_cover_page_dated_after_its_own_filing_is_dropped():
+    """Adobe's 2010 10-K claims a share count as of a date five months after
+    it was filed. That is impossible, so it is a tagging error."""
+
+    shares = _shares(
+        [
+            ("2010-06-15", "2010-01-22", 524_119_635.0),
+            ("2023-12-31", "2024-02-01", 1_000_000.0),
+        ]
+    )
+    kept = point_in_time_shares_outstanding(shares)
+    assert list(kept["end_date"].dt.year) == [2023]
+
+
+def test_utilisation_is_absent_rather_than_guessed_when_no_filing_exists():
+    short_interest = pd.DataFrame(
+        {
+            "symbol": ["AAA"],
+            "settlement_date": pd.to_datetime(["2024-04-15"]),
+            "publication_date": pd.to_datetime(["2024-04-20"]),
+            "short_interest_shares_adjusted": [50_000.0],
+        }
+    )
+    out = short_interest_utilisation(short_interest, pd.DataFrame(), _prices())
+    assert out["short_interest_utilisation"].isna().all()
+
+
+def test_panel_utilisation_is_a_plausible_fraction(panel: pd.DataFrame):
+    """A leg median outside roughly 0.5%-10% of float means the two sides were
+    put on different share bases."""
+
+    util = panel["short_interest_utilisation"].dropna()
+    assert len(util) > 1_500
+    assert util.between(0.005, 0.10).all(), util.describe()
+
+
+def test_utilisation_does_not_invert_during_stress(panel: pd.DataFrame):
+    stressed = panel.loc[panel["days_to_cover_z"] < -1.0]
+    assert stressed["days_to_cover_z"].mean() < -1.0
+    assert stressed["short_interest_utilisation_z"].mean() > -0.5

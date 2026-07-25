@@ -210,8 +210,15 @@ by volume. 2,085 and 2,136 rows available; `short_interest_ratio_z` from
 change median +0.2%, range −12.0% to +16.4%. A leg median above ~1 is expected —
 this is the loser leg.
 
+A third, `short_interest_utilisation` — short interest over shares outstanding
+from SEC EDGAR, joined on **filing** date. 198 of 200 symbols, leg median 1.86%
+of float, range 1.05% to 4.07%. 2.9% of the underlying observations come from
+weighted-average basic shares rather than the cover-page count, because
+multi-class issuers tag that count per share class; those carry `shares_source`
+and are never blended silently.
+
 Rationale and the point-in-time argument for the split adjustment are in
-`docs/DECISIONS.md`. The short version: `days_to_cover` carries volume in its
+`docs/DECISIONS.md`, along with four SEC data traps found while building it. The short version: `days_to_cover` carries volume in its
 denominator and so reads *less* crowded exactly when stress hits, which would
 make the evidence layer read the most dangerous moments as safe.
 

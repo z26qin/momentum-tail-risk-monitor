@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 10341,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:21:10+00:00",
+  "sha256": "2a8ad172e445226564f2d9094046ab1d6224c8c3ae639abf80c47c3149352fbc",
+  "source_key": "sec_shares_outstanding_IBM",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0000051143/dei/EntityCommonStockSharesOutstanding.json"
+}

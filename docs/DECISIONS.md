@@ -1076,3 +1076,80 @@ Measured 1-3 months ahead of each episode, `short_interest_ratio_z` was +0.98
 `days_to_cover_z` over the same windows was +0.96, -0.54, +0.42 and -1.12. Four
 episodes, no significance testing, and nothing here is fitted — this is a
 description of four events, not evidence of predictive power.
+
+## Short interest as a fraction of float, from SEC EDGAR
+
+**Decision taken 2026-07-25**, with the operator's explicit authorisation to use
+their contact address, which SEC's fair-access policy requires on every request.
+
+That address is supplied through the `SEC_CONTACT_EMAIL` environment variable
+and is deliberately absent from this tree, which is public. It is required
+rather than defaulted: a placeholder default would send SEC a contact that does
+not resolve, which is precisely what the policy exists to prevent, so an unset
+variable is an error. The requirement applies only on the path that actually
+sends a request — `cached_fetch` resolves headers after its cache lookup, so a
+clone with the cache in hand reproduces every result with no contact address
+and no network access at all.
+
+`short_interest_ratio` scales each name against its own history, which is
+unit-free but says nothing about level. Shares outstanding restores the level
+and is the only denominator that is both volume-free and comparable across
+companies. 198 of 200 symbols acquired, 11,221 observations, no rate limiting at
+5 requests/second. The two misses — HONA and SPCX — are 2026 registrants with
+no filing history, which is the correct answer rather than a gap.
+
+**Point-in-time on both sides.** Short interest enters on its FINRA publication
+date; shares outstanding enters on its SEC **filing** date, never the
+balance-sheet date it describes. The median gap between the two is 8 days and
+the 95th percentile is 36. Both legs are put on a common split basis before
+dividing, since the sources are dated up to a quarter apart.
+
+**Four traps, each found by looking at the data rather than anticipated.**
+
+1. *The concept endpoint 404s for filers that do report the tag.* XOM returns
+   404 from `companyconcept` while `companyfacts` holds all 69 of its
+   observations. `companyfacts` is now a fallback.
+2. *Multi-class issuers report nothing under the plain tag.* Alphabet, Meta,
+   Dell, Palantir, Airbnb, DoorDash, Robinhood, Cloudflare, Datadog, AppLovin
+   and Carvana tag the cover-page count with a share-class axis, and
+   `companyfacts` drops dimensional facts. For these 12, undimensioned
+   `us-gaap:WeightedAverageNumberOfSharesOutstandingBasic` is used instead — a
+   period average rather than a period-end count. 323 of 11,221 observations,
+   2.9%, and each one carries `shares_source` so the two are never silently
+   blended.
+3. *SEC's ticker map points at the current registrant, not the entity holding
+   the history.* XOM maps to CIK 2115436, a financing shell whose only facts are
+   shelf-registration fees on a POSASR form; the operating company has filed
+   under 34088 since 1993 and still does. Both payloads were inspected before
+   the override was added. This is the same class of error as the FINRA ticker
+   reuse already guarded against.
+4. *A filing restates prior periods.* Airbnb's FY2021 10-K carries FY2019
+   weighted-average shares as a comparative, filed 787 days after that period
+   ended. Taking the most recently *filed* row would make a three-year-old count
+   current. A frontier rule keeps only filings that advance the latest period
+   end. Separately, seven pre-2013 cover pages carry an `end` date after their
+   own filing date — Adobe's 2010 10-K by five months — which is impossible and
+   is dropped as a tagging error.
+
+**What it shows, against the other two crowding metrics.** Leg median
+utilisation is 1.86% of shares outstanding, range 1.05% to 4.07%.
+
+| | corr with `panic_vol_z` | mean z during panic |
+|---|---:|---:|
+| `days_to_cover` (has volume) | −0.196 | −0.66 |
+| `short_interest_ratio` (own history) | −0.029 | −0.01 |
+| `short_interest_utilisation` (% of float) | +0.065 | **+0.26** |
+
+Utilisation is the only one of the three that *rises* during stress rather than
+merely failing to fall. But as a **precondition** it is the weaker of the two
+volume-free measures: measured 1-3 months ahead of the four episodes it reads
+−0.25, −0.11, +1.69, +0.69, against the own-history ratio's +0.98, +1.11, +1.23,
++0.51.
+
+The likely reason is composition. Leg membership turns over monthly and
+companies differ structurally in how much of their float is shorted, so a
+cross-sectionally comparable measure moves substantially because *which names
+are in the leg* changed. Normalising each name to its own history removes
+exactly that. Neither is redundant: utilisation answers "how crowded is this leg
+in absolute terms", the ratio answers "is crowding unusual for these names".
+Four episodes, no significance testing, nothing fitted.

@@ -58,6 +58,7 @@ from src.data.finra import (
     detect_entity_changes,
 )
 from src.data.finra import TICKER_IDENTITY_FROM
+from src.data.sec_edgar import point_in_time_shares_outstanding
 from src.data.trading_calendar import build_trading_calendar
 from src.utils.io import DEFAULT_OUTPUT_DIR, DEFAULT_PROCESSED_DIR, write_json
 from src.utils.pit import ROLLING_WINDOW, rolling_z_pit
@@ -206,7 +207,11 @@ def short_interest_step_function(
     ]
     # Carried when the volume-free metrics have been derived upstream. Optional
     # so this function stays usable on a bare FINRA frame.
-    optional = ["short_interest_ratio", "short_interest_change"]
+    optional = [
+        "short_interest_ratio",
+        "short_interest_change",
+        "short_interest_utilisation",
+    ]
     columns = required + [name for name in optional if name in joined.columns]
 
     merged = pd.merge_asof(
@@ -313,6 +318,74 @@ def split_consistent_short_interest(
         "split_factor_after"
     ].where(merged["split_factor_after"] > 0)
     return merged.drop(columns=["date"])
+
+
+def short_interest_utilisation(
+    short_interest: pd.DataFrame, shares: pd.DataFrame, prices: pd.DataFrame
+) -> pd.DataFrame:
+    """Short interest as a fraction of shares outstanding — the textbook measure.
+
+    The one crowding number that is both volume-free and comparable across
+    companies: 8% of the float being short means the same thing for a mega-cap
+    as for a mid-cap, which ``short_interest_ratio`` deliberately cannot say.
+
+    Point-in-time on both sides. Short interest enters on its FINRA publication
+    date; shares outstanding enters on its SEC **filing** date, never the
+    balance-sheet date it describes — the gap between the two runs to a month.
+
+    Both legs are put on the same split basis before dividing, because the two
+    sources are dated up to a quarter apart and a split in between would
+    otherwise show up as a step change in float.
+    """
+
+    if shares.empty:
+        return short_interest.assign(short_interest_utilisation=np.nan)
+
+    factors = prices.loc[:, ["date", "symbol", "split_factor_after"]].dropna(
+        subset=["split_factor_after"]
+    )
+    factors["date"] = factors["date"].astype("datetime64[ns]")
+    factors = factors.sort_values(["date", "symbol"])
+
+    outstanding = shares.copy()
+    outstanding["filed_date"] = outstanding["filed_date"].astype("datetime64[ns]")
+    outstanding["end_date"] = outstanding["end_date"].astype("datetime64[ns]")
+    outstanding = outstanding.sort_values(["end_date", "symbol"])
+    outstanding = pd.merge_asof(
+        outstanding,
+        factors,
+        left_on="end_date",
+        right_on="date",
+        by="symbol",
+        direction="backward",
+        allow_exact_matches=True,
+    )
+    outstanding["shares_outstanding_adjusted"] = outstanding[
+        "shares_outstanding"
+    ] * outstanding["split_factor_after"].where(
+        outstanding["split_factor_after"] > 0
+    )
+
+    frame = short_interest.sort_values(["publication_date", "symbol"]).copy()
+    frame["publication_date"] = frame["publication_date"].astype("datetime64[ns]")
+    merged = pd.merge_asof(
+        frame,
+        outstanding.loc[
+            :, ["filed_date", "symbol", "shares_outstanding_adjusted", "shares_source"]
+        ].sort_values(["filed_date", "symbol"]),
+        left_on="publication_date",
+        right_on="filed_date",
+        by="symbol",
+        direction="backward",
+        allow_exact_matches=True,
+    )
+    merged["short_interest_utilisation"] = (
+        merged["short_interest_shares_adjusted"]
+        / merged["shares_outstanding_adjusted"].where(
+            merged["shares_outstanding_adjusted"] > 0
+        )
+    )
+    return merged
 
 
 def short_interest_intensity(
@@ -441,6 +514,27 @@ def build_panel(
         publication_map["publication_date_rule"].value_counts().to_dict()
     )
 
+    # --- short interest as a fraction of float -----------------------------
+    # Needs publication dates on the FINRA side, so it runs after the map is
+    # built rather than beside the other volume-free metrics.
+    shares_path = processed_dir / "sec_shares_outstanding.parquet"
+    shares = (
+        point_in_time_shares_outstanding(pd.read_parquet(shares_path))
+        if shares_path.is_file()
+        else pd.DataFrame()
+    )
+    dated = short_interest.merge(
+        publication_map.loc[:, ["settlement_date", "publication_date"]],
+        on="settlement_date",
+        how="left",
+    )
+    dated = short_interest_utilisation(dated, shares, prices)
+    short_interest = short_interest.merge(
+        dated.loc[:, ["symbol", "settlement_date", "short_interest_utilisation"]],
+        on=["symbol", "settlement_date"],
+        how="left",
+    )
+
     # --- point-in-time expansion ------------------------------------------
     expanded = short_interest_step_function(
         short_interest, publication_map, trading_dates, universe_symbols
@@ -486,6 +580,8 @@ def build_panel(
             short_interest_ratio=("short_interest_ratio", "median"),
             short_interest_ratio_mean=("short_interest_ratio", "mean"),
             short_interest_change=("short_interest_change", "median"),
+            short_interest_utilisation=("short_interest_utilisation", "median"),
+            short_interest_utilisation_matched=("short_interest_utilisation", "count"),
             days_to_cover_matched=("days_to_cover", "count"),
             short_vol_share_matched=("short_volume_share_5d", "count"),
             short_interest_ratio_matched=("short_interest_ratio", "count"),
@@ -515,9 +611,13 @@ def build_panel(
     short_interest_ratio_z, sir_stats = rolling_z_pit(
         panel["short_interest_ratio"], ROLLING_WINDOW
     )
+    utilisation_z, util_stats = rolling_z_pit(
+        panel["short_interest_utilisation"], ROLLING_WINDOW
+    )
     panel["days_to_cover_z"] = days_to_cover_z.to_numpy()
     panel["short_vol_share_z"] = short_vol_share_z.to_numpy()
     panel["short_interest_ratio_z"] = short_interest_ratio_z.to_numpy()
+    panel["short_interest_utilisation_z"] = utilisation_z.to_numpy()
 
     dominant_rule = (
         max(rule_counts, key=rule_counts.get) if rule_counts else "none"
@@ -566,10 +666,17 @@ def build_panel(
         "short_interest_ratio_z_available": int(
             panel["short_interest_ratio_z"].notna().sum()
         ),
+        "short_interest_utilisation_available": int(
+            panel["short_interest_utilisation"].notna().sum()
+        ),
+        "short_interest_utilisation_z_available": int(
+            panel["short_interest_utilisation_z"].notna().sum()
+        ),
         "rolling_z_diagnostics": {
             "days_to_cover_z": dtc_stats.as_dict(),
             "short_vol_share_z": svs_stats.as_dict(),
             "short_interest_ratio_z": sir_stats.as_dict(),
+            "short_interest_utilisation_z": util_stats.as_dict(),
         },
         "leg_size_range": [
             int(membership["leg_size"].min()),

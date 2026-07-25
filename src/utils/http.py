@@ -87,7 +87,7 @@ def cached_fetch(
     source_key: str,
     method: str = "GET",
     body: bytes | None = None,
-    headers: Mapping[str, str] | None = None,
+    headers: "Mapping[str, str] | Callable[[], Mapping[str, str]] | None" = None,
     absent_statuses: Sequence[int] = (),
     max_retries: int = 5,
     backoff_seconds: float = 10.0,
@@ -126,9 +126,14 @@ def cached_fetch(
             "disabled. The offline determinism check requires a complete cache."
         )
 
+    # Resolved here rather than by the caller so that a header which is
+    # expensive, or which requires configuration the caller may not have, is
+    # only demanded on the path that actually sends a request. SEC's required
+    # contact address works this way: a fully cached run never needs one.
     request_headers = {"User-Agent": USER_AGENT}
-    if headers:
-        request_headers.update(headers)
+    resolved = headers() if callable(headers) else headers
+    if resolved:
+        request_headers.update(resolved)
 
     attempts: list[dict[str, Any]] = []
     delay = backoff_seconds

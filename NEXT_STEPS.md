@@ -34,12 +34,13 @@ Two things this **did not** buy, both important:
   values a month against `days_to_cover`'s 21, and lags publication by ~8
   business days. It is a **precondition** measure, not a trigger.
 
-**Still open:** the panel does not carry short interest as a fraction of shares
-outstanding, which is the textbook measure. FINRA does not report float and the
-price vendor does not carry it; roughly 200 SEC EDGAR `companyfacts` requests
-would supply it. That would add the cross-sectional level the current
-own-history scaling deliberately gives up. SEC requires a contact email in the
-User-Agent, so it needs a decision before anyone runs it.
+**Also done:** short interest as a fraction of shares outstanding is now in the
+panel, from SEC EDGAR — 198 of 200 symbols, 11,221 observations, joined on
+filing date. Leg median 1.86% of float. It is the only one of the three
+crowding metrics that *rises* during panic (+0.26) rather than merely failing to
+fall, but it is the weaker **precondition** signal, likely because monthly leg
+turnover moves a cross-sectionally comparable measure for reasons that have
+nothing to do with crowding. Keep both; they answer different questions.
 
 ## 2. Acquire `crowding` when GDELT access returns (3 requests)
 

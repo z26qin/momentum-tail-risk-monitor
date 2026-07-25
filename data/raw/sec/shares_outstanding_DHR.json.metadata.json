@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 10423,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:20:56+00:00",
+  "sha256": "09cf957d3782e51a5dba1833625e32ed4bd67909035df9c441c4d87470a1ddde",
+  "source_key": "sec_shares_outstanding_DHR",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0000313616/dei/EntityCommonStockSharesOutstanding.json"
+}

@@ -178,6 +178,7 @@ uv sync --locked --extra test
 uv run python -m src.data.universe
 uv run python -m src.data.prices
 uv run python -m src.data.finra --stage all
+uv run python -m src.data.sec_edgar
 uv run python -m src.features.positioning_panel
 uv run python -m src.data.gdelt
 uv run python -m src.data.gdelt_sanity
@@ -188,6 +189,19 @@ uv run pytest
 Every network artifact is cached under `data/raw/` with a SHA-256 provenance
 sidecar, so a second run makes **zero** network calls. The determinism tests
 assert this by hard-disabling the network and rebuilding.
+
+`src.data.sec_edgar` is the one step that needs configuration. SEC's fair-access
+policy requires a real, reachable contact address on every request, so set one
+before fetching anything new:
+
+```bash
+export SEC_CONTACT_EMAIL='you@example.edu'
+```
+
+It is required rather than defaulted — a placeholder would send SEC a contact
+that does not resolve. It is needed **only** to fetch; the cache in this
+repository already covers all 200 symbols, so `uv run pytest` and every panel
+rebuild work without it.
 
 The large raw caches (`data/raw/finra/daily/`, `data/raw/prices/`, GDELT
 payloads) are git-ignored: they total roughly 150 MB on disk while their
