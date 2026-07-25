@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 51784,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T03:14:27+00:00",
+  "sha256": "305c87ce75a7e043d8e378fa15d17b81e9d93ae8f6b143575ab6d14c146594b1",
+  "source_key": "finra_schedule_20180607124530",
+  "source_url": "https://web.archive.org/web/20180607124530id_/https://www.finra.org/industry/short-interest-reporting"
+}

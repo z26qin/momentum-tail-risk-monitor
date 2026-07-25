@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 2233636,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T03:10:52+00:00",
+  "sha256": "eb60dff68f5da26a7044813dea695c6ec5265ab6508af8de0e13cb4a87e88129",
+  "source_key": "nasdaq_screener",
+  "source_url": "https://api.nasdaq.com/api/screener/stocks?tableonly=true&download=true"
+}

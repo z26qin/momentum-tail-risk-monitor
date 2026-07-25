@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 105629,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T03:14:32+00:00",
+  "sha256": "3ce297eeca76e410c117430714d0d0cbe6a493b1ff5bb6aa46b9e83b6d09289f",
+  "source_key": "finra_schedule_20200718232030",
+  "source_url": "https://web.archive.org/web/20200718232030id_/https://www.finra.org/filing-reporting/regulatory-filing-systems/short-interest"
+}

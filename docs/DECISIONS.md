@@ -742,3 +742,279 @@ unresolved limitations, and Phase 2 interface requirements.
 
 Phase 1 is complete at the Task 5 review gate. No GDELT spike, text ingestion,
 positioning ingestion, Phase 2 feature, or Phase 2 model has been created.
+
+---
+
+# Alternative-data session — structured and unstructured overlays
+
+## Architecture change, and how to read everything above
+
+Everything above this line describes an **abandoned architecture**: a fitted
+model with a baseline ladder, purged walk-forward folds, a frozen specification
+hash, and a one-time holdout. That design is history. It is retained because it
+records how the labels, episodes, and market state variables were built, and
+those artifacts are still in use.
+
+The current architecture has **no fitted model**. The risk state is adopted
+directly from Daniel-Moskowitz (2016) — a bear-market condition combined with
+elevated market volatility — and the risk probability is the point-in-time
+empirical conditional frequency of a tail loss given that state. Nothing is
+trained. There is consequently no baseline ladder, no walk-forward folds, no
+freeze manifest, and no bootstrap confidence interval in this session, and none
+was built.
+
+The two alternative-data overlays constructed here **inform monitoring and feed
+a downstream evidence layer. Neither ever alters the risk number.**
+
+This session built exactly two panels. It did not build the risk state module,
+the conditional probability or severity computation, the evidence layer,
+retrieval, LLM attribution, analog retrieval, or the PM brief.
+
+## Estimand of the narrative panel
+
+The narrative panel measures **English-language global monitored-news attention
+to financial-market stress narratives, and the tone of that coverage.**
+
+It is explicitly **not**:
+
+- a measure of *US* financial journalism — GDELT monitors a worldwide crawl and
+  `sourcelang:english` selects language, not country of publication;
+- a measure of investor sentiment — it observes what was published, not what
+  anyone believed or traded;
+- a measure of article *counts* — `timelinevol` reports a share of all
+  monitored articles that day, so it is an attention *share* and is mechanically
+  insensitive to growth in GDELT's overall crawl volume.
+
+`timelinevolraw` is auxiliary. It supplies the article counts used as tone
+weights and the volume/norm decomposition used for quality assurance. It is not
+itself an output series.
+
+## Query design and the hindsight rule
+
+Five queries were frozen, each ANDed with a mandatory equity/market anchor group
+and `sourcelang:english`. A bare mechanism word such as `plunge` was never used
+alone, because it matches aviation, weather, and sports reporting.
+
+The **hindsight rule** was treated as the one constraint that may not be
+relaxed: mechanism-level language only, with no episode-specific tokens, no
+tickers, no company names, and no dated references. A list of forbidden tokens
+covering the sample period's obvious episode vocabulary is asserted in code, so
+a future edit that reintroduces one fails a test rather than quietly producing a
+panel that "knows" about events it should only be able to sense generically.
+
+**Queries were shortened for a technical reason, and this is logged because it
+changed the term lists.** GDELT rejects over-long queries with an HTTP 200 whose
+body reads "Your query was too short or too long." Measured against the live
+API, 202 characters was accepted and 261 was rejected. The initial `rotation`
+(261) and `crowding` (263) queries were rejected; `policy` (219) and `riskoff`
+(207) were at risk. All five were trimmed below a 220-character ceiling that is
+now asserted in `validate_queries`. Terms dropped were the more marginal
+synonyms within each mechanism group — for example `"style rotation"`,
+`"rotation out of"`, and `unwinding` from `rotation`, and `"short interest"`,
+`"margin calls"`, `"forced selling"`, and `"hedge funds"` from `crowding`. No
+mechanism lost its defining vocabulary, and no anchor or language constraint was
+weakened. This was a correction made **before any panel was built**, and because
+nothing in this project is fitted against labels, a descriptive query change
+carries no selection risk — only a documentation obligation.
+
+## GDELT: resolving "absent" versus "zero"
+
+The probe established that GDELT omits days rather than reporting them as zero:
+a fully non-matching query returns the empty object `{}`, and a matching query
+simply lacks rows for days it did not match. Separately, the archive itself has
+gaps — 2020-10-20 is absent even for a completely unrelated broad query.
+
+An absent day is therefore ambiguous between *the archive has no data* and *this
+query matched nothing*, and the spec forbids reporting an archive gap as a zero.
+
+**Options considered.**
+
+1. Treat every absent day as zero. Rejected: it converts archive outages into
+   confident statements of no coverage, which is exactly the failure the spec
+   names.
+2. Treat every absent day as missing. Rejected in the other direction: it
+   discards genuine zero-match information and would make sparse queries look
+   uninformative rather than quiet.
+3. **Adopted.** Pull a sixth *coverage* series — the bare market anchor in
+   `timelinevolraw`, whose `norm` field counts all monitored articles that day
+   and is query-independent. A day present in coverage establishes archive
+   availability. Absent-from-query but present-in-coverage is a **confirmed
+   zero**; absent from both is **missing** and stays NaN.
+
+## Interval completeness
+
+The spec mandates that tone be NaN when any required raw count for an interval
+is unavailable. It does not state the corresponding rule for volume intensity.
+
+**Decision: an incomplete interval makes volume intensity NaN as well.** Taking
+a mean over two of three days imputes the missing day with the interval mean,
+and this project performs no imputation. The symmetric rule is also what makes
+"vol_intensity is zero only when a zero match is confirmed" true in practice
+rather than only in intent. Days where the three modes return disagreeing grids
+are treated the same way: neither the volume nor the weight for such a day is
+known, so the interval is unavailable.
+
+## Positioning: the publication-date branch
+
+**Branch taken: reconstruction from FINRA's published schedule** (branch 2 of
+the specified decision tree).
+
+- Branch 1 does not apply. `otcMarket/consolidatedShortInterest` carries
+  `settlementDate` and no publication-date field. Joining on settlement date
+  would embed roughly two weeks of look-ahead while looking entirely innocuous —
+  the single most dangerous line in the positioning pipeline.
+- Branch 2 applies. FINRA publishes a *Short Interest Reporting Dates* table
+  with explicit Settlement Date, Due Date, and Publication Date columns.
+  197 settlement dates spanning 2018-10-31 to 2026-12-31 were recovered from the
+  live page plus nine archived snapshots of the same FINRA page. Overlapping
+  snapshots were cross-checked and **agree on every settlement date they share**
+  (zero conflicts), which is the strongest available evidence that the parse is
+  correct.
+- Branch 3 (approximation) is **not** the primary rule. It applies only to the
+  20 settlement dates between 2017-12-29 and 2018-10-15, for which no schedule
+  page carrying a 2018 table could be retrieved — the pre-2019 FINRA site linked
+  the schedule from a separate page that now redirects.
+
+**The fallback rule was measured rather than assumed.** The spec's stated
+fallback is settlement + 8 plain business days. Across the 197 retrieved pairs
+the actual gap is exactly **7 business days excluding US federal holidays** in
+186 cases (6 in four cases, 8 in seven — FINRA's calendar is close to, but not
+identical with, the federal one). The derived 7-federal-business-day rule is
+therefore used for uncovered dates, every row records
+`publication_date_rule` so the two populations are separable, and the
+10-business-day sensitivity variant is carried alongside as specified.
+
+Settlement date is retained as metadata only. A test asserts that for every
+populated row the settlement date is strictly older than the publication date it
+was gated on, so it cannot have driven the join.
+
+## What the FINRA daily files are, for the memo
+
+This paragraph exists to be quoted, because the metric is easy to overclaim.
+
+The FINRA daily short sale volume files cover **only off-exchange trades**
+reported to a FINRA Trade Reporting Facility, the Alternative Display Facility,
+or the OTC Reporting Facility for public dissemination. They are **not**
+consolidated with exchange data, and **offsetting buys are not reflected**,
+which inflates apparent short concentration. FINRA states explicitly that these
+files **do not equate to short interest position data**.
+
+`short_vol_share` is therefore a **flow** measure of shorting activity, and
+`days_to_cover` is a **position** measure. The two are complementary, not
+substitutes, and a divergence between them is not automatically a join error.
+
+## Volume adjustment: a trap that would have been invisible
+
+`days_to_cover` divides a FINRA short-interest **share count**, reported in the
+shares that existed on the settlement date, by an average daily volume. The
+price vendor returns **split-adjusted** volume. This was confirmed by direct
+observation rather than assumed: Apple's 2020-08-28 volume is reported as
+187,630,000, exactly four times the roughly 46.9M shares that actually traded
+the day before its 4:1 split.
+
+Dividing a pre-split short interest by a post-split-adjusted volume understates
+days-to-cover by the split factor, silently and only for names that split. The
+pipeline therefore un-adjusts volume back to as-traded shares using the vendor's
+own split events, and reconciles the result against FINRA's own
+`daysToCoverQuantity` — which exists in the dataset and is used as an
+independent check rather than as the primary series, since FINRA's average daily
+volume "excludes non-media trades" and so will not agree exactly.
+
+The momentum ranking uses the split- and dividend-adjusted close, which is the
+correct convention for a total-return formation window. The two adjustment
+conventions are kept in separate columns and never mixed.
+
+## Symbology
+
+Three sources disagree with each other, established by direct query rather than
+assumption:
+
+| Security | Short interest API | CNMS daily file | Price vendor |
+|---|---|---|---|
+| Berkshire Hathaway B | `BRKB` | `BRK/B` | `BRK-B` |
+| Brown-Forman B | `BFB` | `BF/B` | `BF-B` |
+
+`BRK-B` and `BRK/B` both return zero rows from the short-interest dataset; only
+`BRKB` matches. A per-source normaliser is therefore mandatory rather than a
+nicety — without it every dual-class name drops silently out of the panel.
+Unmatched universe symbols are written to a diagnostic list and never dropped
+silently.
+
+## Universe
+
+The universe is the 200 largest US-domiciled, US-listed common stocks by market
+capitalisation on the retrieval date, from the Nasdaq stock screener, after
+excluding non-common-stock instruments by name.
+
+It is **current membership applied historically** and therefore carries
+survivorship bias in both directions: names that were large during the sample
+but were later acquired, delisted, or shrank out of the top 200 are absent for
+the whole sample, and names that grew into the top 200 late are present from the
+start. Because the screen is by market capitalisation, the universe is also
+large-cap dominated, while a real momentum loser decile contains far more mid-
+and small-cap names — which are precisely where short-leg crowding is most
+acute. The panel therefore **understates** crowding relative to a true momentum
+universe. It is a labelled proxy, not a reconstruction. Production would use
+CRSP/Compustat point-in-time constituents.
+
+## Formation window
+
+12-2 momentum is implemented exactly as specified: at the rebalance on the last
+trading day of month *m*, the formation return is the cumulative total return
+from the month end 12 months before the rebalance to the month end 2 months
+before it. The most recent month is skipped, so no information from inside the
+rebalance month can influence the ranking. Bottom decile of the rankable names
+is the proxy loser leg, and constituents are fixed for the following calendar
+month.
+
+## Availability conventions
+
+Both are consistent with the Phase 1 post-close assessment contract, under which
+the assessment happens after the US close on trading date *t* and the earliest
+action is the next session.
+
+| Source | Treated as observable at | Reason |
+|---|---|---|
+| GDELT bucket for calendar day *D* | close of the next trading day after *D* | the bucket only completes at 00:00 UTC on *D+1*, roughly 19:00-20:00 ET on *D* |
+| FINRA short interest | close of its **publication** date | FINRA disseminates during that day |
+| FINRA daily short volume for trade date *t* | close of *t* | FINRA posts no later than 6:00 p.m. ET on the trade date, after the close |
+
+## Normalisation rule relaxed, and a correction to the reasoning behind it
+
+**Decision.** The narrative panel standardises against **100 finite observations
+out of the 126 immediately preceding rows**, rather than requiring all 126. The
+positioning panel keeps the strict all-126 rule. Both panels now carry
+`z_window` and `z_min_observations` columns so neither rule is implicit.
+
+**Why this is not imputation.** The window remains *positionally* the 126 rows
+immediately preceding row `t`. No missing observation is filled and no backward
+search is performed — a value 200 rows back cannot influence row `t` under
+either rule, and a test pins that. Only the number of finite values required
+inside the fixed window changes, i.e. **when a statistic is available, not what
+its value is**.
+
+**Why the positioning panel was left strict.** Its inputs have no interior gaps
+(`missing_current_value: 0`), so relaxing would change nothing there. Leaving it
+alone also avoids perturbing a validated artifact.
+
+**Correction to the justification.** The relaxation was argued on an estimate
+that GDELT's 21 archive gaps were spread evenly across the sample, which would
+have made the strict rule destroy nearly the whole series. **That estimate was
+wrong.** The real gaps are clustered into four events — 17 consecutive days in
+June-July 2025, two in December 2017, and two isolated single days. Measured on
+the built panel, the strict rule yields 1,739 z-scores and the relaxed rule
+2,269, a gain of 530 (+30%). Worthwhile, but the strict rule would have been
+usable and the original argument overstated the case. Recorded because the
+decision was taken on the bad estimate.
+
+## Query-independence of `timelinevolraw.norm` — verified
+
+Stage 1 adopted a coverage series on the assumption that `norm` counts all
+monitored articles that day and is therefore query-independent. The probe that
+would have confirmed it was lost to a rate limit, so it remained an assumption.
+
+It is now **verified**: two entirely different cached queries returned
+byte-identical `norm` on **all 366 overlapping days of 2020**. This licenses two
+things — using any cached `timelinevolraw` as the archive-availability calendar,
+and deriving volume intensity as `100 × value / norm` for a query that holds
+only `timelinevolraw`.
