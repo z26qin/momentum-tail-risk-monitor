@@ -1,0 +1,19 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 461552,
+  "http_method": "POST",
+  "http_status": 200,
+  "request_limit": 5000,
+  "request_offset": 10000,
+  "retrieval_timestamp_utc": "2026-07-25T03:47:38+00:00",
+  "sha256": "115f755a9c3f6082259687d36047df60b5c44def6239451c22c0fd4aa361ea40",
+  "source_key": "finra_short_interest_c9f72d2a8bdc_page_002",
+  "source_url": "https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest",
+  "symbol_count": 200
+}

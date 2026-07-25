@@ -1,0 +1,15 @@
+{
+  "daily": {
+    "absent_days": 78,
+    "failed_days": [],
+    "first_absent": [
+      "20180903",
+      "20181122",
+      "20181205",
+      "20181225",
+      "20190101"
+    ],
+    "rows": 382978,
+    "trading_days_with_file": 2005
+  }
+}

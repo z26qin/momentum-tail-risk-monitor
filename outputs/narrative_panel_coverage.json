@@ -1,0 +1,286 @@
+{
+  "gdelt_diagnostics": {
+    "archive_days": 3447,
+    "archive_missing_count": 21,
+    "archive_missing_days": [
+      "2017-12-01",
+      "2017-12-02",
+      "2020-10-20",
+      "2023-03-23",
+      "2025-06-15",
+      "2025-06-16",
+      "2025-06-17",
+      "2025-06-18",
+      "2025-06-19",
+      "2025-06-20",
+      "2025-06-21",
+      "2025-06-22",
+      "2025-06-23",
+      "2025-06-24",
+      "2025-06-25",
+      "2025-06-26",
+      "2025-06-27",
+      "2025-06-28",
+      "2025-06-29",
+      "2025-06-30",
+      "2025-07-01"
+    ],
+    "coverage_source": "riskoff_timelinevolraw_substitute",
+    "modes": {
+      "crowding": {
+        "inconsistent": 0,
+        "intersection": 3447,
+        "modes_present": [
+          "timelinevol"
+        ],
+        "timelinetone": 0,
+        "timelinevol": 3447,
+        "timelinevolraw": 0,
+        "tone_available": false,
+        "volume_source": "timelinevol"
+      },
+      "panic": {
+        "inconsistent": 0,
+        "intersection": 3447,
+        "modes_present": [
+          "timelinevol"
+        ],
+        "timelinetone": 0,
+        "timelinevol": 3447,
+        "timelinevolraw": 0,
+        "tone_available": false,
+        "volume_source": "timelinevol"
+      },
+      "riskoff": {
+        "inconsistent": 0,
+        "intersection": 3447,
+        "modes_present": [
+          "timelinevolraw"
+        ],
+        "timelinetone": 0,
+        "timelinevol": 3447,
+        "timelinevolraw": 3447,
+        "tone_available": false,
+        "volume_source": "derived_from_timelinevolraw"
+      }
+    },
+    "skipped_queries": {
+      "policy": [
+        "timelinevol",
+        "timelinetone",
+        "timelinevolraw"
+      ],
+      "rotation": [
+        "timelinevol",
+        "timelinevolraw"
+      ]
+    }
+  },
+  "panel_path": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/processed/narrative_panel.parquet",
+  "per_query": {
+    "crowding": {
+      "confirmed_zero_day_total": 0,
+      "rows": 2385,
+      "tone_available": 0,
+      "tone_max": null,
+      "tone_min": null,
+      "tone_z_available": 0,
+      "vol_intensity_available": 2369,
+      "vol_intensity_max": 0.3834,
+      "vol_intensity_min": 0.0004333333333333333,
+      "vol_z_available": 2269
+    },
+    "panic": {
+      "confirmed_zero_day_total": 0,
+      "rows": 2385,
+      "tone_available": 0,
+      "tone_max": null,
+      "tone_min": null,
+      "tone_z_available": 0,
+      "vol_intensity_available": 2369,
+      "vol_intensity_max": 1.5936,
+      "vol_intensity_min": 0.0,
+      "vol_z_available": 2269
+    },
+    "riskoff": {
+      "confirmed_zero_day_total": 0,
+      "rows": 2385,
+      "tone_available": 0,
+      "tone_max": null,
+      "tone_min": null,
+      "tone_z_available": 0,
+      "vol_intensity_available": 2369,
+      "vol_intensity_max": 0.30073591848287573,
+      "vol_intensity_min": 0.0008235400693420739,
+      "vol_z_available": 2269
+    }
+  },
+  "per_year": {
+    "2017": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 249,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 249,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 249,
+      "trading_days": 251
+    },
+    "2018": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 251,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 251,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 251,
+      "trading_days": 251
+    },
+    "2019": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 252,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 252,
+      "trading_days": 252
+    },
+    "2020": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 252,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 252,
+      "trading_days": 253
+    },
+    "2021": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 252,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 252,
+      "trading_days": 252
+    },
+    "2022": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 251,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 251,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 251,
+      "trading_days": 251
+    },
+    "2023": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 249,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 249,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 249,
+      "trading_days": 250
+    },
+    "2024": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 252,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 252,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 252,
+      "trading_days": 252
+    },
+    "2025": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 238,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 238,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 238,
+      "trading_days": 250
+    },
+    "2026": {
+      "crowding_tone_available": 0,
+      "crowding_vol_available": 123,
+      "narrative_breadth_available": 0,
+      "panic_tone_available": 0,
+      "panic_vol_available": 123,
+      "riskoff_tone_available": 0,
+      "riskoff_vol_available": 123,
+      "trading_days": 123
+    }
+  },
+  "rolling_z_diagnostics": {
+    "crowding_tone_z": {
+      "available": 0,
+      "incomplete_window": 2385,
+      "min_observations": 100,
+      "missing_current_value": 0,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "crowding_vol_z": {
+      "available": 2269,
+      "incomplete_window": 101,
+      "min_observations": 100,
+      "missing_current_value": 15,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "panic_tone_z": {
+      "available": 0,
+      "incomplete_window": 2385,
+      "min_observations": 100,
+      "missing_current_value": 0,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "panic_vol_z": {
+      "available": 2269,
+      "incomplete_window": 101,
+      "min_observations": 100,
+      "missing_current_value": 15,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "riskoff_tone_z": {
+      "available": 0,
+      "incomplete_window": 2385,
+      "min_observations": 100,
+      "missing_current_value": 0,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "riskoff_vol_z": {
+      "available": 2269,
+      "incomplete_window": 101,
+      "min_observations": 100,
+      "missing_current_value": 15,
+      "rows": 2385,
+      "window": 126,
+      "zero_standard_deviation": 0
+    }
+  },
+  "rows": 2385,
+  "trading_calendar": {
+    "extended_by_price_sessions": 38,
+    "first": "2016-01-04",
+    "french_authoritative_through": "2026-05-29",
+    "last": "2026-07-24",
+    "overlap_days_checked": 2616,
+    "overlap_disagreements": [],
+    "trading_days": 2654
+  }
+}

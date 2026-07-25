@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 10160,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:21:26+00:00",
+  "sha256": "3a30ecc6bb6bbd136cdf141f56fb5e7c08ef05132319476a4ee0398b42758d68",
+  "source_key": "sec_shares_outstanding_NVDA",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001045810/dei/EntityCommonStockSharesOutstanding.json"
+}

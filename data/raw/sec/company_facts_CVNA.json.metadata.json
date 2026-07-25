@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 1762808,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:22:43+00:00",
+  "sha256": "8d1a545c982e117cc367448e1d556626d7f80d8ea2c6931b6cb7310d5790396c",
+  "source_key": "sec_company_facts_CVNA",
+  "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001690820.json"
+}

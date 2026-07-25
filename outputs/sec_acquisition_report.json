@@ -1,0 +1,13 @@
+{
+  "note": "Complete.",
+  "observations": 11221,
+  "stopped_at": null,
+  "stopped_early": false,
+  "symbols_requested": 200,
+  "symbols_with_data": 198,
+  "tickers_without_the_concept": [
+    "HONA",
+    "SPCX"
+  ],
+  "unmapped_tickers": []
+}

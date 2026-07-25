@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 4695,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:21:45+00:00",
+  "sha256": "7ba22201472f42769ef7d752cbbb58c82cd191921a02e0e8b42416aeec8c74d3",
+  "source_key": "sec_shares_outstanding_UBER",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001543151/dei/EntityCommonStockSharesOutstanding.json"
+}

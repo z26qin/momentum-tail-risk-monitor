@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 10485,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:20:25+00:00",
+  "sha256": "178c9bfabadd0ef332160f60ca5c497f10ce76c6eaff5763d0408d117947f4ee",
+  "source_key": "sec_shares_outstanding_AAPL",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0000320193/dei/EntityCommonStockSharesOutstanding.json"
+}
