@@ -72,6 +72,24 @@ CLASSIFICATION_EXCLUSION_REASONS = frozenset(
         "irrelevant_to_momentum_risk",
     }
 )
+DOMAIN_RISK_STATES = frozenset(
+    {
+        "normal",
+        "stressed_precondition",
+        "reversal_watch",
+        "active_reversal",
+    }
+)
+DOMAIN_COMPONENT_CATEGORIES = frozenset(
+    {"precondition", "trigger", "confirmation", "proxy"}
+)
+DOMAIN_COMPARISONS = frozenset(
+    {
+        "less_than_or_equal",
+        "greater_than_or_equal",
+        "absolute_greater_than_or_equal",
+    }
+)
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -452,6 +470,303 @@ class PositioningState:
         for name in (
             "limitations",
             "production_replacements",
+            "data_quality_flags",
+        ):
+            values[name] = tuple(values[name])
+        values["provenance"] = tuple(
+            ArtifactProvenance(**item) for item in values["provenance"]
+        )
+        return cls(**values)
+
+
+@dataclass(frozen=True)
+class ContextChange:
+    """One factual change from the prior momentum assessment date."""
+
+    metric: str
+    current_value: float | None
+    previous_value: float | None
+    delta: float | None
+
+    def __post_init__(self) -> None:
+        _require_nonempty(self.metric, "metric")
+        _optional_numeric_fields(
+            self,
+            ("current_value", "previous_value", "delta"),
+        )
+        if self.current_value is None or self.previous_value is None:
+            if self.delta is not None:
+                raise ValueError(
+                    "delta must be null when either endpoint is unavailable"
+                )
+        elif self.delta is None:
+            raise ValueError(
+                "delta is required when both endpoints are available"
+            )
+
+
+@dataclass(frozen=True)
+class StructuredMarketContext:
+    """Concise point-in-time market and momentum facts for PM review."""
+
+    schema_version: str
+    as_of_date: str
+    as_of_timestamp: str
+    previous_as_of_date: str | None
+    market_return_504d: float | None
+    market_volatility_percentile_126d: float | None
+    vix_close: float | None
+    market_return_1d: float | None
+    market_return_5d: float | None
+    market_return_20d: float | None
+    momentum_return_21d: float | None
+    momentum_return_63d: float | None
+    momentum_drawdown_252d: float | None
+    winner_return_5d: float | None
+    winner_return_20d: float | None
+    loser_return_5d: float | None
+    loser_return_20d: float | None
+    loser_minus_winner_return_5d: float | None
+    loser_minus_winner_return_20d: float | None
+    winner_volatility_21d: float | None
+    loser_volatility_21d: float | None
+    momentum_market_beta_126d: float | None
+    momentum_market_correlation_126d: float | None
+    beta_change_21d: float | None
+    positioning_proxy_name: str
+    positioning_proxy_percentile: float | None
+    positioning_is_observed: bool
+    changes: tuple[ContextChange, ...]
+    data_quality_flags: tuple[str, ...]
+    provenance: tuple[ArtifactProvenance, ...]
+
+    def __post_init__(self) -> None:
+        if self.schema_version != SCHEMA_VERSION:
+            raise ValueError(f"schema_version must equal {SCHEMA_VERSION}")
+        _require_iso_date(self.as_of_date, "as_of_date")
+        _require_aware_timestamp(self.as_of_timestamp, "as_of_timestamp")
+        if self.previous_as_of_date is not None:
+            _require_iso_date(
+                self.previous_as_of_date,
+                "previous_as_of_date",
+            )
+        numeric_fields = (
+            "market_return_504d",
+            "market_volatility_percentile_126d",
+            "vix_close",
+            "market_return_1d",
+            "market_return_5d",
+            "market_return_20d",
+            "momentum_return_21d",
+            "momentum_return_63d",
+            "momentum_drawdown_252d",
+            "winner_return_5d",
+            "winner_return_20d",
+            "loser_return_5d",
+            "loser_return_20d",
+            "loser_minus_winner_return_5d",
+            "loser_minus_winner_return_20d",
+            "winner_volatility_21d",
+            "loser_volatility_21d",
+            "momentum_market_beta_126d",
+            "momentum_market_correlation_126d",
+            "beta_change_21d",
+            "positioning_proxy_percentile",
+        )
+        _optional_numeric_fields(self, numeric_fields)
+        _require_probability(
+            self.market_volatility_percentile_126d,
+            "market_volatility_percentile_126d",
+            nullable=True,
+        )
+        _require_probability(
+            self.positioning_proxy_percentile,
+            "positioning_proxy_percentile",
+            nullable=True,
+        )
+        _require_nonempty(
+            self.positioning_proxy_name,
+            "positioning_proxy_name",
+        )
+        if not isinstance(self.positioning_is_observed, bool):
+            raise ValueError("positioning_is_observed must be boolean")
+        change_names = [change.metric for change in self.changes]
+        if len(change_names) != len(set(change_names)):
+            raise ValueError("Context change metrics must be unique")
+        if not self.data_quality_flags:
+            raise ValueError("data_quality_flags cannot be empty")
+        if not self.provenance:
+            raise ValueError("provenance cannot be empty")
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def from_dict(
+        cls,
+        payload: Mapping[str, Any],
+    ) -> StructuredMarketContext:
+        values = dict(payload)
+        values["changes"] = tuple(
+            ContextChange(**item) for item in values["changes"]
+        )
+        values["data_quality_flags"] = tuple(values["data_quality_flags"])
+        values["provenance"] = tuple(
+            ArtifactProvenance(**item) for item in values["provenance"]
+        )
+        return cls(**values)
+
+
+@dataclass(frozen=True)
+class DomainRiskComponent:
+    """One transparent threshold check in the domain-risk state."""
+
+    component: str
+    category: str
+    value: float | None
+    threshold: float
+    comparison: str
+    unit: str
+    available: bool
+    triggered: bool
+    previous_triggered: bool | None
+    rationale: str
+
+    def __post_init__(self) -> None:
+        _require_nonempty(self.component, "component")
+        if self.category not in DOMAIN_COMPONENT_CATEGORIES:
+            raise ValueError(
+                "category must be one of "
+                f"{sorted(DOMAIN_COMPONENT_CATEGORIES)}"
+            )
+        _require_finite(self.value, "value", nullable=True)
+        _require_finite(self.threshold, "threshold")
+        if self.comparison not in DOMAIN_COMPARISONS:
+            raise ValueError(
+                "comparison must be one of "
+                f"{sorted(DOMAIN_COMPARISONS)}"
+            )
+        _require_nonempty(self.unit, "unit")
+        for name in ("available", "triggered"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be boolean")
+        if self.previous_triggered is not None and not isinstance(
+            self.previous_triggered,
+            bool,
+        ):
+            raise ValueError("previous_triggered must be boolean or null")
+        if self.available != (self.value is not None):
+            raise ValueError("available must agree with value availability")
+        if not self.available and self.triggered:
+            raise ValueError("An unavailable component cannot trigger")
+        _require_nonempty(self.rationale, "rationale")
+
+
+@dataclass(frozen=True)
+class DomainRiskState:
+    """Transparent Daniel-Moskowitz-inspired monitoring state."""
+
+    schema_version: str
+    as_of_date: str
+    as_of_timestamp: str
+    state: str
+    previous_state: str | None
+    state_changed: bool
+    component_count: int
+    max_components: int
+    components: tuple[DomainRiskComponent, ...]
+    mechanisms: tuple[str, ...]
+    interpretation: str
+    legacy_benchmark_name: str | None
+    legacy_benchmark_probability: float | None
+    legacy_benchmark_severity: str | None
+    legacy_benchmark_limitations: tuple[str, ...]
+    limitations: tuple[str, ...]
+    data_quality_flags: tuple[str, ...]
+    provenance: tuple[ArtifactProvenance, ...]
+
+    def __post_init__(self) -> None:
+        if self.schema_version != SCHEMA_VERSION:
+            raise ValueError(f"schema_version must equal {SCHEMA_VERSION}")
+        _require_iso_date(self.as_of_date, "as_of_date")
+        _require_aware_timestamp(self.as_of_timestamp, "as_of_timestamp")
+        if self.state not in DOMAIN_RISK_STATES:
+            raise ValueError(
+                f"state must be one of {sorted(DOMAIN_RISK_STATES)}"
+            )
+        if self.previous_state is not None and (
+            self.previous_state not in DOMAIN_RISK_STATES
+        ):
+            raise ValueError("previous_state is unsupported")
+        if not isinstance(self.state_changed, bool):
+            raise ValueError("state_changed must be boolean")
+        if self.previous_state is not None and self.state_changed != (
+            self.previous_state != self.state
+        ):
+            raise ValueError("state_changed is inconsistent")
+        if self.max_components != len(self.components):
+            raise ValueError(
+                "max_components must equal the component count"
+            )
+        if self.component_count != sum(
+            component.triggered for component in self.components
+        ):
+            raise ValueError(
+                "component_count must equal triggered components"
+            )
+        component_names = [
+            component.component for component in self.components
+        ]
+        if len(component_names) != len(set(component_names)):
+            raise ValueError("Domain component names must be unique")
+        if set(self.mechanisms).difference(EVIDENCE_MECHANISMS):
+            raise ValueError("Domain mechanisms contain unsupported values")
+        _require_nonempty(self.interpretation, "interpretation")
+        benchmark_fields = (
+            self.legacy_benchmark_name,
+            self.legacy_benchmark_probability,
+            self.legacy_benchmark_severity,
+        )
+        if any(value is None for value in benchmark_fields) and not all(
+            value is None for value in benchmark_fields
+        ):
+            raise ValueError(
+                "Legacy benchmark name, probability, and severity must "
+                "all be set or all be null"
+            )
+        _require_probability(
+            self.legacy_benchmark_probability,
+            "legacy_benchmark_probability",
+            nullable=True,
+        )
+        if self.legacy_benchmark_probability is not None:
+            if self.legacy_benchmark_severity not in RISK_SEVERITIES:
+                raise ValueError("legacy_benchmark_severity is unsupported")
+            if not self.legacy_benchmark_limitations:
+                raise ValueError(
+                    "A legacy benchmark requires explicit limitations"
+                )
+        for name in (
+            "limitations",
+            "data_quality_flags",
+            "provenance",
+        ):
+            if not getattr(self, name):
+                raise ValueError(f"{name} cannot be empty")
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> DomainRiskState:
+        values = dict(payload)
+        values["components"] = tuple(
+            DomainRiskComponent(**item) for item in values["components"]
+        )
+        for name in (
+            "mechanisms",
+            "legacy_benchmark_limitations",
+            "limitations",
             "data_quality_flags",
         ):
             values[name] = tuple(values[name])
