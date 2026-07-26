@@ -1,94 +1,82 @@
 # Next steps
 
-Both overlays now exist. The prototype answered its question — see
-`outputs/narrative_poc_review.md`. What follows is scope and judgement, not
-plumbing.
+Rebuilt 2026-07-25 from `outputs/review_report.md`. The previous version of this
+file is superseded — its status claims were stale: it said no risk-state or
+evidence modules exist, but `src/monitoring/` and `src/evidence/` are committed
+(`8e1b641`, `04f6f3d`), built on the **abandoned** pre-v3 architecture. That
+contradiction is itself item 3 below.
 
-## State
+## Budget
 
-| Panel | Status |
+Operator-corrected: **the existing repo accounts for ≈4h** of the ~20h cap, so
+**≈16h remain**. `PROJECT_PLAN_v3.md` §5's "Spent to date ≈ 9h" is superseded
+and should be corrected there when the plan is next touched. Log actual hours
+per item from here on — interview question "where did the 20 hours go?" is only
+answerable if they are written down.
+
+## State (verified by the review, 2026-07-25)
+
+| Piece | Status |
 |---|---|
-| Positioning | Complete. 2,402 dates, 200/200 symbol match, days-to-cover reconciled to FINRA's own figure at 0.974 median. Now carries volume-free crowding alongside. |
-| Narrative | Prototype. 2,385 dates, two mechanisms (`panic`, `riskoff`), **volume only — no tone**, breadth undefined. |
+| Positioning panel | Complete. 2,402 dates, 200/200 match, publication-date join tested, three crowding variants. **Consumed by nothing downstream.** |
+| Narrative panel | Prototype. 2 of 5 mechanisms, volume only, no tone, precision unassessed. Raw GDELT payloads exist only on the build machine. **Consumed by nothing downstream.** |
+| Risk state (v3: DM rule + PIT conditional frequency/severity) | **Does not exist.** |
+| Baseline separation ("insurance") table | **Does not exist.** |
+| Pre-v3 monitoring/evidence prototype | Exists (`src/monitoring/`, `src/evidence/`) but serves the fitted B2 probability the project disavowed; thresholds in `domain_risk.py` match neither DM 2016 nor PLAN_v3. |
+| PM brief, memo, slides | Do not exist. |
+| Tests | 121 passed / 1 skipped in the build worktree; **a fresh clone fails 1 test** (narrative rebuild needs git-ignored payloads) and skips 3. |
+| Branches | `main` (587a099) lacks the overlays and the v3 plan; everything new is on `dear/*`. |
 
-115 tests pass, 1 skip (the tone-dependent assertion).
+## Ordered work list (from review Part 5 — marginal value per hour)
 
-## 1. ~~Decide what the `days_to_cover` sign behaviour means~~ — **settled 2026-07-25**
+| # | What | Why | Est. h | Depends on |
+|---|---|---|---:|---|
+| 1 | **Insurance table**: unconditional vs DM-panic-state-conditional forward tail-loss frequency, full sample, both horizons, n per cell. Inputs already exist (`data/processed/momentum_labels_h*.parquet`, `market_features.parquet`). | Required Element 5; answers "did you check the rule in your own data?" | 0.5 | — |
+| 2 | **v3 risk-state module**: DM rule from existing `bear_state` × `mkt_variance_126d`, PIT conditional probability and severity range with sample size; run on one elevated and one quiet date. Cite DM 2016's exact parameterization (open travel item, `PROJECT_PLAN_v3.md:75`). | Elements 1/3/6; removes the fitted-B2 contradiction | 1.5 | 1 |
+| 3 | **Coherence pass**: README leads with v3 + traceability table (PLAN_v3 §3); DECISIONS entry assigning `src/monitoring/` + `src/modeling/` to "prior iteration, retained as history"; correct PLAN_v3 §5 hours; align `src/utils/pit.py` docstring with the corrected gap-clustering finding. | README deliverable; kills the sharpest interview attack | 1.0 | 2 |
+| 4 | **PM brief generator** (markdown, from the pipeline, quiet day + elevated day): state, conditional probability (n), severity range, crowding read (`short_interest_ratio_z`, utilisation), narrative read (`panic_vol_z`, `crowding_vol_z`), cited evidence replayed from existing classified outputs, explicit invalidation conditions. | Elements 3 + 6 — the first artifact where all three legs meet | 1.5 | 2 |
+| 5 | **Episode ablation table** (descriptive): per episode (2020-03, 2021-01, 2024-08, 2025-04) — did the DM state flag it; overlay lead-time readings. Numbers already measured in `outputs/narrative_poc_review.md:172-183`; formalize into one artifact. | Element 5 item 3 | 0.5 | 2 |
+| 6 | **Reproducibility guard**: fix `test_narrative_panel_rebuild_is_byte_identical`'s skip condition (guard on raw payloads, not the tracked parquet); README paragraph on what a clone can regenerate; track the six small GDELT payload JSONs; merge `dear/*` → `main`. | A cloning interviewer currently sees a failing suite | 0.5 | — |
+| 7 | **Memo, 6-10 pp** (hand-written per plan §5 item 5). Much of §2/§4 already exists in `docs/DECISIONS.md` and `outputs/data_review.md`; §5 needs the procurement table (borrow fees, RavenPack/Bloomberg, PIT constituents). | Deliverable | 2.5 | 1-5 |
+| 8 | **Slides + rehearsal** | Deliverable | 0.75 | 7 |
+| | **Core total** | | **8.75** | |
 
-Resolved by carrying a volume-neutral variant alongside. The panel now has
-`short_interest_ratio` (level, versus each symbol's own trailing median print)
-and `short_interest_change` (accumulation), neither of which touches volume.
-See `docs/DECISIONS.md`.
+## Affordable extensions (budget now permits; keep this order)
 
-Correlation with the panic narrative fell from **−0.196** to **−0.029**; in the
-139 days where `panic_vol_z > 2`, `days_to_cover_z` averages −0.66 while
-`short_interest_ratio_z` averages −0.01. The false "safe" reading is gone.
+1. **Trigger discipline + minimal agent loop** (~1.0-1.5h): gate evidence on an
+   elevated state; bounded one-loop-one-requery per `PROJECT_PLAN_v3.md:113`.
+2. **Faithfulness sample extension** (~0.5h): a third demo day and more review
+   labels — n=16 developer-labeled rows is the thinnest AI-validation number.
+3. **Analog check** (~1.5h): lowest evidence-per-hour on the board; do last or
+   leave as a designed-but-unbuilt memo paragraph.
 
-Two things this **did not** buy, both important:
+Core + extensions 1-2 ≈ 10.75h → cumulative ≈ 15h, under the cap with buffer.
 
-- It is not a positive stress signal. It goes to roughly zero during panic, not
-  positive. In March 2020 and April 2025 it still reads mildly negative, because
-  short interest genuinely falls as shorts cover — a real effect, unlike the
-  volume artifact.
-- Removing volume removed the only daily-updating term. It takes 3 distinct
-  values a month against `days_to_cover`'s 21, and lags publication by ~8
-  business days. It is a **precondition** measure, not a trigger.
+## Opportunistic (zero planned hours — externally blocked)
 
-**Also done:** short interest as a fraction of shares outstanding is now in the
-panel, from SEC EDGAR — 198 of 200 symbols, 11,221 observations, joined on
-filing date. Leg median 1.86% of float. It is the only one of the three
-crowding metrics that *rises* during panic (+0.26) rather than merely failing to
-fall, but it is the weaker **precondition** signal, likely because monthly leg
-turnover moves a cross-sectionally comparable measure for reasons that have
-nothing to do with crowding. Keep both; they answer different questions.
-
-## 2. Acquire `crowding` when GDELT access returns (3 requests)
-
-`crowding` is the direct narrative counterpart of the positioning panel — short
-squeezes and crowded-trade deleveraging against measured squeeze. `riskoff`
-currently stands in for it only because `riskoff` happened to be cached.
-
-```bash
-uv run python -m src.data.gdelt --queries crowding
-```
-
-Fail-fast and resumable. Do not loop it.
-
-## 3. Add tone (2 requests per query)
-
-Tone is half the narrative construct and is entirely absent. It needs
-`timelinetone` **and** `timelinevolraw` for the raw-count weights; no query
-currently holds both.
-
-Everything for it is implemented and tested — the raw-count weighting, the
-NaN-on-missing-weight rule, the zero-match rule. Only the data is missing.
-
-## 4. Run the semantic sanity check (4 requests)
+GDELT access may return at any time. Each command is fail-fast and resumable;
+do not loop, do not wait on it:
 
 ```bash
-uv run python -m src.data.gdelt_sanity
+uv run python -m src.data.gdelt --queries panic      # 2 requests: adds tone
+uv run python -m src.data.gdelt_sanity               # 4 requests: precision flags
 ```
 
-Both queries carry `precision_flag = "unassessed"`. The episode evidence is
-strong indirect support — the eight largest `panic_vol_z` readings are all real
-stress events — but nobody has read a headline these queries actually return.
+(`crowding` volume is already cached; `panic` tone is the highest-value missing
+piece, then the sanity check — both queries still carry
+`precision_flag = "unassessed"`.)
 
-## 5. Confirm the 12-2 formation window convention
+## Open questions carried forward
 
-Implemented per the spec's literal wording: month end *m*−12 to *m*−2, a
-10-month window skipping two months. The more common convention skips one. It is
-point-in-time safe either way; someone should confirm which was intended.
+- **12-2 formation window**: implemented as month-end *m*−12 to *m*−2 (10-month
+  window, skips two months) per the spec's literal wording; the common
+  convention skips one. PIT-safe either way; confirm which was intended before
+  the memo states it.
+- **Normalisation convention**: narrative panel requires 100 of 126 finite
+  observations, positioning panel all 126. Both recorded per row; unify only if
+  a downstream consumer needs one rule.
 
-## 6. Revisit the normalisation rule if it matters downstream
+## Never cut (unchanged from PLAN_v3 §5)
 
-The narrative panel uses 100 of 126; the positioning panel uses the strict 126.
-Measured on real data the relaxation buys 530 z-scores (+30%), less than the
-original argument claimed — the archive gaps turned out to be clustered, not
-spread. Both rules are viable. If a single convention is wanted across panels,
-now is the cheap moment to pick one.
-
-## Out of scope, unchanged
-
-No risk state module, conditional probability or severity computation, evidence
-layer, retrieval, LLM attribution, analogs, or PM brief. Nothing is fitted in
-this project — no model, folds, freeze manifest, or bootstrap.
+PIT/leakage tests, the insurance table, the generated PM brief, the two-track
+text rule's honest treatment in the memo.
