@@ -1,0 +1,156 @@
+{
+  "evaluation_purpose": "Developer-review agreement check for a small prototype; not a model-accuracy claim.",
+  "limitations": [
+    "The reference judgments are not independent ground truth.",
+    "The set contains only sixteen deliberately curated candidate documents.",
+    "Disagreements are retained for researcher review rather than reconciled away."
+  ],
+  "records": [
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-03-talf",
+      "review_classification": "supporting",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Direct evidence of extraordinary credit-market impairment and policy response, but no explicit momentum reference.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-02-aig",
+      "review_classification": "supporting",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Systemic liquidity stress supports the broad panic-state mechanism.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "bls-2009-03-06-employment",
+      "review_classification": "contextual",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "Severe labor deterioration is broad risk-off context, not momentum-specific evidence.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-03-bernanke",
+      "review_classification": "supporting",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Persistent financial stress and impaired securitization support the liquidity mechanism.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-02-25-stress-tests",
+      "review_classification": "contextual",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "A reviewer considered adverse-scenario capital assessment relevant background, although the mechanism link is weak.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-05-kohn-aig",
+      "review_classification": "supporting",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Market disruption, asset-price declines, and constrained credit support the stress mechanism.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-05-h3",
+      "review_classification": "contextual",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Facility usage documents liquidity conditions but has no clear directional momentum content.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2009-03-06",
+      "document_id": "fed-2009-03-05-h41",
+      "review_classification": "supporting",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "A reviewer treated the scale of liquidity facilities as supporting stress rather than merely contextual.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "reuters-2024-01-05-wall-street",
+      "review_classification": "contextual",
+      "review_mechanism": "factor rotation",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Technology-to-defensive rotation is mechanism-relevant, but a reviewer judged the direction too indirect to contradict the low-risk signal.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "bls-2024-01-05-employment",
+      "review_classification": "supporting",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "Continued job growth supports benign broad-market context, not a momentum-specific conclusion.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "fed-2024-01-04-h41",
+      "review_classification": "contextual",
+      "review_mechanism": "policy or liquidity shock",
+      "review_specificity": "mechanism_proxy",
+      "review_note": "Funding-program balances provide liquidity context without clear direction.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "bls-2024-01-03-jolts",
+      "review_classification": "contextual",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "Little-changed labor turnover is generic context.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "bea-2023-12-22-income-outlays",
+      "review_classification": "supporting",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "Income and spending growth with softer prices supports benign generic context.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "bea-2023-12-21-gdp",
+      "review_classification": "contextual",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "Strong lagged GDP is relevant context, but a reviewer did not treat it as directional evidence for current momentum risk.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "fed-2023-12-13-fomc",
+      "review_classification": "contextual",
+      "review_mechanism": "generic risk-off or risk-on",
+      "review_specificity": "generic_context",
+      "review_note": "The mix of slower growth, strong jobs, easing inflation, and restrictive rates is directionally mixed.",
+      "review_relevant": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "document_id": "fed-2024-01-03-minutes",
+      "review_classification": "irrelevant",
+      "review_mechanism": "other",
+      "review_specificity": "not_applicable",
+      "review_note": "The cached passage announces publication without substantive evidence.",
+      "review_relevant": false
+    }
+  ],
+  "reference_label_provenance": "developer_review_not_independent_ground_truth",
+  "schema_version": "1.0"
+}

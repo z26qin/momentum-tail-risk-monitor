@@ -1,0 +1,35 @@
+{
+  "as_of_date": "2024-01-05",
+  "as_of_timestamp": "2024-01-05T16:00:00-05:00",
+  "construction": "Population standard deviation across the ten trailing 21-trading-day compounded value-weighted momentum-decile returns, followed by a weak expanding percentile through the assessment date.",
+  "construction_window_trading_days": 21,
+  "data_quality_flags": [
+    "calculated_return_proxy_not_observed_positioning",
+    "same_day_source_publication_timestamp_not_historically_verified",
+    "public_source_snapshot_may_contain_later_vendor_revisions"
+  ],
+  "historical_observation_count": 25532,
+  "historical_percentile": 0.8314663951120163,
+  "interpretation": "Trailing momentum-decile return dispersion is elevated relative to its point-in-time history. Wider decile separation can indicate a stretched factor structure vulnerable to rotation, but it does not measure investor holdings or leverage.",
+  "is_observed_positioning": false,
+  "limitations": [
+    "This is return dispersion, not observed investor positioning, ownership concentration, flow, leverage, or financing data.",
+    "High dispersion can reflect broad volatility, sector composition, or return outliers rather than crowding.",
+    "Public portfolio-return histories may be revised after publication."
+  ],
+  "production_replacements": [
+    "prime-broker factor crowding and leverage",
+    "institutional holdings and factor exposure",
+    "fund flows, short interest, borrow, and financing conditions"
+  ],
+  "provenance": [
+    {
+      "path": "data/processed/french_10_momentum_portfolios_daily.parquet",
+      "role": "ten_momentum_decile_returns",
+      "sha256": "58fe335e356886938df5df838e0d0b67cd0e56966d8d6522399114434908db7f"
+    }
+  ],
+  "proxy_name": "momentum_decile_return_dispersion_21d",
+  "schema_version": "1.0",
+  "value": 0.03242430283276189
+}

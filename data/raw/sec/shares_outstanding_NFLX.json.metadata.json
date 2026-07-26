@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 10660,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:21:25+00:00",
+  "sha256": "887f4b05a82512f909587a09b93af164d2b7fa6f4a5ec232daa2f668387b8e02",
+  "source_key": "sec_shares_outstanding_NFLX",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001065280/dei/EntityCommonStockSharesOutstanding.json"
+}

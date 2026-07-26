@@ -1,0 +1,133 @@
+{
+  "as_of_date": "2009-03-06",
+  "data_quality_flags": [
+    "queries_are_deterministic_keyword_templates",
+    "query_topics_do_not_change_the_deterministic_risk_probability",
+    "retrieval_failure_must_not_be_interpreted_as_low_risk"
+  ],
+  "lookback_days": 120,
+  "max_documents": 8,
+  "mechanisms": [
+    "winner liquidation",
+    "loser squeeze",
+    "factor rotation",
+    "crowding or deleveraging",
+    "policy or liquidity shock",
+    "generic risk-off or risk-on"
+  ],
+  "positioning_state_sha256": "9143ed7ed983c2e1ef2eff21f98dcd05abee064fa7a1dc7471c9f7c49e203c5b",
+  "queries": [
+    {
+      "mechanism": "winner liquidation",
+      "query_id": "q01",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic winner liquidation mechanism.",
+      "related_drivers": [
+        "loser_leg_vol_21d"
+      ],
+      "search_terms": [
+        "winner stocks",
+        "technology",
+        "selling",
+        "selloff",
+        "decline"
+      ]
+    },
+    {
+      "mechanism": "loser squeeze",
+      "query_id": "q02",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic loser squeeze mechanism.",
+      "related_drivers": [
+        "loser_leg_vol_21d"
+      ],
+      "search_terms": [
+        "loser stocks",
+        "short covering",
+        "bank stocks",
+        "rally",
+        "rebound"
+      ]
+    },
+    {
+      "mechanism": "factor rotation",
+      "query_id": "q03",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic factor rotation mechanism.",
+      "related_drivers": [
+        "mom_mkt_corr_126d"
+      ],
+      "search_terms": [
+        "factor rotation",
+        "sector rotation",
+        "technology",
+        "defensive stocks",
+        "stock market"
+      ]
+    },
+    {
+      "mechanism": "crowding or deleveraging",
+      "query_id": "q04",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic crowding or deleveraging mechanism.",
+      "related_drivers": [
+        "momentum_decile_return_dispersion_21d"
+      ],
+      "search_terms": [
+        "crowding",
+        "leverage",
+        "deleveraging",
+        "liquidation",
+        "market stress",
+        "capital"
+      ]
+    },
+    {
+      "mechanism": "policy or liquidity shock",
+      "query_id": "q05",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic policy or liquidity shock mechanism.",
+      "related_drivers": [
+        "bear_x_mkt_variance_126d",
+        "mkt_variance_126d",
+        "vix_close"
+      ],
+      "search_terms": [
+        "liquidity",
+        "credit",
+        "federal reserve",
+        "financial system",
+        "bank lending",
+        "funding",
+        "TALF"
+      ]
+    },
+    {
+      "mechanism": "generic risk-off or risk-on",
+      "query_id": "q06",
+      "rationale": "Search the cached point-in-time corpus for public context related to the deterministic generic risk-off or risk-on mechanism.",
+      "related_drivers": [
+        "bear_x_mkt_variance_126d",
+        "mkt_variance_126d",
+        "vix_close",
+        "loser_leg_vol_21d",
+        "mom_mkt_corr_126d"
+      ],
+      "search_terms": [
+        "stock market",
+        "employment",
+        "job openings",
+        "jobs",
+        "unemployment",
+        "growth",
+        "GDP",
+        "consumer spending",
+        "inflation",
+        "recession",
+        "financial conditions"
+      ]
+    }
+  ],
+  "risk_state_sha256": "acdf7453322d415ffc7707785edc57cc918202905b52e3d9a318fc4973822b33",
+  "schema_version": "1.0",
+  "source_filters": [
+    "official",
+    "news"
+  ],
+  "timestamp_cutoff": "2009-03-06T16:00:00-05:00"
+}

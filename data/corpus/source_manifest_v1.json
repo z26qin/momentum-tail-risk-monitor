@@ -1,0 +1,50 @@
+{
+  "corpus_version": "momentum-evidence-v1",
+  "created_at_utc": "2026-07-25T00:37:25+00:00",
+  "limitations": [
+    "This is a compact research fixture, not a comprehensive historical-news archive.",
+    "Passages are concise paraphrases retained for offline replay; reviewers should use the source URLs for full context.",
+    "Corpus collection occurred after both assessment dates, so publication timing is supported by source-page metadata rather than a contemporaneous archive.",
+    "Date-only sources are assigned to midnight on the next calendar day in New York to prevent same-day look-ahead.",
+    "A source with an uncertain historical content version is retained only as an exclusion-control fixture."
+  ],
+  "market_close_convention": "Assessment cutoff is 4:00 p.m. America/New_York on the as-of date. Only publication timestamps at or before that instant are eligible.",
+  "records": [
+    {
+      "case": "2009-03-06",
+      "document_ids": [
+        "fed-2009-02-23-bank-support",
+        "fed-2009-02-25-stress-tests",
+        "fed-2009-03-02-aig",
+        "fed-2009-03-03-talf",
+        "fed-2009-03-03-bernanke",
+        "fed-2009-03-05-kohn-aig",
+        "fed-2009-03-05-h41",
+        "fed-2009-03-05-h3",
+        "fed-2009-03-05-h6",
+        "bls-2009-03-06-employment",
+        "fed-2009-03-18-fomc-future",
+        "nyfed-2009-03-18-treasury-future"
+      ],
+      "purpose": "Elevated-risk historical momentum-reversal case plus future-document controls."
+    },
+    {
+      "case": "2024-01-05",
+      "document_ids": [
+        "fed-2023-12-13-fomc",
+        "bea-2023-12-21-gdp",
+        "bea-2023-12-22-income-outlays",
+        "bls-2024-01-03-jolts",
+        "fed-2024-01-03-minutes",
+        "fed-2024-01-04-h41",
+        "bls-2024-01-05-employment",
+        "reuters-2024-01-05-wall-street",
+        "reuters-2024-01-05-wall-street-duplicate",
+        "ap-2024-01-05-market-update-uncertain",
+        "bls-2024-01-11-cpi-future"
+      ],
+      "purpose": "Low-risk recent control case plus duplicate, uncertain-version, and future-document controls."
+    }
+  ],
+  "schema_version": "1.0"
+}

@@ -1,0 +1,98 @@
+{
+  "as_of_date": "2024-01-05",
+  "classifier_mode": "codex_assisted_cached_fixture",
+  "items": [
+    {
+      "classification": "contradicting",
+      "classification_rationale": "Technology weakness and defensive-sector interest indicate rotation that challenges the otherwise low deterministic risk state.",
+      "confidence": 0.88,
+      "document_id": "reuters-2024-01-05-wall-street",
+      "exclusion_reason": null,
+      "extracted_passage": "US stock indexes were set for a weaker open after stronger employment data reduced near-term rate-cut expectations; technology shares lagged while defensive sectors drew interest.",
+      "mechanism": "factor rotation",
+      "specificity": "mechanism_proxy",
+      "related_driver": "mom_mkt_corr_126d"
+    },
+    {
+      "classification": "supporting",
+      "classification_rationale": "Continued job growth and stable unemployment support a benign broad-market backdrop consistent with low risk.",
+      "confidence": 0.84,
+      "document_id": "bls-2024-01-05-employment",
+      "exclusion_reason": null,
+      "extracted_passage": "US payroll employment increased by 216,000 in December, unemployment held at 3.7 percent, and employment continued to trend up in several sectors.",
+      "mechanism": "generic risk-off or risk-on",
+      "specificity": "generic_context",
+      "related_driver": "bear_state"
+    },
+    {
+      "classification": "contextual",
+      "classification_rationale": "Funding-program balances provide liquidity context but do not show a directional momentum-risk change.",
+      "confidence": 0.75,
+      "document_id": "fed-2024-01-04-h41",
+      "exclusion_reason": null,
+      "extracted_passage": "The weekly balance sheet reported Reserve Bank credit and outstanding funding through liquidity programs including the Bank Term Funding Program.",
+      "mechanism": "policy or liquidity shock",
+      "specificity": "mechanism_proxy",
+      "related_driver": "vix_close"
+    },
+    {
+      "classification": "contextual",
+      "classification_rationale": "Little-changed labor turnover is broad economic context without a direct momentum or fragility implication.",
+      "confidence": 0.86,
+      "document_id": "bls-2024-01-03-jolts",
+      "exclusion_reason": null,
+      "extracted_passage": "Job openings were little changed at 8.8 million in November, with hires at 5.5 million and total separations at 5.3 million.",
+      "mechanism": "generic risk-off or risk-on",
+      "specificity": "generic_context",
+      "related_driver": "bear_state"
+    },
+    {
+      "classification": "supporting",
+      "classification_rationale": "Rising income and spending alongside a monthly price decline support benign generic context consistent with low risk.",
+      "confidence": 0.82,
+      "document_id": "bea-2023-12-22-income-outlays",
+      "exclusion_reason": null,
+      "extracted_passage": "Personal income and consumer spending increased in November, while the price index for personal consumption expenditures declined from the prior month.",
+      "mechanism": "generic risk-off or risk-on",
+      "specificity": "generic_context",
+      "related_driver": "bear_state"
+    },
+    {
+      "classification": "supporting",
+      "classification_rationale": "Strong GDP growth supports resilient generic market context consistent with the low deterministic risk state.",
+      "confidence": 0.8,
+      "document_id": "bea-2023-12-21-gdp",
+      "exclusion_reason": null,
+      "extracted_passage": "Real GDP increased at a 4.9 percent annual rate in the third quarter, reflecting gains that included consumer spending and private inventory investment.",
+      "mechanism": "generic risk-off or risk-on",
+      "specificity": "generic_context",
+      "related_driver": "bear_state"
+    },
+    {
+      "classification": "contextual",
+      "classification_rationale": "Slower growth, strong jobs, easing but elevated inflation, and unchanged rates create mixed broad-market context.",
+      "confidence": 0.9,
+      "document_id": "fed-2023-12-13-fomc",
+      "exclusion_reason": null,
+      "extracted_passage": "The FOMC said economic growth had slowed, job gains remained strong, inflation had eased but was still elevated, and the target range would remain at 5.25 to 5.5 percent.",
+      "mechanism": "generic risk-off or risk-on",
+      "specificity": "generic_context",
+      "related_driver": "vix_close"
+    },
+    {
+      "classification": "irrelevant",
+      "classification_rationale": "The cached passage only records that minutes were released and contains no substantive evidence to classify.",
+      "confidence": 0.9,
+      "document_id": "fed-2024-01-03-minutes",
+      "exclusion_reason": "The passage only announces the minutes and contains no substantive mechanism evidence.",
+      "extracted_passage": null,
+      "mechanism": "other",
+      "specificity": "not_applicable",
+      "related_driver": null
+    }
+  ],
+  "model_identifier": "codex-session-model-unspecified",
+  "prompt_version": "momentum-evidence-classifier-v1",
+  "schema_version": "1.0",
+  "temperature": null
+}

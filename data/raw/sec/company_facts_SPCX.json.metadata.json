@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 1033,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:22:48+00:00",
+  "sha256": "4f99200ef7a890d3f8bfe7a45798039e6c1306978ed84f5a9ee5a085132d7e75",
+  "source_key": "sec_company_facts_SPCX",
+  "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001181412.json"
+}

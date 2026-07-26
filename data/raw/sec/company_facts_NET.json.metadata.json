@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 1617015,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:22:48+00:00",
+  "sha256": "8893a72de8ffe3924f8d5c45486ae52a9e19a5ffa3a21503769a96abb8070dc3",
+  "source_key": "sec_company_facts_NET",
+  "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001477333.json"
+}

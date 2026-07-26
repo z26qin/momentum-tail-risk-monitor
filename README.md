@@ -181,3 +181,82 @@ in `outputs/phase2_research_review.md`.
 - **Deferred information:** no text or positioning information is ingested.
   The separate GDELT feasibility spike remains deferred and is not part of
   Phase 1.
+
+## Alternative-data overlays
+
+Two overlays inform monitoring and feed the downstream evidence layer. **Neither
+alters the risk number.** There is no fitted model in this project: the risk
+state is adopted directly from Daniel–Moskowitz (2016) and the risk probability
+is a point-in-time empirical conditional frequency. Phase 1 sections above
+describe an abandoned modelling architecture and are retained as history.
+
+- **Structured — loser-leg crowding** (`data/processed/positioning_panel.parquet`).
+  FINRA short interest joined on **publication date**, plus FINRA daily
+  short-sale volume, measured across a monthly-rebalanced proxy loser decile.
+- **Unstructured — narrative attention and tone** (`data/processed/narrative_panel.parquet`).
+  GDELT DOC 2.0 timelines across five frozen mechanism queries. **Not built in
+  the current run** — see `BLOCKERS.md`.
+
+Read `outputs/data_review.md` first: it carries the coverage tables, the match
+rates, every limitation, and the self-review.
+
+### Reproduce the overlays
+
+```bash
+uv sync --locked --extra test
+uv run python -m src.data.universe
+uv run python -m src.data.prices
+uv run python -m src.data.finra --stage all
+uv run python -m src.data.sec_edgar
+uv run python -m src.features.positioning_panel
+uv run python -m src.data.gdelt
+uv run python -m src.data.gdelt_sanity
+uv run python -m src.features.narrative_panel
+uv run pytest
+```
+
+Every network artifact is cached under `data/raw/` with a SHA-256 provenance
+sidecar, so a second run makes **zero** network calls. The determinism tests
+assert this by hard-disabling the network and rebuilding.
+
+`src.data.sec_edgar` is the one step that needs configuration. SEC's fair-access
+policy requires a real, reachable contact address on every request, so set one
+before fetching anything new:
+
+```bash
+export SEC_CONTACT_EMAIL='you@example.edu'
+```
+
+It is required rather than defaulted — a placeholder would send SEC a contact
+that does not resolve. It is needed **only** to fetch; the cache in this
+repository already covers all 200 symbols, so `uv run pytest` and every panel
+rebuild work without it.
+
+The large raw caches (`data/raw/finra/daily/`, `data/raw/prices/`, GDELT
+payloads) are git-ignored: they total roughly 150 MB on disk while their
+provenance sidecars and the processed extracts are tracked.
+
+### Alternative-data sources
+
+| Input | Source | Use |
+|---|---|---|
+| Consolidated short interest | [FINRA Query API `otcMarket/consolidatedShortInterest`](https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest) | Loser-leg short position, joined on publication date |
+| Daily short sale volume | [FINRA CNMS daily files](https://cdn.finra.org/equity/regsho/daily/) | Off-exchange shorting flow, from 2018-08-01 |
+| Short interest reporting dates | [FINRA schedule page](https://www.finra.org/filing-reporting/regulatory-filing-systems/short-interest) plus archived snapshots | Settlement → publication mapping (the point-in-time gate) |
+| Universe | [Nasdaq stock screener](https://api.nasdaq.com/api/screener/stocks) | 200 large caps, current membership — survivorship-biased |
+| Prices and volume | [Yahoo Finance chart API](https://query1.finance.yahoo.com/v8/finance/chart/) | 12-2 momentum ranking and as-traded volume |
+| News attention and tone | [GDELT DOC 2.0](https://api.gdeltproject.org/api/v2/doc/doc) | Narrative overlay |
+
+### Alternative-data limitations
+
+Full list in `outputs/data_review.md` §7. The three that matter most:
+
+- **The narrative overlay does not exist** in this run. GDELT applied a
+  sustained IP block; the code and tests are complete and the cache is empty.
+- **`days_to_cover` mechanically falls during crashes**, because volume is its
+  denominator and volume explodes under stress. Measured mean `days_to_cover_z`
+  was **−2.23 in March 2020**. Reading low days-to-cover as low squeeze risk
+  during a volume spike is backwards.
+- **The universe is current membership applied historically** and large-cap
+  dominated, so it is survivorship-biased and *understates* crowding relative to
+  a true momentum loser decile.

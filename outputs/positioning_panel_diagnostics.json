@@ -1,0 +1,218 @@
+{
+  "daily_match_rate": 1.0,
+  "days_to_cover_available": 2145,
+  "days_to_cover_reconciliation": {
+    "comparable_rows": 403853,
+    "computed_median": 2.3627,
+    "finra_reported_median": 2.44,
+    "ratio_median": 0.974,
+    "ratio_p05": 0.68,
+    "ratio_p95": 1.281,
+    "share_within_2x": 0.9881
+  },
+  "days_to_cover_z_available": 2019,
+  "dominant_publication_date_rule": "finra_published_schedule",
+  "first_trading_date": "2017-01-03",
+  "last_trading_date": "2026-07-24",
+  "leg_size_range": [
+    18,
+    20
+  ],
+  "panel_path": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/processed/positioning_panel.parquet",
+  "publication_date_rules": {
+    "finra_published_schedule": 186,
+    "settlement_plus_8_business_days": 20
+  },
+  "rankable_universe_range": [
+    181,
+    198
+  ],
+  "rolling_z_diagnostics": {
+    "days_to_cover_z": {
+      "available": 2019,
+      "incomplete_window": 383,
+      "min_observations": 126,
+      "missing_current_value": 0,
+      "rows": 2402,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "short_interest_ratio_z": {
+      "available": 1959,
+      "incomplete_window": 443,
+      "min_observations": 126,
+      "missing_current_value": 0,
+      "rows": 2402,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "short_interest_utilisation_z": {
+      "available": 2019,
+      "incomplete_window": 383,
+      "min_observations": 126,
+      "missing_current_value": 0,
+      "rows": 2402,
+      "window": 126,
+      "zero_standard_deviation": 0
+    },
+    "short_vol_share_z": {
+      "available": 1875,
+      "incomplete_window": 527,
+      "min_observations": 126,
+      "missing_current_value": 0,
+      "rows": 2402,
+      "window": 126,
+      "zero_standard_deviation": 0
+    }
+  },
+  "rows": 2402,
+  "short_interest_match_rate": 1.0,
+  "short_interest_ratio_available": 2085,
+  "short_interest_ratio_z_available": 1959,
+  "short_interest_utilisation_available": 2145,
+  "short_interest_utilisation_z_available": 2019,
+  "short_vol_share_available": 2001,
+  "short_vol_share_z_available": 1875,
+  "ticker_identity_guard": {
+    "daily_rows_dropped": {
+      "BNY": 1892,
+      "META": 152,
+      "SPCX": 1096
+    },
+    "detector_candidates": [
+      {
+        "current_issue_name": "ConocoPhillips",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Conoco Phillips"
+        ],
+        "prior_last_settlement": "2018-03-15",
+        "prior_print_count": 6,
+        "symbol": "COP"
+      },
+      {
+        "current_issue_name": "GE Aerospace",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "General Electric",
+          "General Electric Company"
+        ],
+        "prior_last_settlement": "2024-03-28",
+        "prior_print_count": 151,
+        "symbol": "GE"
+      },
+      {
+        "current_issue_name": "McDonald's Corporation",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Mcdonalds"
+        ],
+        "prior_last_settlement": "2018-03-15",
+        "prior_print_count": 6,
+        "symbol": "MCD"
+      },
+      {
+        "current_issue_name": "Moody's Corporation",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Moodys Corp"
+        ],
+        "prior_last_settlement": "2018-03-15",
+        "prior_print_count": 6,
+        "symbol": "MCO"
+      },
+      {
+        "current_issue_name": "Meta Platforms, Inc. Class A C",
+        "handled_by_override": true,
+        "prior_issue_names": [
+          "Roundhill Ball Metaverse ETF"
+        ],
+        "prior_last_settlement": "2022-01-14",
+        "prior_print_count": 13,
+        "symbol": "META"
+      },
+      {
+        "current_issue_name": "RTX Corporation",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Raytheon Technologies Corporat"
+        ],
+        "prior_last_settlement": "2023-07-14",
+        "prior_print_count": 79,
+        "symbol": "RTX"
+      },
+      {
+        "current_issue_name": "Space Exploration Technologies",
+        "handled_by_override": true,
+        "prior_issue_names": [
+          "The SPAC and New Issue ETF"
+        ],
+        "prior_last_settlement": "2026-03-31",
+        "prior_print_count": 127,
+        "symbol": "SPCX"
+      },
+      {
+        "current_issue_name": "UNITEDHEALTH GROUP INCORPORATE",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "United Healthcare"
+        ],
+        "prior_last_settlement": "2018-03-15",
+        "prior_print_count": 6,
+        "symbol": "UNH"
+      },
+      {
+        "current_issue_name": "Walmart Inc. Common Stock",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Wal-mart Stores"
+        ],
+        "prior_last_settlement": "2018-01-31",
+        "prior_print_count": 3,
+        "symbol": "WMT"
+      },
+      {
+        "current_issue_name": "ExxonMobil Holdings Corporatio",
+        "handled_by_override": false,
+        "prior_issue_names": [
+          "Exxon Mobil",
+          "Exxon Mobil Corporation"
+        ],
+        "prior_last_settlement": "2026-06-30",
+        "prior_print_count": 205,
+        "symbol": "XOM"
+      }
+    ],
+    "overrides_applied": {
+      "BNY": {
+        "current_entity_from": "2026-05-29",
+        "prior_occupant": "Blackrock New York Muni Tr"
+      },
+      "META": {
+        "current_entity_from": "2022-06-15",
+        "prior_occupant": "Roundhill Ball Metaverse ETF"
+      },
+      "SPCX": {
+        "current_entity_from": "2026-06-15",
+        "prior_occupant": "The SPAC and New Issue ETF"
+      }
+    },
+    "short_interest_rows_dropped": {
+      "BNY": 195,
+      "META": 13,
+      "SPCX": 127
+    }
+  },
+  "trading_calendar": {
+    "extended_by_price_sessions": 38,
+    "first": "2016-01-04",
+    "french_authoritative_through": "2026-05-29",
+    "last": "2026-07-24",
+    "overlap_days_checked": 2616,
+    "overlap_disagreements": [],
+    "trading_days": 2654
+  },
+  "universe_symbols": 200,
+  "unmatched_daily_symbols": [],
+  "unmatched_short_interest_symbols": []
+}

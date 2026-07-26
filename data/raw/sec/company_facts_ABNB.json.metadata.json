@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 1223031,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:22:42+00:00",
+  "sha256": "efe6b76467c929013fd1c752adda574b57bb64e2dc01cd99575f8d4b374fd15c",
+  "source_key": "sec_company_facts_ABNB",
+  "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001559720.json"
+}

@@ -1,0 +1,16 @@
+{
+  "absent": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "http_status": 200
+    }
+  ],
+  "bytes": 9623,
+  "http_method": "GET",
+  "http_status": 200,
+  "retrieval_timestamp_utc": "2026-07-25T17:21:01+00:00",
+  "sha256": "dfb9d275f1e6e1d890944cc0b955f58b57cc0c3e69c2c37f3fce9ec8c00719df",
+  "source_key": "sec_shares_outstanding_EQIX",
+  "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001101239/dei/EntityCommonStockSharesOutstanding.json"
+}
