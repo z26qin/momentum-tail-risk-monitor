@@ -1206,3 +1206,29 @@ enforced. Missing evidence is unavailable, never evidence of low risk.
 tests remain in the full suite. The default entry point does not call them.
 Their original reproduction instructions moved to
 `docs/history/README_legacy.md`.
+
+## Archived evidence is a separate, fail-closed provider
+
+**Decision taken 2026-07-26.**
+
+The post-date curated fixture remains available for demonstration, but it
+cannot be passed to the archived provider or relabeled as point-in-time
+evidence. Archive mode requires a versioned deterministic inventory, exact
+content hashes, and separate publication, discovery, availability, and
+content-version timestamps. Uncertain content versions are retained as
+exclusions for audit and cannot be classified.
+
+Retrieval and classification are two gates. Retrieval is deterministic and
+produces request/result hashes plus explicit exclusion reasons. Its candidates
+remain `retrieved_unclassified` until an exact-hash classifier response names
+an approved prompt version and explicit model identifier, covers every
+candidate once, and grounds every relevant passage in archived content.
+Failure at either gate emits no directional claims and never falls back to the
+fixture.
+
+GDELT 2.0 is usable as a discovery inventory only from 2015-02-19 onward and
+GKG metadata does not itself preserve article bodies. A strict 2020 track
+therefore also requires archived page or WARC content; 2009 requires an
+official-release archive or another older inventory. Until those bytes are
+acquired, the code path is production-shaped but the production corpus remains
+an explicit blocker.

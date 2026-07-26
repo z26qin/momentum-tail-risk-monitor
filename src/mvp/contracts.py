@@ -23,7 +23,12 @@ OVERLAY_READS = frozenset(
     {"confirm", "contradict", "neutral", "unavailable"}
 )
 EVIDENCE_STATUSES = frozenset(
-    {"skipped_quiet_state", "available", "unavailable"}
+    {
+        "skipped_quiet_state",
+        "available",
+        "retrieved_unclassified",
+        "unavailable",
+    }
 )
 
 
@@ -242,6 +247,19 @@ class EvidenceSnapshot:
     as_of_date: str
     status: str
     mode: str
+    provider_name: str
+    corpus_version: str | None
+    corpus_sha256: str | None
+    request_sha256: str | None
+    retrieved_documents: int
+    retrieved_document_ids: tuple[str, ...]
+    excluded_documents: int
+    exclusions: tuple[dict[str, Any], ...]
+    retrieval_sha256: str | None
+    classifier_input_sha256: str | None
+    prompt_version: str | None
+    model_identifier: str | None
+    classifier_mode: str | None
     supporting_items: int
     contradicting_items: int
     contextual_items: int
@@ -252,14 +270,81 @@ class EvidenceSnapshot:
         _date(self.as_of_date, "as_of_date")
         if self.status not in EVIDENCE_STATUSES:
             raise ValueError("unsupported evidence status")
-        if self.mode != "illustrative_fixture_replay":
-            raise ValueError("MVP evidence mode must disclose fixture replay")
+        if self.mode not in {
+            "illustrative_fixture_replay",
+            "archived_point_in_time",
+        }:
+            raise ValueError("unsupported evidence mode")
+        if not self.provider_name:
+            raise ValueError("provider_name is required")
+        if min(self.retrieved_documents, self.excluded_documents) < 0:
+            raise ValueError("retrieval counts cannot be negative")
+        for name in (
+            "corpus_sha256",
+            "request_sha256",
+            "retrieval_sha256",
+            "classifier_input_sha256",
+        ):
+            value = getattr(self, name)
+            if value is not None and len(value) != 64:
+                raise ValueError(f"{name} must be a SHA-256 digest")
+        if self.retrieved_documents != len(self.retrieved_document_ids):
+            raise ValueError("retrieved_documents must match retrieved_document_ids")
+        if len(set(self.retrieved_document_ids)) != len(
+            self.retrieved_document_ids
+        ):
+            raise ValueError("retrieved_document_ids must be unique")
+        if self.excluded_documents != len(self.exclusions):
+            raise ValueError("excluded_documents must match exclusions")
         if min(
             self.supporting_items,
             self.contradicting_items,
             self.contextual_items,
         ) < 0:
             raise ValueError("evidence counts cannot be negative")
+        if self.status == "available" and not self.model_identifier:
+            raise ValueError(
+                "available classified evidence requires a model identifier"
+            )
+        if self.status == "available" and (
+            not self.retrieval_sha256
+            or not self.classifier_input_sha256
+            or not self.prompt_version
+            or not self.classifier_mode
+        ):
+            raise ValueError(
+                "available classified evidence requires retrieval and "
+                "classifier metadata"
+            )
+        if len(self.citations) != (
+            self.supporting_items
+            + self.contradicting_items
+            + self.contextual_items
+        ):
+            raise ValueError("directional evidence counts must match citations")
+        if self.status in {
+            "skipped_quiet_state",
+            "retrieved_unclassified",
+            "unavailable",
+        } and (
+            self.supporting_items
+            or self.contradicting_items
+            or self.contextual_items
+            or self.citations
+        ):
+            raise ValueError(
+                "unavailable, unclassified, or skipped evidence cannot emit claims"
+            )
+        if self.retrieved_documents and not self.retrieval_sha256:
+            raise ValueError("retrieved evidence requires a retrieval hash")
+        if (
+            self.mode == "archived_point_in_time"
+            and self.corpus_version is not None
+            and (not self.corpus_sha256 or not self.request_sha256)
+        ):
+            raise ValueError(
+                "an identified archive corpus requires corpus and request hashes"
+            )
         if not self.detail:
             raise ValueError("evidence detail is required")
 

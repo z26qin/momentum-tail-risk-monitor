@@ -24,7 +24,10 @@ DM-inspired PIT state + matured-label conditional frequency  [PRIMARY]
         +--> GDELT panic/crowding/risk-off attention          [OVERLAY]
         |
         v  only when primary state is elevated
-validated illustrative evidence fixture                      [AI / HUMAN REVIEW]
+fixture replay OR strict archived PIT retrieval              [AI / HUMAN REVIEW]
+        |
+        v  archived candidates must pass versioned classifier grounding
+directional evidence (or unavailable/unclassified)
         |
         v
 one JSON assessment + one Markdown PM brief
@@ -47,6 +50,22 @@ uv sync --locked --extra test
 uv run python -m src.pipeline --as-of-date 2020-03-24 --horizon 20
 uv run python -m pytest
 ```
+
+The default evidence mode preserves the committed illustrative fixture. To
+exercise the production-shaped archive gate:
+
+```bash
+uv run python -m src.pipeline \
+  --as-of-date 2020-03-24 \
+  --horizon 20 \
+  --evidence-provider archived \
+  --archived-corpus /path/to/archived_corpus.json
+```
+
+Without a classifier response, eligible documents are reported as
+`retrieved_unclassified` and no directional claims are emitted. Add
+`--classifier-response /path/to/response.json` only for a response tied to the
+exact retrieval hash. See `docs/ARCHIVED_EVIDENCE.md` for both schemas.
 
 Outputs are written under `outputs/mvp/`:
 
@@ -72,7 +91,7 @@ Committed demonstrations cover:
 | Reversal checklist | Experimental preconditions and triggers | No |
 | FINRA positioning | Confirm, contradict, or remain neutral | No |
 | GDELT narrative | Confirm, contradict, or remain neutral | No |
-| Evidence fixture | Supply timestamped, passage-grounded context | No |
+| Evidence provider | Supply timestamped, passage-grounded context | No |
 
 The active entry point is `src/pipeline.py`. The small active contracts live in
 `src/mvp/contracts.py`. Earlier modeling and monitoring modules remain in place
@@ -99,12 +118,18 @@ five-mechanism breadth are unavailable.
 
 ## Evidence scope
 
-The current evidence output is deliberately labeled
-`illustrative_fixture_replay`. Its per-document timestamps and passages are
-validated, but the small corpus was curated after the historical assessment
-dates. It demonstrates grounding and control flow, not a strict historical
-text backtest. A production implementation requires an archived point-in-time
-corpus or live retrieval track.
+The default evidence output remains deliberately labeled
+`illustrative_fixture_replay`. Its small corpus was curated after the
+historical assessment dates and therefore demonstrates control flow, not a
+strict historical text backtest.
+
+The optional `archived_point_in_time` path now enforces a deterministic archive
+inventory, publication/discovery/availability/content-version cutoffs,
+deduplication, a frozen mechanism query, retrieval hashes, and exact passage
+grounding. A missing corpus never falls back to fixtures. A retrieved document
+cannot become directional evidence until a named classifier response matches
+the exact retrieval and approved prompt version. No qualifying documents means
+`unavailable`, never a low-risk interpretation.
 
 ## Tests and reproducibility
 
@@ -117,6 +142,8 @@ The default suite covers:
 - primary/shadow/experimental isolation;
 - overlay immutability of the primary probability;
 - elevated-state evidence gating and citation cutoffs;
+- strict archive-schema, content-version, deduplication, retrieval-hash, and
+  classifier-grounding gates;
 - quiet and elevated end-to-end artifacts.
 
 Processed panels are committed and immediately readable. Large raw FINRA,
@@ -134,6 +161,8 @@ Current:
 - `src/experiments/reversal_checklist.py`
 - `src/overlays/snapshots.py`
 - `src/evidence/mvp.py`
+- `src/evidence/archived_provider.py`
+- `src/evidence/versioned_classifier.py`
 - `src/reporting/pm_brief.py`
 - `src/pipeline.py`
 

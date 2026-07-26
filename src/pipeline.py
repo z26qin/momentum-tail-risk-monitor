@@ -9,7 +9,10 @@ from pathlib import Path
 import pandas as pd
 
 from src.benchmarks.b2_shadow import build_b2_shadow
-from src.evidence.mvp import build_evidence_snapshot
+from src.evidence.mvp import (
+    DEFAULT_ARCHIVED_CORPUS_PATH,
+    build_evidence_snapshot,
+)
 from src.experiments.reversal_checklist import build_reversal_conditions
 from src.mvp.contracts import SCHEMA_VERSION, MvpAssessment
 from src.overlays.snapshots import (
@@ -33,6 +36,9 @@ def run_pipeline(
     horizon: int = 20,
     processed_dir: Path = DEFAULT_PROCESSED_DIR,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
+    evidence_provider: str = "fixture",
+    archived_corpus_path: Path = DEFAULT_ARCHIVED_CORPUS_PATH,
+    classifier_response_path: Path | None = None,
 ) -> tuple[MvpAssessment, Path, Path]:
     """Build every MVP component while preserving one primary risk number."""
 
@@ -63,6 +69,9 @@ def run_pipeline(
         evidence=build_evidence_snapshot(
             primary=primary,
             output_dir=output_dir,
+            provider_mode=evidence_provider,
+            archived_corpus_path=archived_corpus_path,
+            classifier_response_path=classifier_response_path,
         ),
     )
     mvp_dir = output_dir / "mvp"
@@ -84,6 +93,24 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--horizon", type=int, choices=(5, 20), default=20)
     parser.add_argument("--processed-dir", type=Path, default=DEFAULT_PROCESSED_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument(
+        "--evidence-provider",
+        choices=("fixture", "archived"),
+        default="fixture",
+    )
+    parser.add_argument(
+        "--archived-corpus",
+        type=Path,
+        default=DEFAULT_ARCHIVED_CORPUS_PATH,
+    )
+    parser.add_argument(
+        "--classifier-response",
+        type=Path,
+        help=(
+            "Validated cached response for archived retrieval. Without it, "
+            "eligible documents remain retrieved_unclassified."
+        ),
+    )
     return parser
 
 
@@ -94,6 +121,9 @@ def main() -> None:
         horizon=args.horizon,
         processed_dir=args.processed_dir,
         output_dir=args.output_dir,
+        evidence_provider=args.evidence_provider,
+        archived_corpus_path=args.archived_corpus,
+        classifier_response_path=args.classifier_response,
     )
     print(json.dumps(assessment.to_dict(), indent=2, sort_keys=True))
     print(f"Wrote {assessment_path}")

@@ -73,10 +73,32 @@
         "title": "Factors Affecting Reserve Balances, March 5, 2009"
       }
     ],
+    "classifier_input_sha256": "ffadd3fb78a8f3812e602d1036a88c1c2432ea6a84c100449bcf19e901846243",
+    "classifier_mode": "codex_assisted_cached_fixture",
     "contextual_items": 3,
     "contradicting_items": 0,
+    "corpus_sha256": null,
+    "corpus_version": "momentum-evidence-v1",
     "detail": "Validated replay of a small corpus curated after the historical assessment date. It demonstrates grounding controls, not a strict point-in-time text backtest.",
+    "excluded_documents": 0,
+    "exclusions": [],
     "mode": "illustrative_fixture_replay",
+    "model_identifier": "codex-session-model-unspecified",
+    "prompt_version": "momentum-evidence-classifier-v1",
+    "provider_name": "fixture_evidence_provider_v1",
+    "request_sha256": "509a1d46ad4639a4882bb2f160a617f22755416b94c2822c663ae2f71240c318",
+    "retrieval_sha256": "7e78301d3bcaf23458d4595c1893751fd608aab311015e0ac3853ab624e9c3a3",
+    "retrieved_document_ids": [
+      "fed-2009-03-03-talf",
+      "fed-2009-03-02-aig",
+      "bls-2009-03-06-employment",
+      "fed-2009-03-03-bernanke",
+      "fed-2009-02-25-stress-tests",
+      "fed-2009-03-05-kohn-aig",
+      "fed-2009-03-05-h3",
+      "fed-2009-03-05-h41"
+    ],
+    "retrieved_documents": 8,
     "status": "available",
     "supporting_items": 4
   },

@@ -28,8 +28,21 @@ def _shadow_line(assessment: MvpAssessment) -> str:
 def _evidence_lines(assessment: MvpAssessment) -> list[str]:
     evidence = assessment.evidence
     lines = [
-        f"Evidence status: `{evidence.status}`; {evidence.detail}",
+        (
+            f"Evidence status: `{evidence.status}`; provider "
+            f"`{evidence.provider_name}`; corpus "
+            f"`{evidence.corpus_version or 'unavailable'}`; retrieved "
+            f"{evidence.retrieved_documents}, excluded "
+            f"{evidence.excluded_documents}."
+        ),
+        evidence.detail,
     ]
+    if evidence.status == "available":
+        lines.append(
+            "Classifier metadata: "
+            f"`{evidence.prompt_version}` / `{evidence.model_identifier}` / "
+            f"`{evidence.classifier_mode}`."
+        )
     for item in evidence.citations:
         lines.append(
             "- "
@@ -118,11 +131,16 @@ def render_pm_brief(assessment: MvpAssessment) -> str:
         "## Required human review",
         "",
         "- Review primary/shadow disagreements rather than averaging the numbers.",
-        "- Treat overlay contradictions as investigation prompts, not probability adjustments.",
-        "- Evidence is illustrative fixture replay unless a production archive is explicitly configured.",
+        (
+            "- Treat overlay contradictions as investigation prompts, not "
+            "probability adjustments."
+        ),
+        (
+            "- Evidence is illustrative fixture replay unless a production "
+            "archive is explicitly configured."
+        ),
         "",
         "_Research prototype; not an investment recommendation._",
         "",
     ]
     return "\n".join(lines)
-
