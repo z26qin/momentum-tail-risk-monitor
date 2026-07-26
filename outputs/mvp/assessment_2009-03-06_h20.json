@@ -1,0 +1,171 @@
+{
+  "evidence": {
+    "as_of_date": "2009-03-06",
+    "citations": [
+      {
+        "citation_url": "https://www.federalreserve.gov/monetarypolicy/20090303a.htm",
+        "classification": "supporting",
+        "document_id": "fed-2009-03-03-talf",
+        "extracted_passage": "The Federal Reserve and Treasury launched TALF to support credit markets, noting that securitization markets were virtually shuttered and that the facility could expand substantially.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-03T09:15:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Federal Reserve and Treasury announce TALF launch"
+      },
+      {
+        "citation_url": "https://www.federalreserve.gov/newsevents/pressreleases/other20090302a.htm",
+        "classification": "supporting",
+        "document_id": "fed-2009-03-02-aig",
+        "extracted_passage": "The Federal Reserve described AIG as systemically important and restructured assistance to improve its capital and liquidity amid continuing market turbulence.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-02T06:00:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Federal Reserve restructures assistance to AIG"
+      },
+      {
+        "citation_url": "https://www.bls.gov/news.release/archives/empsit_03062009.htm",
+        "classification": "contextual",
+        "document_id": "bls-2009-03-06-employment",
+        "extracted_passage": "US payroll employment fell by 651,000 in February, unemployment rose to 8.1 percent, and job losses were widespread across major industries.",
+        "mechanism": "generic risk-off or risk-on",
+        "publication_timestamp": "2009-03-06T08:30:00-05:00",
+        "source": "US Bureau of Labor Statistics",
+        "title": "Employment Situation, February 2009"
+      },
+      {
+        "citation_url": "https://www.federalreserve.gov/newsevents/testimony/bernanke20090303a.htm",
+        "classification": "supporting",
+        "document_id": "fed-2009-03-03-bernanke",
+        "extracted_passage": "Chairman Bernanke said financial stresses persisted, securitization markets remained impaired, and the Federal Reserve was using alternative credit tools including TALF.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-04T00:00:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Bernanke testimony on monetary policy and the economy"
+      },
+      {
+        "citation_url": "https://www.federalreserve.gov/newsevents/testimony/kohn20090305a.htm",
+        "classification": "supporting",
+        "document_id": "fed-2009-03-05-kohn-aig",
+        "extracted_passage": "Vice Chairman Kohn warned that an AIG failure could deepen market disruption, depress asset prices, and further constrict credit, explaining the liquidity support.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-06T00:00:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Kohn testimony on American International Group"
+      },
+      {
+        "citation_url": "https://www.federalreserve.gov/Releases/H3/20090305/",
+        "classification": "contextual",
+        "document_id": "fed-2009-03-05-h3",
+        "extracted_passage": "The H.3 release showed reserve balances and borrowings, including substantial term auction credit during the market stress episode.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-05T16:30:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Aggregate Reserves of Depository Institutions, March 5, 2009"
+      },
+      {
+        "citation_url": "https://www.federalreserve.gov/Releases/h41/20090305/h41.htm",
+        "classification": "contextual",
+        "document_id": "fed-2009-03-05-h41",
+        "extracted_passage": "The weekly balance sheet reported Reserve Bank credit and the scale of term auction credit and other liquidity facilities.",
+        "mechanism": "policy or liquidity shock",
+        "publication_timestamp": "2009-03-05T16:30:00-05:00",
+        "source": "Federal Reserve Board",
+        "title": "Factors Affecting Reserve Balances, March 5, 2009"
+      }
+    ],
+    "contextual_items": 3,
+    "contradicting_items": 0,
+    "detail": "Validated replay of a small corpus curated after the historical assessment date. It demonstrates grounding controls, not a strict point-in-time text backtest.",
+    "mode": "illustrative_fixture_replay",
+    "status": "available",
+    "supporting_items": 4
+  },
+  "experimental_conditions": {
+    "detail": "Research heuristics retained to explain reversal conditions. Thresholds are not the primary DM rule, are not calibrated, and cannot change the primary probability.",
+    "research_only": true,
+    "status": "stressed_precondition",
+    "total_conditions": 6,
+    "triggered_conditions": [
+      "severe_prior_market_decline",
+      "high_market_volatility"
+    ]
+  },
+  "narrative": {
+    "as_of_date": "2009-03-06",
+    "available_mechanisms": [],
+    "crowding_volume_z": null,
+    "limitations": [
+      "The current panel contains volume intensity for panic, crowding, and risk-off only; tone and five-mechanism breadth are unavailable.",
+      "The estimand is attention share in GDELT-monitored English-language global news, not US financial-news sentiment or article counts.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": null,
+    "panic_volume_z": null,
+    "read": "unavailable",
+    "riskoff_volume_z": null,
+    "stale_trading_days": null
+  },
+  "positioning": {
+    "as_of_date": "2009-03-06",
+    "limitations": [
+      "The proxy universe is current membership applied historically and is therefore survivorship-biased.",
+      "FINRA daily short volume is off-exchange flow, not a position, and is not consolidated with exchange short-sale volume.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": null,
+    "read": "unavailable",
+    "short_interest_ratio_z": null,
+    "short_interest_utilisation_z": null,
+    "short_volume_share_z": null,
+    "stale_trading_days": null
+  },
+  "primary": {
+    "as_of_date": "2009-03-06",
+    "as_of_timestamp": "2009-03-06T16:00:00-05:00",
+    "bear_state": true,
+    "conditional_fifth_percentile": -0.15343103498337216,
+    "conditional_mean_forward_return": -0.003493649362887821,
+    "conditioning_sample_size": 1218,
+    "elevated": true,
+    "elevation_rule": "bear_state is true and 126-day market variance is at least the point-in-time expanding mean variance among bear-state observations",
+    "horizon_days": 20,
+    "label_maturity_cutoff_date": "2009-03-06",
+    "limitations": [
+      "The paper defines a continuous bear-state-times-variance variable; the binary elevation boundary is an explicit operationalization.",
+      "Daily Ken French and broad-market public proxies replace the paper's monthly CRSP implementation.",
+      "Conditional frequencies are descriptive historical rates, not calibrated forecasts or trading thresholds."
+    ],
+    "market_return_504d": -0.4790279277461014,
+    "market_variance_126d": 0.0012366109974603185,
+    "method": "dm_pit_conditional_frequency",
+    "panic_intensity": 4.802715497049102,
+    "provenance": [
+      {
+        "path": "data/processed/market_features.parquet",
+        "role": "market_features",
+        "sha256": "92e760b47167ba167f16de05208c07538d6cb8ce510ccee633b630e1e46ff5b9"
+      },
+      {
+        "path": "data/processed/momentum_labels_h20.parquet",
+        "role": "matured_tail_labels",
+        "sha256": "8a3fd5f1b25787f50ea08b4535ed5dbc1bcf9858c386b9601b55e57bfe216632"
+      }
+    ],
+    "schema_version": "mvp-v1",
+    "state": "panic_elevated",
+    "tail_loss_probability": 0.1986863711001642,
+    "unconditional_sample_size": 21295,
+    "unconditional_tail_loss_probability": 0.04592627377318619
+  },
+  "schema_version": "mvp-v1",
+  "shadow_benchmarks": [
+    {
+      "agrees_with_primary": true,
+      "detail": "Research-only frozen OOS B2 probability. Agreement compares the primary elevated flag with whether B2 is at or above its 75th PIT percentile inside the same saved split; this is not an alert threshold and does not modify primary risk.",
+      "name": "B2_logistic",
+      "shadow_percentile": 0.8898623279098874,
+      "shadow_probability": 0.7917440160900019,
+      "status": "available"
+    }
+  ]
+}

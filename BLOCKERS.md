@@ -1,72 +1,38 @@
-# Blockers
+# Blockers and scope limits
 
-One blocker, **downgraded**. It no longer prevents a deliverable; it limits
-scope.
+Updated 2026-07-26.
 
----
+No blocker prevents the streamlined MVP from running. Two limitations prevent
+stronger production or historical-backtest claims.
 
-## B1 — GDELT DOC 2.0 API applied a sustained IP block
+## B1 — Historical text selection is illustrative
 
-**Status: still in force, but worked around.** Verified 2026-07-25: HTTP 429
-after roughly ten hours of near-silence at one request per five minutes.
+The validated evidence corpus was curated after its historical assessment
+dates. Publication cutoffs and passage grounding are enforced, but document
+selection itself is not a strict point-in-time archive.
 
-**Effect on the deliverable — revised.** The narrative panel **now exists**,
-built entirely from already-cached payloads with **zero further API calls**. See
-`outputs/narrative_poc_review.md`. What the block costs is *scope*, not
-existence:
+Current handling:
 
-| Missing | Requests needed |
-|---|---:|
-| `crowding` mechanism — the direct narrative counterpart of the positioning panel | 3 |
-| Tone series (needs `timelinetone` + `timelinevolraw` for the weights) | 2 per query |
-| `rotation`, `policy` mechanisms, and `narrative_breadth` | 3 each |
-| Semantic sanity check / query precision flags | 4 |
+- evidence runs only when the primary DM state is elevated;
+- every result is labeled `illustrative_fixture_replay`;
+- missing fixtures produce `unavailable`, never a low-risk interpretation;
+- evidence cannot alter the primary probability.
 
-**Two verified substitutions made the workaround sound**, rather than
-convenient:
+Production resolution: archived GDELT GKG or another timestamped historical
+corpus for backtests, plus a separate live retrieval track for current use.
 
-1. Volume intensity for `riskoff` is derived from `timelinevolraw` as
-   `100 × value / norm`. Verified arithmetically against the API — the two modes
-   are equivalent.
-2. Archive availability uses a spare `timelinevolraw`'s `norm` instead of the
-   dedicated coverage series. Verified directly: two entirely different queries
-   returned byte-identical `norm` on all 366 overlapping days of 2020.
+## B2 — GDELT panel is partial
 
-### Characterisation of the block
+The processed narrative panel exists and is consumed by the MVP. It currently
+contains volume intensity for three mechanisms:
 
-Worth carrying forward, because it dictates how to work with this API.
+- `panic`
+- `crowding`
+- `riskoff`
 
-1. **Stateful and sticky.** Requests spaced 20 seconds apart — four times
-   GDELT's own stated interval — were still refused.
-2. **Retrying prolongs it.** The first driver retried with exponential backoff
-   and kept the penalty continuously re-triggered for ~25 minutes. This was the
-   single most costly mistake of the session.
-3. **Going silent can clear it.** The first block lifted after one five-minute
-   silence, which bought 16 usable requests.
-4. **The second block did not.** After a five-request diagnostic burst it
-   returned and survived ten consecutive probes at 1/60th of the stated
-   allowance, then a further ~8 hours. This is an hours-to-days IP ban keyed to
-   cumulative session volume.
+Tone is unavailable and five-mechanism narrative breadth is undefined. Large
+raw GDELT payloads are not committed, so a fresh clone can read the processed
+panel but cannot rebuild it without reacquisition. Rebuild-only tests therefore
+skip when those payloads are absent.
 
-**Deliberately not tried:** changing the User-Agent or otherwise disguising the
-client. That would circumvent an access control the provider applied on
-purpose — GDELT's own 429 body directs high-traffic users to its ngrams dataset
-or to contacting the maintainer. The block was respected.
-
-### What is not blocked
-
-- The **positioning panel** is complete and never depended on GDELT.
-- The **narrative pipeline** is complete and tested: mapping, tone weighting,
-  confirmed-zero versus archive-gap disambiguation, PIT z-scores.
-- 106 tests pass; the single remaining skip is the tone-dependent assertion.
-
-### Correct usage from here
-
-`acquire_timelines` is now fail-fast and resumable: one attempt per request,
-stops on the first refusal, never caches a refusal. **Do not loop it.**
-
-```bash
-uv run python -m src.data.gdelt --queries crowding
-```
-
-Re-run occasionally; each attempt costs seconds and keeps whatever it wins.
+This limits scope but does not block daily assessment generation.

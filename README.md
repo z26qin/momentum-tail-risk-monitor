@@ -1,262 +1,151 @@
-# Momentum Tail-Risk Research Prototype
+# Momentum Tail-Risk Monitoring MVP
 
-This repository estimates the probability of sharp reversals in the US equity
-momentum factor. Phase 1 is deliberately market-only: it uses momentum,
-broad-market, volatility, and momentum-leg information. Phase 2 adds a small
-aggregate GDELT news panel and tests whether it improves on the same-sample
-market baseline. Positioning data remains deferred.
+This repository produces one auditable daily assessment of US equity momentum
+tail risk. The primary risk number is a point-in-time historical conditional
+frequency anchored to the panic-state mechanism in Daniel and Moskowitz
+(2016). A frozen B2 logistic model is retained only as a shadow benchmark, and
+the earlier reversal checklist is retained only as a research explanation.
+Neither can replace or average into the primary result.
 
-The fixed research vintage is `AS_OF_DATE=2026-05-29`. The model sample begins
-on 1990-01-02, when unfilled VIX observations become available. This is a lean
-research prototype, not a trading system or investment recommendation.
+The MVP is a research prototype, not a trading system or investment
+recommendation.
 
-Phase 2 uses `AS_OF_DATE=2026-06-30`; the underlying Ken French daily files
-available at that vintage end on 2026-05-29, so label maturity determines the
-earlier final usable date for each horizon.
+## Active system
 
-## Research target
+```text
+Ken French market and momentum data
+        |
+        v
+DM-inspired PIT state + matured-label conditional frequency  [PRIMARY]
+        |
+        +--> frozen B2 OOS probability                        [SHADOW]
+        +--> reversal conditions                              [EXPERIMENT]
+        +--> FINRA loser-leg crowding                         [OVERLAY]
+        +--> GDELT panic/crowding/risk-off attention          [OVERLAY]
+        |
+        v  only when primary state is elevated
+validated illustrative evidence fixture                      [AI / HUMAN REVIEW]
+        |
+        v
+one JSON assessment + one Markdown PM brief
+```
 
-For horizons of 5 and 20 momentum trading days, the primary target is a
-forward compounded UMD return below its point-in-time historical fifth
-percentile. A historical label enters the threshold sample only after its
-entire forward window has matured. The primary target is unconditional on
-prior momentum strength so it continues to represent losses that affect
-momentum P&L; prior state enters through features instead.
+The paper defines a negative cumulative market return over the prior 24 months
+and interacts that bear indicator with variance from the prior 126 daily market
+returns. Its panic variable is continuous, not a published binary alert. The
+MVP operationalizes `panic_elevated` as a bear state whose 126-day variance is
+at least the expanding point-in-time mean variance observed in bear states.
+That boundary is explicitly an implementation convention, not a threshold
+claimed by the paper.
 
-Positive event days are grouped into episodes. A new episode begins only
-after at least five consecutive valid non-event assessment days.
+## Run the MVP
 
-The nested baselines are:
-
-- B0: constant event rate in the purged training rows;
-- B1: unweighted logistic regression on bear state, 126-day market variance,
-  and their interaction;
-- B2: unweighted L2-regularized logistic regression on all 24 market features.
-
-All imputation, standardization, and model fitting occur inside a new
-training-fold-only scikit-learn pipeline. No alert or classification threshold
-is selected.
-
-## Reproduce Phase 1
-
-Python 3.11–3.14 and [`uv`](https://docs.astral.sh/uv/) are required. Run from
-the repository root:
+Python 3.11–3.14 and [`uv`](https://docs.astral.sh/uv/) are required:
 
 ```bash
 uv sync --locked --extra test
-export MTR_AS_OF_DATE=2026-05-29
-
-uv run python -m src.data.french --as-of-date "$MTR_AS_OF_DATE"
-uv run python -m src.data.vix \
-  --as-of-date "$MTR_AS_OF_DATE" \
-  --write-fill-sensitivity
-uv run python -m src.features.legs
-uv run python -m src.features.labels --as-of-date "$MTR_AS_OF_DATE"
-uv run python -m src.features.market_features --as-of-date "$MTR_AS_OF_DATE"
-
-uv run python -m src.modeling.validation --as-of-date "$MTR_AS_OF_DATE"
-uv run python -m src.modeling.baselines \
-  --stage development \
-  --as-of-date "$MTR_AS_OF_DATE"
-uv run python -m src.modeling.baselines \
-  --stage holdout \
-  --as-of-date "$MTR_AS_OF_DATE"
-
-uv run jupyter-execute \
-  --inplace \
-  --timeout=120 \
-  notebooks/01_baseline_eda.ipynb
-uv run python -m src.modeling.audit
-uv run pytest
+uv run python -m src.pipeline --as-of-date 2020-03-24 --horizon 20
+uv run python -m pytest
 ```
 
-The raw cache and its SHA256 provenance sidecars are already under `data/raw`.
-For a network-restricted rebuild, add `--offline-dir data/raw` to the French
-and VIX commands. Do not use `--force` unless intentionally replacing the
-frozen raw snapshots.
+Outputs are written under `outputs/mvp/`:
 
-The holdout command is included for exact reconstruction of this completed
-run. During new research it must be run only after development choices are
-frozen. Routine integrity checks should use `src.modeling.audit`, which reads
-saved results without fitting or predicting.
+- `assessment_<date>_h<horizon>.json`: the complete machine-readable result;
+- `risk_state_<date>_h<horizon>.json`: the primary DM/PIT assessment only;
+- `insurance_table_<date>.csv`: unconditional versus state-conditional
+  frequencies for 5- and 20-day horizons;
+- `pm_brief_<date>_h<horizon>.md`: the PM-facing daily artifact.
 
-## Public data sources
+Committed demonstrations cover:
 
-| Input | Source | Use |
-|---|---|---|
-| Daily UMD factor | [Ken French momentum factor ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip) | Published momentum return and label calendar |
-| Daily research factors | [Ken French research factors ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip) | Broad US market total-return proxy, constructed as `Mkt-RF + RF` |
-| Six size–momentum portfolios | [Ken French six portfolios ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_Prior_12_2_Daily_CSV.zip) | Winner and loser leg reconstruction |
-| Ten momentum deciles | [Ken French ten portfolios ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_Daily_CSV.zip) | Decile-based formation spread |
-| VIX close | [FRED VIXCLS](https://fred.stlouisfed.org/series/VIXCLS) and [CSV endpoint](https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS) | Option-implied market stress and model-sample boundary |
-| Aggregate public news | [GDELT DOC 2.0 API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) | Five fixed narrative queries, raw volume/count denominators, and aggregate tone |
+- `2009-03-06`: elevated state with illustrative grounded evidence, but no
+  post-2017 alternative-data overlays;
+- `2020-03-24`: elevated state with FINRA and GDELT overlays;
+- `2024-01-05`: quiet/non-elevated control with evidence correctly skipped.
 
-Ken French returns are converted from percent to decimal. VIX remains in
-index points.
+## What each component is allowed to do
 
-## Validation design and outputs
+| Component | Role | May change primary probability? |
+|---|---|---:|
+| DM/PIT engine | Official state and conditional tail-loss frequency | Yes — it defines it |
+| B2 logistic | Frozen research-only shadow comparison | No |
+| Reversal checklist | Experimental preconditions and triggers | No |
+| FINRA positioning | Confirm, contradict, or remain neutral | No |
+| GDELT narrative | Confirm, contradict, or remain neutral | No |
+| Evidence fixture | Supply timestamped, passage-grounded context | No |
 
-The originally requested three-year tests failed the minimum-five-episodes
-gate for two 20-day folds. With explicit approval, development validation uses
-three non-overlapping six-year tests after an initial ten-year training
-window. Training expands from 1990-01-02, and every row with
-`label_end_date >= test_start` is purged. The final three calendar years form
-the retained holdout.
+The active entry point is `src/pipeline.py`. The small active contracts live in
+`src/mvp/contracts.py`. Earlier modeling and monitoring modules remain in place
+for historical replay and are documented in `docs/history/README_legacy.md`;
+they are not called by the active pipeline.
 
-Important artifacts:
+## Data and point-in-time controls
 
-- `docs/DECISIONS.md`: complete research contract and judgment log;
-- `outputs/phase1_review.md`: compact Phase 1 evidence review;
-- `outputs/split_manifest.csv`: development split and episode audit;
-- `outputs/baseline_metrics.csv`: development and holdout metrics;
-- `outputs/calibration_table.csv`: probability buckets and realized rates;
-- `outputs/model_coefficients.csv`: standardized logistic coefficients;
-- `outputs/preprocessing_statistics.csv`: fold-local medians and scales;
-- `outputs/baseline_predictions.parquet`: saved probabilities and outcomes;
-- `outputs/task4_validation_audit.json`: independent metric and integrity audit;
-- `notebooks/01_baseline_eda.ipynb`: executed 12-cell visual review.
+- Market state uses only feature rows through the assessment date.
+- Conditional frequencies use only labels whose full forward windows have
+  matured by that date.
+- FINRA short interest enters on publication date, not settlement date.
+- SEC shares outstanding enter on filing date.
+- GDELT calendar buckets map into the next complete trading-date information
+  set and use prior-only rolling normalization.
+- Evidence publications must not postdate the assessment timestamp.
+- Relevant evidence must carry a valid URL and grounded source passage.
 
-## Tests
+The FINRA panel is based on a current large-cap universe applied historically
+and is survivorship-biased. FINRA daily short volume is off-exchange flow, not
+a consolidated position measure. The GDELT panel currently contains three
+volume-only mechanisms (`panic`, `crowding`, and `riskoff`); tone and
+five-mechanism breadth are unavailable.
 
-The 12-test suite covers:
+## Evidence scope
 
-- forward-return alignment with a planted crash;
-- point-in-time threshold maturity and future-data invariance;
-- five-quiet-day episode de-clustering;
-- strict walk-forward ordering and label-window purging;
-- fold-specific imputation/scaling statistics;
-- real-data winner/loser reconstruction against published UMD;
-- stable Parquet and audit hashes under a fixed `AS_OF_DATE`.
-- Phase 2 calendar-bucket mapping across weekdays, weekends, and holidays;
-- strictly prior-only news normalization;
-- zero-news versus GDELT failure handling;
-- identical B2c/B3 test dates;
-- final-sample label maturity.
+The current evidence output is deliberately labeled
+`illustrative_fixture_replay`. Its per-document timestamps and passages are
+validated, but the small corpus was curated after the historical assessment
+dates. It demonstrates grounding and control flow, not a strict historical
+text backtest. A production implementation requires an archived point-in-time
+corpus or live retrieval track.
 
-## Reproduce Phase 2
+## Tests and reproducibility
 
-After the Phase 1 processed artifacts exist, run:
+The default suite covers:
 
-```bash
-uv run python -m src.features.gdelt \
-  --as-of-date 2026-06-30
-uv run python -m src.modeling.phase2 \
-  --as-of-date 2026-06-30
-uv run pytest
-```
+- label maturity and future-data invariance;
+- DM/PIT state construction and the insurance-table separation;
+- publication-date positioning joins;
+- prior-only normalization and GDELT information mapping;
+- primary/shadow/experimental isolation;
+- overlay immutability of the primary probability;
+- elevated-state evidence gating and citation cutoffs;
+- quiet and elevated end-to-end artifacts.
 
-GDELT responses are cached under `data/raw/gdelt_phase2`. The public endpoint
-is deliberately queried serially and may throttle; cached responses make a
-restart incremental. The frozen queries and model settings are in
-`config/phase2_queries.yaml`. The accepted research conclusion is summarized
-in `outputs/phase2_research_review.md`.
+Processed panels are committed and immediately readable. Large raw FINRA,
+price, and GDELT payload caches are not fully committed. Rebuild-only tests
+skip when their required raw payloads are absent; this is different from
+claiming that every processed artifact can be regenerated from a fresh clone
+without network access.
 
-## Limitations
+## Current versus historical modules
 
-- **Market proxy naming:** `mkt_total_return = Mkt-RF + RF` is a broad US
-  market total-return proxy. It must not be represented as a named cash index.
-- **VIX boundary and timing:** VIX begins on 1990-01-02 and therefore bounds
-  the model sample. Three valid momentum dates have missing VIX values:
-  1991-03-01, 1997-01-31, and 1997-11-26. They remain missing in the primary
-  data and are imputed only inside training folds. Daily source files do not
-  provide exact historical publication timestamps; the approved convention is
-  a post-close assessment for earliest action next session.
-- **Formation spread:** this is the compounded decile-10 return minus the
-  compounded decile-1 return over 252 observations ending at `t−21`. The most
-  recent 21 trading rows are skipped, so the full input span is 273 rows. It
-  is not a beta or correlation measure.
-- **Sparse independent events:** overlapping daily labels are serially
-  dependent. Episode counts are much smaller than event-day counts. Only one
-  20-day episode appears in the retained holdout, making its metrics highly
-  uncertain.
-- **Calibration:** B2 shows useful ranking in some periods but unstable
-  probability levels and poor development log loss. Phase 1 does not claim a
-  production-calibrated alert model.
-- **Holdout limitation:** aggregate holdout counts were exposed during an
-  early split-gate implementation. No predictions or performance metrics were
-  used for tuning, and the limited contamination was explicitly accepted
-  before the one-time evaluation.
-- **Source revisions:** raw snapshots and hashes make this run reproducible,
-  but public vendors can revise later downloads.
-- **Deferred information:** no text or positioning information is ingested.
-  The separate GDELT feasibility spike remains deferred and is not part of
-  Phase 1.
+Current:
 
-## Alternative-data overlays
+- `src/risk/dm_engine.py`
+- `src/benchmarks/b2_shadow.py`
+- `src/experiments/reversal_checklist.py`
+- `src/overlays/snapshots.py`
+- `src/evidence/mvp.py`
+- `src/reporting/pm_brief.py`
+- `src/pipeline.py`
 
-Two overlays inform monitoring and feed the downstream evidence layer. **Neither
-alters the risk number.** There is no fitted model in this project: the risk
-state is adopted directly from Daniel–Moskowitz (2016) and the risk probability
-is a point-in-time empirical conditional frequency. Phase 1 sections above
-describe an abandoned modelling architecture and are retained as history.
+Historical but retained:
 
-- **Structured — loser-leg crowding** (`data/processed/positioning_panel.parquet`).
-  FINRA short interest joined on **publication date**, plus FINRA daily
-  short-sale volume, measured across a monthly-rebalanced proxy loser decile.
-- **Unstructured — narrative attention and tone** (`data/processed/narrative_panel.parquet`).
-  GDELT DOC 2.0 timelines across five frozen mechanism queries. **Not built in
-  the current run** — see `BLOCKERS.md`.
+- `src/modeling/`
+- `src/monitoring/risk_state.py`
+- `src/monitoring/domain_risk.py`
+- `src/monitoring/positioning.py`
+- `src/monitoring/market_context.py`
+- `src/modeling/phase2.py` and the older aggregate-news model ablation
 
-Read `outputs/data_review.md` first: it carries the coverage tables, the match
-rates, every limitation, and the self-review.
-
-### Reproduce the overlays
-
-```bash
-uv sync --locked --extra test
-uv run python -m src.data.universe
-uv run python -m src.data.prices
-uv run python -m src.data.finra --stage all
-uv run python -m src.data.sec_edgar
-uv run python -m src.features.positioning_panel
-uv run python -m src.data.gdelt
-uv run python -m src.data.gdelt_sanity
-uv run python -m src.features.narrative_panel
-uv run pytest
-```
-
-Every network artifact is cached under `data/raw/` with a SHA-256 provenance
-sidecar, so a second run makes **zero** network calls. The determinism tests
-assert this by hard-disabling the network and rebuilding.
-
-`src.data.sec_edgar` is the one step that needs configuration. SEC's fair-access
-policy requires a real, reachable contact address on every request, so set one
-before fetching anything new:
-
-```bash
-export SEC_CONTACT_EMAIL='you@example.edu'
-```
-
-It is required rather than defaulted — a placeholder would send SEC a contact
-that does not resolve. It is needed **only** to fetch; the cache in this
-repository already covers all 200 symbols, so `uv run pytest` and every panel
-rebuild work without it.
-
-The large raw caches (`data/raw/finra/daily/`, `data/raw/prices/`, GDELT
-payloads) are git-ignored: they total roughly 150 MB on disk while their
-provenance sidecars and the processed extracts are tracked.
-
-### Alternative-data sources
-
-| Input | Source | Use |
-|---|---|---|
-| Consolidated short interest | [FINRA Query API `otcMarket/consolidatedShortInterest`](https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest) | Loser-leg short position, joined on publication date |
-| Daily short sale volume | [FINRA CNMS daily files](https://cdn.finra.org/equity/regsho/daily/) | Off-exchange shorting flow, from 2018-08-01 |
-| Short interest reporting dates | [FINRA schedule page](https://www.finra.org/filing-reporting/regulatory-filing-systems/short-interest) plus archived snapshots | Settlement → publication mapping (the point-in-time gate) |
-| Universe | [Nasdaq stock screener](https://api.nasdaq.com/api/screener/stocks) | 200 large caps, current membership — survivorship-biased |
-| Prices and volume | [Yahoo Finance chart API](https://query1.finance.yahoo.com/v8/finance/chart/) | 12-2 momentum ranking and as-traded volume |
-| News attention and tone | [GDELT DOC 2.0](https://api.gdeltproject.org/api/v2/doc/doc) | Narrative overlay |
-
-### Alternative-data limitations
-
-Full list in `outputs/data_review.md` §7. The three that matter most:
-
-- **The narrative overlay does not exist** in this run. GDELT applied a
-  sustained IP block; the code and tests are complete and the cache is empty.
-- **`days_to_cover` mechanically falls during crashes**, because volume is its
-  denominator and volume explodes under stress. Measured mean `days_to_cover_z`
-  was **−2.23 in March 2020**. Reading low days-to-cover as low squeeze risk
-  during a volume spike is backwards.
-- **The universe is current membership applied historically** and large-cap
-  dominated, so it is survivorship-biased and *understates* crowding relative to
-  a true momentum loser decile.
+See `docs/DECISIONS.md` for data judgments and
+`docs/history/README_legacy.md` for the original Phase 1/2 reproduction
+instructions.

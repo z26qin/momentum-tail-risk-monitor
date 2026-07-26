@@ -1,4 +1,4 @@
-"""Build a small point-in-time daily panel from GDELT DOC 2.0 timelines."""
+"""Legacy Phase 2 aggregate-news model panel; active MVP uses narrative_panel."""
 
 from __future__ import annotations
 

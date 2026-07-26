@@ -134,8 +134,8 @@ def test_price_acquisition_rerun_makes_no_network_calls(offline):
 
 
 @pytest.mark.skipif(
-    not (DEFAULT_PROCESSED_DIR / "narrative_panel.parquet").is_file(),
-    reason="narrative panel not built",
+    not any(GDELT_RAW.glob("*_timelinevol*_full.json")),
+    reason="raw GDELT payloads required for narrative rebuild are not present",
 )
 def test_narrative_panel_rebuild_is_byte_identical(offline):
     from src.features.narrative_panel import build_panel

@@ -1,5 +1,11 @@
 # PROJECT PLAN & SYSTEM DESIGN v3 — Momentum Tail-Risk (Millennium Global Macro Pod)
 
+> **Implementation status, 2026-07-26:** the streamlined MVP described by the
+> pivot is now implemented through `src/pipeline.py`. B2 is a shadow benchmark,
+> the heuristic checklist is experimental, real FINRA/GDELT overlays are wired
+> into one PM brief, and evidence is explicitly fixture replay. The remaining
+> production gaps are tracked in `NEXT_STEPS.md`.
+
 Supersedes PROJECT_PLAN_v2.md and the plan sections of PROJECT_HANDOFF.md. Self-contained: this is the document to travel with.
 
 Last updated: 2026-07-24. Review meeting ~week of Aug 10 (3-week window granted).

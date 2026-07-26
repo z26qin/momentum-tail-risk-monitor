@@ -1,1 +1,1 @@
-"""Model validation and baseline estimation for momentum tail risk."""
+"""Legacy Phase 1/2 modeling retained for historical replay, not active MVP."""

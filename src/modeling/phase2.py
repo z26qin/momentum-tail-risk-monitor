@@ -1,4 +1,4 @@
-"""Run the paired Phase 2 market-only versus market-plus-news ablation."""
+"""Legacy Phase 2 fitted ablation retained for historical replay."""
 
 from __future__ import annotations
 

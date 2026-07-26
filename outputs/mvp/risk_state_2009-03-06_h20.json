@@ -1,0 +1,38 @@
+{
+  "as_of_date": "2009-03-06",
+  "as_of_timestamp": "2009-03-06T16:00:00-05:00",
+  "bear_state": true,
+  "conditional_fifth_percentile": -0.15343103498337216,
+  "conditional_mean_forward_return": -0.003493649362887821,
+  "conditioning_sample_size": 1218,
+  "elevated": true,
+  "elevation_rule": "bear_state is true and 126-day market variance is at least the point-in-time expanding mean variance among bear-state observations",
+  "horizon_days": 20,
+  "label_maturity_cutoff_date": "2009-03-06",
+  "limitations": [
+    "The paper defines a continuous bear-state-times-variance variable; the binary elevation boundary is an explicit operationalization.",
+    "Daily Ken French and broad-market public proxies replace the paper's monthly CRSP implementation.",
+    "Conditional frequencies are descriptive historical rates, not calibrated forecasts or trading thresholds."
+  ],
+  "market_return_504d": -0.4790279277461014,
+  "market_variance_126d": 0.0012366109974603185,
+  "method": "dm_pit_conditional_frequency",
+  "panic_intensity": 4.802715497049102,
+  "provenance": [
+    {
+      "path": "data/processed/market_features.parquet",
+      "role": "market_features",
+      "sha256": "92e760b47167ba167f16de05208c07538d6cb8ce510ccee633b630e1e46ff5b9"
+    },
+    {
+      "path": "data/processed/momentum_labels_h20.parquet",
+      "role": "matured_tail_labels",
+      "sha256": "8a3fd5f1b25787f50ea08b4535ed5dbc1bcf9858c386b9601b55e57bfe216632"
+    }
+  ],
+  "schema_version": "mvp-v1",
+  "state": "panic_elevated",
+  "tail_loss_probability": 0.1986863711001642,
+  "unconditional_sample_size": 21295,
+  "unconditional_tail_loss_probability": 0.04592627377318619
+}

@@ -76,7 +76,7 @@
       ]
     }
   },
-  "panel_path": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/processed/narrative_panel.parquet",
+  "panel_path": "data/processed/narrative_panel.parquet",
   "per_query": {
     "crowding": {
       "confirmed_zero_day_total": 0,

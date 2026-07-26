@@ -1,4 +1,4 @@
-"""Evaluate a transparent momentum-reversal domain-risk checklist."""
+"""Legacy domain checklist; active experimental conditions live in src.experiments."""
 
 from __future__ import annotations
 

@@ -1,5 +1,11 @@
 # MVP review against the take-home assignment
 
+> **Historical snapshot.** This review describes the repository before the
+> 2026-07-26 streamlined MVP implementation. Its primary findings drove the new
+> `src/pipeline.py`, DM/PIT primary state, real overlay integration, PM briefs,
+> and logical archive. Consult the root README and `NEXT_STEPS.md` for current
+> status.
+
 Reviewer stance: skeptical quant at a global macro pod. Read-only session, 2026-07-25.
 Everything below cites a path; where I could not find evidence I say "not found."
 Test counts were verified by running the suite this session, in two states: the build
