@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "notes": [
+    "Semantic labels are human-authored only.",
+    "uncertain rows are excluded from strict metrics.",
+    "invalid_future requires relevance_label=0."
+  ],
+  "properties": {
+    "evidence_direction": {
+      "enum": [
+        "supporting",
+        "contradicting",
+        "contextual",
+        "irrelevant"
+      ]
+    },
+    "mechanism_labels": {
+      "items": {
+        "enum": [
+          "market_stress_or_panic",
+          "market_rebound",
+          "policy_or_liquidity_support",
+          "short_covering_or_position_unwind",
+          "loser_leg_recovery",
+          "crowded_positioning",
+          "generic_macro_context",
+          "other"
+        ]
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "relevance_label": {
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    },
+    "review_status": {
+      "enum": [
+        "pending",
+        "completed",
+        "needs_discussion"
+      ]
+    },
+    "reviewer_confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "reviewer_rationale": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "supporting_passage": {
+      "type": "string"
+    },
+    "timestamp_validity": {
+      "enum": [
+        "valid",
+        "invalid_future",
+        "uncertain"
+      ]
+    }
+  },
+  "required": [
+    "timestamp_validity",
+    "relevance_label",
+    "mechanism_labels",
+    "evidence_direction",
+    "supporting_passage",
+    "reviewer_rationale",
+    "reviewer_confidence",
+    "review_status"
+  ],
+  "title": "march-2020-momentum-retrieval-gold-v1",
+  "type": "object"
+}

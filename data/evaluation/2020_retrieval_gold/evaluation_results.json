@@ -1,0 +1,45 @@
+{
+  "annotation_rows": 45,
+  "completed_rows": 0,
+  "confidence_intervals": {
+    "reason": "Tiny-sample confidence intervals are not calculated.",
+    "status": "not_reported"
+  },
+  "evaluation_name": "march-2020-momentum-retrieval-gold-v1",
+  "metrics": {
+    "Precision@3": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "Precision@5": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "citation_valid_rate": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "exact_passage_match_rate": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "mechanism_coverage": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "nDCG@5": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "timestamp_valid_rate": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    },
+    "unsupported_claim_rate": {
+      "reason": "Human annotation is incomplete.",
+      "status": "not_reported"
+    }
+  },
+  "status": "AWAITING HUMAN ANNOTATION",
+  "strict_metric_rows": 0
+}
