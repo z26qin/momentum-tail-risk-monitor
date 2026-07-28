@@ -151,8 +151,6 @@ def _load_scorecard(
 
 def _scorecard_contract(table: pd.DataFrame, source: str) -> dict[str, Any]:
     rows = _records(table)
-    for row in rows:
-        row["coverage_status"] = row["status"]
     return {
         "source": source,
         "definition": "unchanged_phase_4_four_row_scorecard",
@@ -740,14 +738,17 @@ def run_demo(
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / f"demo_summary_{date_label}.json", summary)
 
-    scorecard = pd.DataFrame(current["deterministic_scorecard"]["rows"])
-    scorecard = scorecard.loc[:, [
-        *[column for column in scorecard.columns if column != "coverage_status"],
-        "coverage_status",
-    ]]
+    source_scorecard = scorecard_dir / f"scorecard_{date_label}.csv"
+    scorecard_bytes = (
+        source_scorecard.read_bytes()
+        if source_scorecard.is_file()
+        else pd.DataFrame(
+            current["deterministic_scorecard"]["rows"]
+        ).to_csv(index=False).encode("utf-8")
+    )
     atomic_write_bytes(
         output_dir / f"demo_scorecard_{date_label}.csv",
-        scorecard.to_csv(index=False).encode("utf-8"),
+        scorecard_bytes,
     )
     atomic_write_bytes(
         output_dir / f"demo_portfolio_{date_label}.csv",

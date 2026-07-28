@@ -119,4 +119,9 @@ def test_demo_does_not_modify_existing_artifacts(tmp_path: Path) -> None:
         "demo_scorecard_2026-05-29.csv",
         "demo_summary_2026-05-29.json",
     ]
+    assert (
+        output_dir / "demo_scorecard_2026-05-29.csv"
+    ).read_bytes() == (
+        DEFAULT_SCORECARD_DIR / "scorecard_2026-05-29.csv"
+    ).read_bytes()
     assert set(tmp_path.rglob("*.*")) == set(output_dir.iterdir())
