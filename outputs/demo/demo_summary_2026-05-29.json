@@ -1,0 +1,482 @@
+{
+  "current_observation": {
+    "active_risk_portfolio_formation_date": "2026-04-30",
+    "date_alignment_note": "Realized risk uses the portfolio active on the observation date. The next rebalance is separately labeled and is not used to attribute already-realized risk.",
+    "deterministic_scorecard": {
+      "definition": "unchanged_phase_4_four_row_scorecard",
+      "rows": [
+        {
+          "as_of_date": "2026-05-29",
+          "context": "{\"early_recovery_state\":false,\"high_volatility\":false,\"market_drawdown\":0.0,\"realized_volatility_21d\":0.10603009006881499,\"realized_volatility_threshold_80pct\":0.18146677048568394,\"recent_min_drawdown_126d\":-0.09457141603482766,\"recovery_from_trough_126d\":0.1943410361538216}",
+          "current_value": 0.0,
+          "direction": "greater_than_or_equal",
+          "explanation": "One composite macro gate replaces separate drawdown, recovery, and volatility alerts. It requires Phase 1 early recovery and high realized volatility to be true together.",
+          "metric": "high_volatility_recovery",
+          "monitor_family": "macro",
+          "severity": "normal",
+          "source_module": "src.regime.market_state",
+          "status": "available",
+          "threshold": 1.0,
+          "threshold_provenance": "demo_threshold",
+          "triggered": false
+        },
+        {
+          "as_of_date": "2026-05-29",
+          "context": "{\"long_beta_126d\":2.572822625616927,\"portfolio_beta_126d\":2.067731776337184,\"short_underlying_beta_126d\":0.5050908492797432}",
+          "current_value": -2.067731776337184,
+          "direction": "greater_than_or_equal",
+          "explanation": "Positive and unusually high short-underlying minus long beta indicates that a market rebound can squeeze the recent-loser leg. Threshold: prior-only 80th percentile from 2281 observations; raw historical threshold=0.248979.",
+          "metric": "short_minus_long_beta_gap",
+          "monitor_family": "leg_exposure",
+          "severity": "normal",
+          "source_module": "src.risk.leg_decomposition",
+          "status": "available",
+          "threshold": 0.2489791869413615,
+          "threshold_provenance": "historical_quantile",
+          "triggered": false
+        },
+        {
+          "as_of_date": "2026-05-29",
+          "context": "{\"drawdown_window_trading_days\":63,\"gross_exposure\":2.0,\"membership_status\":\"current_snapshot_proxy\",\"since_inception_portfolio_drawdown\":-0.07522682931760427,\"survivorship_bias\":true}",
+          "current_value": -0.0752268293176042,
+          "direction": "less_than_or_equal",
+          "explanation": "Long-short wealth relative to its highest level in the prior 63 trading days is compared with its own prior-only left-tail history. The threshold can never be looser than -20%, and drawdowns shallower than 5% are not material. Threshold: prior-only 20th percentile from 2281 observations; raw historical threshold=-0.174081.",
+          "metric": "portfolio_drawdown",
+          "monitor_family": "portfolio_loss",
+          "severity": "normal",
+          "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition",
+          "status": "available",
+          "threshold": -0.1740814097242129,
+          "threshold_provenance": "historical_quantile",
+          "triggered": false
+        },
+        {
+          "as_of_date": "2026-05-29",
+          "context": "{\"early_recovery_state\":false,\"high_volatility_recovery_state\":false,\"short_contribution_trailing_window\":-0.035422016402520844,\"window_trading_days\":21}",
+          "current_value": 0.1550793092676755,
+          "direction": "greater_than_or_equal",
+          "explanation": "Trailing 21-day short loss magnitude is the sum of negative signed short contributions. It triggers only when Phase 1 early recovery is active and the loss reaches the threshold. Threshold: prior-only 80th percentile from 2323 observations; raw historical threshold=0.25042.",
+          "metric": "short_loss_in_recovery",
+          "monitor_family": "recovery_mechanism",
+          "severity": "normal",
+          "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition + src.regime.market_state",
+          "status": "available",
+          "threshold": 0.2504202158762045,
+          "threshold_provenance": "historical_quantile",
+          "triggered": false
+        }
+      ],
+      "source": "outputs/scorecard/scorecard_2026-05-29.csv",
+      "triggered_metrics": [],
+      "unavailable_metrics": []
+    },
+    "macro_regime": {
+      "bear_state": false,
+      "crash_state": false,
+      "dm_state": "normal",
+      "early_recovery_state": false,
+      "high_volatility": false,
+      "high_volatility_recovery_state": false,
+      "market_drawdown": 0.0,
+      "market_stage": "normal",
+      "market_stage_definition": "presentation adapter only; precedence is high-volatility recovery, crash, early recovery, high volatility, then the frozen DM state",
+      "panic_intensity": null,
+      "rate_regime": "tightening",
+      "realized_volatility_21d": 0.10603009006881499,
+      "realized_volatility_threshold_80pct": 0.18146677048568394,
+      "recent_min_drawdown_126d": -0.09457141603482766,
+      "recovery_from_trough_126d": 0.1943410361538216
+    },
+    "next_rebalance_formation_date": "2026-05-29",
+    "observation_date": "2026-05-29",
+    "risk_decomposition": {
+      "benchmark_source": "Yahoo Finance SPY split- and dividend-adjusted close",
+      "benchmark_status": "primary_spy_total_return_proxy",
+      "beta_gap_short_minus_long_126d": -2.067731776337184,
+      "long_beta_126d": 2.572822625616927,
+      "long_contribution": 0.004037442465708944,
+      "long_contribution_21d": 0.2684505711987562,
+      "long_down_beta_126d": 1.8540206254691285,
+      "long_up_beta_126d": 2.1181270369970653,
+      "portfolio_beta_126d": 2.067731776337184,
+      "portfolio_contribution_21d": 0.23302855479623535,
+      "portfolio_down_beta_126d": 0.8813381033548261,
+      "portfolio_drawdown": -0.07522682931760427,
+      "portfolio_return": -0.006893260030880095,
+      "portfolio_up_beta_126d": 1.6766839874172779,
+      "portfolio_volatility_21d": 0.7913894363134107,
+      "risk_timing": "post-close trailing statistics; earliest use is next trading session",
+      "short_contribution": -0.01093070249658904,
+      "short_contribution_21d": -0.035422016402520844,
+      "short_underlying_beta_126d": 0.5050908492797432,
+      "short_underlying_down_beta_126d": 0.9726825221143024,
+      "short_underlying_up_beta_126d": 0.4414430495797873
+    }
+  },
+  "demo_contract_version": "final_mvp_v1",
+  "evidence_preview": {
+    "component": "Phase 8 capability preview \u2014 not the completed Phase 8 implementation.",
+    "contextual": [],
+    "contradicting": [],
+    "deterministic_facts_sha256": "49fd18e9eb03f012def74bee63f69ddee403b9545f1e54d91208cdf3249e70db",
+    "deterministic_facts_unchanged": true,
+    "evidence_case_date": "2023-01-09",
+    "evidence_label": "historical_proxy",
+    "limitations": [
+      "Evidence status is unavailable because no reliable date-matched validated cache exists; no evidence conclusion is produced.",
+      "The evidence layer cannot change deterministic metrics, thresholds, triggered states, or create a risk score."
+    ],
+    "research_questions": [
+      "Which point-in-time evidence would distinguish a broad rebound from a momentum-specific short squeeze?",
+      "Did loser-leg beta and short-side losses rise before or only during the realized stress?",
+      "What evidence would contradict the high-volatility-recovery interpretation?"
+    ],
+    "status": "unavailable",
+    "supporting": [],
+    "uncertainty": "Reliable evidence unavailable: no exact-date validated classification cache."
+  },
+  "historical_case_2023": {
+    "interpretation": "January 9 is a relative stress precursor, not a formal panic_elevated alert or a proven prediction. February 2 records realized portfolio pressure; temporal ordering does not establish that Fed repricing or any other narrative caused the loss.",
+    "limitations": [
+      "The historical portfolio uses current S&P 500 membership and is survivorship-biased.",
+      "The macro and risk states are deterministic descriptions, not causal estimates.",
+      "The precursor and realized-stress dates use different active monthly portfolios."
+    ],
+    "permitted_description": [
+      "relative elevated-risk",
+      "stress precursor",
+      "high-volatility recovery example"
+    ],
+    "precursor": {
+      "active_risk_portfolio_formation_date": "2022-12-30",
+      "date_alignment_note": "Realized risk uses the portfolio active on the observation date. The next rebalance is separately labeled and is not used to attribute already-realized risk.",
+      "deterministic_scorecard": {
+        "definition": "unchanged_phase_4_four_row_scorecard",
+        "rows": [
+          {
+            "as_of_date": "2023-01-09",
+            "context": "{\"early_recovery_state\":true,\"high_volatility\":true,\"market_drawdown\":-0.19438525463563683,\"realized_volatility_21d\":0.1940155457688922,\"realized_volatility_threshold_80pct\":0.1821252470114078,\"recent_min_drawdown_126d\":-0.2555594287444445,\"recovery_from_trough_126d\":0.08217469126599708}",
+            "current_value": 1.0,
+            "direction": "greater_than_or_equal",
+            "explanation": "One composite macro gate replaces separate drawdown, recovery, and volatility alerts. It requires Phase 1 early recovery and high realized volatility to be true together.",
+            "metric": "high_volatility_recovery",
+            "monitor_family": "macro",
+            "severity": "high",
+            "source_module": "src.regime.market_state",
+            "status": "available",
+            "threshold": 1.0,
+            "threshold_provenance": "demo_threshold",
+            "triggered": true
+          },
+          {
+            "as_of_date": "2023-01-09",
+            "context": "{\"long_beta_126d\":0.8179593913714502,\"portfolio_beta_126d\":-1.225191998383208,\"short_underlying_beta_126d\":2.043151389754658}",
+            "current_value": 1.2251919983832076,
+            "direction": "greater_than_or_equal",
+            "explanation": "Positive and unusually high short-underlying minus long beta indicates that a market rebound can squeeze the recent-loser leg. Threshold: prior-only 80th percentile from 1432 observations; raw historical threshold=0.238307.",
+            "metric": "short_minus_long_beta_gap",
+            "monitor_family": "leg_exposure",
+            "severity": "high",
+            "source_module": "src.risk.leg_decomposition",
+            "status": "available",
+            "threshold": 0.23830697328430805,
+            "threshold_provenance": "historical_quantile",
+            "triggered": true
+          },
+          {
+            "as_of_date": "2023-01-09",
+            "context": "{\"drawdown_window_trading_days\":63,\"gross_exposure\":2.0,\"membership_status\":\"current_snapshot_proxy\",\"since_inception_portfolio_drawdown\":-0.12477500322428048,\"survivorship_bias\":true}",
+            "current_value": -0.12477500322428048,
+            "direction": "less_than_or_equal",
+            "explanation": "Long-short wealth relative to its highest level in the prior 63 trading days is compared with its own prior-only left-tail history. The threshold can never be looser than -20%, and drawdowns shallower than 5% are not material. Threshold: prior-only 20th percentile from 1432 observations; raw historical threshold=-0.175911.",
+            "metric": "portfolio_drawdown",
+            "monitor_family": "portfolio_loss",
+            "severity": "normal",
+            "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition",
+            "status": "available",
+            "threshold": -0.17591140449089857,
+            "threshold_provenance": "historical_quantile",
+            "triggered": false
+          },
+          {
+            "as_of_date": "2023-01-09",
+            "context": "{\"early_recovery_state\":true,\"high_volatility_recovery_state\":true,\"short_contribution_trailing_window\":-0.04685735810588808,\"window_trading_days\":21}",
+            "current_value": 0.26368643115602536,
+            "direction": "greater_than_or_equal",
+            "explanation": "Trailing 21-day short loss magnitude is the sum of negative signed short contributions. It triggers only when Phase 1 early recovery is active and the loss reaches the threshold. Threshold: prior-only 80th percentile from 1474 observations; raw historical threshold=0.273921.",
+            "metric": "short_loss_in_recovery",
+            "monitor_family": "recovery_mechanism",
+            "severity": "normal",
+            "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition + src.regime.market_state",
+            "status": "available",
+            "threshold": 0.27392146305360265,
+            "threshold_provenance": "historical_quantile",
+            "triggered": false
+          }
+        ],
+        "source": "calculated_in_memory_with_frozen_phase_4_rules",
+        "triggered_metrics": [
+          "high_volatility_recovery",
+          "short_minus_long_beta_gap"
+        ],
+        "unavailable_metrics": []
+      },
+      "macro_regime": {
+        "bear_state": true,
+        "crash_state": false,
+        "dm_state": "bear_low_volatility",
+        "early_recovery_state": true,
+        "high_volatility": true,
+        "high_volatility_recovery_state": true,
+        "market_drawdown": -0.19438525463563683,
+        "market_stage": "high_volatility_recovery",
+        "market_stage_definition": "presentation adapter only; precedence is high-volatility recovery, crash, early recovery, high volatility, then the frozen DM state",
+        "panic_intensity": 0.8650917587364645,
+        "rate_regime": "tightening",
+        "realized_volatility_21d": 0.1940155457688922,
+        "realized_volatility_threshold_80pct": 0.1821252470114078,
+        "recent_min_drawdown_126d": -0.2555594287444445,
+        "recovery_from_trough_126d": 0.08217469126599708
+      },
+      "next_rebalance_formation_date": "2023-01-31",
+      "observation_date": "2023-01-09",
+      "risk_decomposition": {
+        "benchmark_source": "Yahoo Finance SPY split- and dividend-adjusted close",
+        "benchmark_status": "primary_spy_total_return_proxy",
+        "beta_gap_short_minus_long_126d": 1.2251919983832076,
+        "long_beta_126d": 0.8179593913714502,
+        "long_contribution": 0.00517108009040438,
+        "long_contribution_21d": 0.01282998489163679,
+        "long_down_beta_126d": 0.846908501053587,
+        "long_up_beta_126d": 0.5116412040890751,
+        "portfolio_beta_126d": -1.225191998383208,
+        "portfolio_contribution_21d": -0.03402737321425128,
+        "portfolio_down_beta_126d": -1.1145596547406238,
+        "portfolio_drawdown": -0.12477500322428048,
+        "portfolio_return": -0.02317169094384997,
+        "portfolio_up_beta_126d": -1.5147960163043264,
+        "portfolio_volatility_21d": 0.4957635598439874,
+        "risk_timing": "post-close trailing statistics; earliest use is next trading session",
+        "short_contribution": -0.02834277103425435,
+        "short_contribution_21d": -0.04685735810588808,
+        "short_underlying_beta_126d": 2.043151389754658,
+        "short_underlying_down_beta_126d": 1.9614681557942109,
+        "short_underlying_up_beta_126d": 2.0264372203934014
+      }
+    },
+    "realized_stress_observation": {
+      "active_risk_portfolio_formation_date": "2023-01-31",
+      "date_alignment_note": "Realized risk uses the portfolio active on the observation date. The next rebalance is separately labeled and is not used to attribute already-realized risk.",
+      "deterministic_scorecard": {
+        "definition": "unchanged_phase_4_four_row_scorecard",
+        "rows": [
+          {
+            "as_of_date": "2023-02-02",
+            "context": "{\"early_recovery_state\":false,\"high_volatility\":false,\"market_drawdown\":-0.12723912452930752,\"realized_volatility_21d\":0.17042739216452554,\"realized_volatility_threshold_80pct\":0.18225137288044602,\"recent_min_drawdown_126d\":-0.2555594287444445,\"recovery_from_trough_126d\":0.17237145471359128}",
+            "current_value": 0.0,
+            "direction": "greater_than_or_equal",
+            "explanation": "One composite macro gate replaces separate drawdown, recovery, and volatility alerts. It requires Phase 1 early recovery and high realized volatility to be true together.",
+            "metric": "high_volatility_recovery",
+            "monitor_family": "macro",
+            "severity": "normal",
+            "source_module": "src.regime.market_state",
+            "status": "available",
+            "threshold": 1.0,
+            "threshold_provenance": "demo_threshold",
+            "triggered": false
+          },
+          {
+            "as_of_date": "2023-02-02",
+            "context": "{\"long_beta_126d\":0.8179160454568608,\"portfolio_beta_126d\":-1.2865027999893346,\"short_underlying_beta_126d\":2.104418845446195}",
+            "current_value": 1.2865027999893344,
+            "direction": "greater_than_or_equal",
+            "explanation": "Positive and unusually high short-underlying minus long beta indicates that a market rebound can squeeze the recent-loser leg. Threshold: prior-only 80th percentile from 1449 observations; raw historical threshold=0.243613.",
+            "metric": "short_minus_long_beta_gap",
+            "monitor_family": "leg_exposure",
+            "severity": "high",
+            "source_module": "src.risk.leg_decomposition",
+            "status": "available",
+            "threshold": 0.24361307569943058,
+            "threshold_provenance": "historical_quantile",
+            "triggered": true
+          },
+          {
+            "as_of_date": "2023-02-02",
+            "context": "{\"drawdown_window_trading_days\":63,\"gross_exposure\":2.0,\"membership_status\":\"current_snapshot_proxy\",\"since_inception_portfolio_drawdown\":-0.45582450475894243,\"survivorship_bias\":true}",
+            "current_value": -0.45582450475894243,
+            "direction": "less_than_or_equal",
+            "explanation": "Long-short wealth relative to its highest level in the prior 63 trading days is compared with its own prior-only left-tail history. The threshold can never be looser than -20%, and drawdowns shallower than 5% are not material. Threshold: prior-only 20th percentile from 1449 observations; raw historical threshold=-0.178871.",
+            "metric": "portfolio_drawdown",
+            "monitor_family": "portfolio_loss",
+            "severity": "high",
+            "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition",
+            "status": "available",
+            "threshold": -0.17887091705023495,
+            "threshold_provenance": "historical_quantile",
+            "triggered": true
+          },
+          {
+            "as_of_date": "2023-02-02",
+            "context": "{\"early_recovery_state\":false,\"high_volatility_recovery_state\":false,\"short_contribution_trailing_window\":-0.5010071476013591,\"window_trading_days\":21}",
+            "current_value": 0.6485677126231099,
+            "direction": "greater_than_or_equal",
+            "explanation": "Trailing 21-day short loss magnitude is the sum of negative signed short contributions. It triggers only when Phase 1 early recovery is active and the loss reaches the threshold. Threshold: prior-only 80th percentile from 1491 observations; raw historical threshold=0.278868.",
+            "metric": "short_loss_in_recovery",
+            "monitor_family": "recovery_mechanism",
+            "severity": "normal",
+            "source_module": "src.monitoring.scorecard + src.risk.leg_decomposition + src.regime.market_state",
+            "status": "available",
+            "threshold": 0.27886805458281533,
+            "threshold_provenance": "historical_quantile",
+            "triggered": false
+          }
+        ],
+        "source": "calculated_in_memory_with_frozen_phase_4_rules",
+        "triggered_metrics": [
+          "short_minus_long_beta_gap",
+          "portfolio_drawdown"
+        ],
+        "unavailable_metrics": []
+      },
+      "macro_regime": {
+        "bear_state": false,
+        "crash_state": false,
+        "dm_state": "normal",
+        "early_recovery_state": false,
+        "high_volatility": false,
+        "high_volatility_recovery_state": false,
+        "market_drawdown": -0.12723912452930752,
+        "market_stage": "normal",
+        "market_stage_definition": "presentation adapter only; precedence is high-volatility recovery, crash, early recovery, high volatility, then the frozen DM state",
+        "panic_intensity": null,
+        "rate_regime": "tightening",
+        "realized_volatility_21d": 0.17042739216452554,
+        "realized_volatility_threshold_80pct": 0.18225137288044602,
+        "recent_min_drawdown_126d": -0.2555594287444445,
+        "recovery_from_trough_126d": 0.17237145471359128
+      },
+      "next_rebalance_formation_date": "2023-02-28",
+      "observation_date": "2023-02-02",
+      "risk_decomposition": {
+        "benchmark_source": "Yahoo Finance SPY split- and dividend-adjusted close",
+        "benchmark_status": "primary_spy_total_return_proxy",
+        "beta_gap_short_minus_long_126d": 1.2865027999893344,
+        "long_beta_126d": 0.8179160454568608,
+        "long_contribution": -0.008890088214628772,
+        "long_contribution_21d": 0.051853529606662695,
+        "long_down_beta_126d": 0.9152153675869912,
+        "long_up_beta_126d": 0.6060367562594536,
+        "portfolio_beta_126d": -1.2865027999893346,
+        "portfolio_contribution_21d": -0.4491536179946964,
+        "portfolio_down_beta_126d": -0.9697995493372398,
+        "portfolio_drawdown": -0.45582450475894243,
+        "portfolio_return": -0.11621247960102118,
+        "portfolio_up_beta_126d": -1.2254358725188665,
+        "portfolio_volatility_21d": 0.6372617089617815,
+        "risk_timing": "post-close trailing statistics; earliest use is next trading session",
+        "short_contribution": -0.10732239138639241,
+        "short_contribution_21d": -0.5010071476013591,
+        "short_underlying_beta_126d": 2.104418845446195,
+        "short_underlying_down_beta_126d": 1.885014916924231,
+        "short_underlying_up_beta_126d": 1.8314726287783203
+      }
+    },
+    "status": "historical_proxy",
+    "title": "January-to-February 2023 relative elevated-risk case"
+  },
+  "limitations": [
+    "The synthetic portfolio uses a current-membership S&P 500 proxy and is survivorship-biased.",
+    "All risk values are post-close observations, not intraday forecasts or trade instructions.",
+    "Extreme price-momentum signals may reflect corporate actions or ticker-history discontinuities.",
+    "Phase 5A is a June 30 feasibility audit and is not a date-aligned fundamental signal for May 29.",
+    "Phase 5B, Phase 7 crowding, and the full Phase 8 AI research layer remain deferred."
+  ],
+  "metadata": {
+    "active_risk_portfolio_formation_date": "2026-04-30",
+    "execution_mode": "offline_read_only",
+    "module_latest_data_dates": {
+      "phase_1_macro": "2026-05-29",
+      "phase_2_holdings_formation": "2026-06-30",
+      "phase_3_realized_risk": "2026-06-30",
+      "phase_4_scorecard_artifacts": "2026-06-30",
+      "phase_5a_coverage_audit": "2026-06-30"
+    },
+    "next_rebalance_formation_date": "2026-05-29",
+    "observation_date": "2026-05-29"
+  },
+  "phase_5a_fundamental_feasibility": {
+    "alignment_flags": null,
+    "alignment_status": "future_work",
+    "artifact_as_of_date": "2026-06-30",
+    "coverage_percent": 64.79,
+    "coverage_ratio": 0.647887323943662,
+    "coverage_status": "degraded",
+    "covered_issuers": 322,
+    "eligible_issuers": 497,
+    "fundamental_ranks": null,
+    "interpretation": "Acquisition coverage is visible for feasibility only. It is not fundamental alignment and cannot imply safe, low, or high risk.",
+    "long_short_fundamental_spread": null,
+    "phase": "5A",
+    "risk_conclusion": null,
+    "scope": "coverage_feasibility_only",
+    "spearman_alignment": null
+  },
+  "portfolios": {
+    "active": {
+      "effective_month": "2026-05",
+      "formation_date": "2026-04-30",
+      "long_symbols": [
+        "SNDK",
+        "LITE",
+        "WDC",
+        "CIEN",
+        "ECHO",
+        "MU",
+        "STX",
+        "TER",
+        "COHR",
+        "FIX"
+      ],
+      "short_symbols": [
+        "BAX",
+        "CPRT",
+        "CSGP",
+        "FICO",
+        "WDAY",
+        "FDS",
+        "GDDY",
+        "TTD",
+        "IT",
+        "FISV"
+      ]
+    },
+    "next_rebalance": {
+      "effective_month": "2026-06",
+      "formation_date": "2026-05-29",
+      "long_symbols": [
+        "SNDK",
+        "LITE",
+        "WDC",
+        "ECHO",
+        "CIEN",
+        "STX",
+        "MU",
+        "INTC",
+        "TER",
+        "COHR"
+      ],
+      "short_symbols": [
+        "FDS",
+        "WDAY",
+        "GDDY",
+        "CSGP",
+        "NOW",
+        "LULU",
+        "CHTR",
+        "FISV",
+        "IT",
+        "TTD"
+      ]
+    }
+  }
+}
