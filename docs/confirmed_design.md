@@ -238,8 +238,10 @@ Required invariants:
 - All risk windows end on or before the as-of date.
 - Every scorecard row records metric, threshold, comparison direction,
   triggered flag, severity, explanation, date, and source module.
-- Threshold provenance is `literature`, `historical_quantile`, or
-  `demo_threshold`.
+- Threshold provenance is `literature`, `historical_quantile`,
+  `historical_proxy_threshold`, or `demo_threshold`. The proxy label is
+  required when calibration history uses current membership or current
+  classifications rather than production PIT history.
 - Missing inputs remain missing and cannot silently pass a threshold.
 - AI output receives a copy of deterministic facts and cannot write back to
   them.

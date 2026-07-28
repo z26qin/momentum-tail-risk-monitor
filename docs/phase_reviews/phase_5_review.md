@@ -2,7 +2,8 @@
 
 Date: 2026-07-28
 
-Status: revised feasibility plan, awaiting implementation approval
+Status: Phase 5A acquisition and feasibility work approved; Phase 5B remains
+unapproved
 
 No Phase 5 production code or production data was edited during this review
 gate.
@@ -83,7 +84,7 @@ requirement or embed a placeholder address.
 
 ## Current cached coverage breakdown
 
-The following counts are for the current 503-security universe as of the
+The following pre-Phase-5A counts are for the current 503-security universe as of the
 2026-06-30 portfolio rebalance. They diagnose the cache; they are not an
 estimate of full-universe filing availability.
 
@@ -146,6 +147,13 @@ The correct as-of rule is:
 Full-universe acquisition must produce a sector-by-sector tag coverage audit.
 Banks, insurers, and REITs are the main risk because generic revenue and
 operating-margin concepts may be absent or economically misleading.
+
+Operating-margin change is explicitly inapplicable to banks, insurers, REITs,
+and any other accounting category where operating income divided by revenue
+does not represent an economically comparable operating margin. Phase 5A must
+classify these as `accounting_category_inapplicable`, not search for a
+superficially populated but economically incorrect tag. Unavailable coverage
+is preferred to a false comparison.
 
 ### Quarterly and annual facts
 
@@ -309,10 +317,12 @@ Each signal is normalized independently:
 1. use industry-relative percentile rank when the industry has at least 10
    valid companies for that signal;
 2. otherwise fall back to sector-relative percentile rank;
-3. require at least five valid sector peers;
-4. map the average-rank percentile to `[-1, +1]`;
-5. preserve equal raw values as ties;
-6. leave the signal missing if neither peer group is adequate.
+3. sector normalization with at least 10 valid peers is `normal`;
+4. sector normalization with 5–9 valid peers is allowed but explicitly
+   `degraded`;
+5. fewer than five sector peers is unavailable;
+6. map the average-rank percentile to `[-1, +1]`;
+7. preserve equal raw values as ties.
 
 Current Nasdaq data contain industry labels for 500/503 securities across 112
 industries, but these labels are also a current, non-PIT snapshot.
@@ -395,8 +405,15 @@ Required outputs are:
 - percentage of covered short names with composite score greater than zero;
 - price winners with deteriorating fundamentals: long names with score below
   zero;
-- price losers with improving fundamentals: short names with score above zero;
+- price losers with positive relative fundamental momentum: short names with
+  sector- or industry-relative composite score above zero;
 - covered count, coverage status, and missing-symbol list for each leg.
+
+A composite score above zero means positive **relative** fundamental momentum
+versus the applicable peer group. It does not prove that the company's
+absolute fundamentals improved. Output names and explanations must use
+`positive_relative_fundamental_momentum`, not the ambiguous phrase
+`improving_fundamentals`.
 
 Raw rank averages are accompanied by rank percentiles because raw ranks change
 scale when the covered universe count changes.
@@ -435,15 +452,26 @@ Before that, fallbacks are labeled `demo_threshold`.
 
 | Flag | Direction | Historical threshold | Demonstration fallback |
 |---|---|---|---|
-| Weak price/fundamental correlation | `correlation <=` | prior 20th percentile, with zero threshold floor | `0.00` |
+| Weak price/fundamental correlation | `correlation <=` | `max(prior_20th_percentile, 0.0)` | `0.00` |
 | Insufficient long support | `long_positive_share <=` | prior 20th percentile | `0.60` |
-| Improving short leg | `short_positive_share >=` | prior 80th percentile | `0.40` |
-| Narrow/negative score spread | `long_minus_short_score_spread <=` | prior 20th percentile, with zero threshold floor | `0.00` |
+| Positive relative fundamental momentum in short leg | `short_positive_relative_share >=` | prior 80th percentile | `0.40` |
+| Narrow/negative score spread | `long_minus_short_score_spread <=` | `max(prior_20th_percentile, 0.0)` | `0.00` |
 | Sharp alignment deterioration | `alignment_change <=` | prior 20th percentile | `-0.20` |
 
 Negative correlation and a negative long-minus-short score spread must always
 qualify as risk. A structural guardrail that overrides the historical
 quantile is labeled `demo_threshold`, matching Phase 4 provenance rules.
+
+The exact zero-floor formulas are:
+
+```text
+correlation_threshold = max(prior_20th_percentile, 0.0)
+spread_threshold = max(prior_20th_percentile, 0.0)
+```
+
+Any threshold calibrated from a history that uses current-membership or
+current-classification proxies is labeled `historical_proxy_threshold`, not a
+production PIT historical threshold.
 
 The five flags remain separate. They are not averaged into a probability or
 composite alert count.
@@ -463,7 +491,7 @@ The visible scorecard contains these auditable rows:
 1. universe data coverage;
 2. universe price/fundamental rank correlation;
 3. long-leg fundamental support;
-4. improving fundamentals in the short leg;
+4. positive relative fundamental momentum in the short leg;
 5. long-minus-short fundamental score spread;
 6. alignment deterioration.
 
@@ -472,6 +500,10 @@ lists, missing symbols, tag provenance, and membership limitations are exposed
 as row context and in the underlying output tables. Coverage rows use the
 explicit `normal`, `degraded`, and `insufficient` policy rather than a
 historical quantile.
+
+Spearman rank correlation is the primary universe-alignment metric. Top-10 and
+bottom-10 overlap are portfolio-oriented diagnostics, not alternative primary
+universe-alignment measures.
 
 The scorecard cannot modify Phase 1–4 trigger values and cannot fail their
 pipeline.
@@ -551,7 +583,7 @@ Planned generated artifacts:
 
 ## Recommended implementation sequence
 
-### Phase 5A — acquisition and feasibility gate
+### Phase 5A — acquisition and feasibility gate (approved scope)
 
 1. Require the operator-provided `SEC_CONTACT_EMAIL`.
 2. Fetch and cache Company Facts for every distinct CIK in the eligible
@@ -559,11 +591,17 @@ Planned generated artifacts:
 3. Produce counts for usable filing, revenue, EPS, operating income/margin,
    two-of-three composite, each sector, and both current portfolio legs.
 4. Diagnose missingness by ticker mapping, HTTP result, tag, unit, dimension,
-   period continuity, staleness, and filing-date filter.
+   period continuity, staleness, filing-date filter, and accounting-category
+   inapplicability.
 5. Stop for data review.
 
 No monitor should be built if coverage remains below 60% without an understood
 and economically defensible remediation.
+
+Phase 5A must not build the historical stock panel, calibration history,
+minimal breadth module, production alignment flags, or final Fundamental
+Alignment Scorecard. Those remain Phase 5B–5D work and require a new approval
+after the Phase 5A coverage report.
 
 ### Phase 5B — universe stock panel
 
@@ -606,7 +644,8 @@ and economically defensible remediation.
   prevent look-ahead.
 - Fiscal period and Q4 handling never subtract non-additive EPS.
 - Every signal is industry-relative with at least ten peers or falls back to
-  sector-relative normalization.
+  sector-relative normalization; sector groups of 5–9 are explicitly
+  degraded and groups below five are unavailable.
 - At least two of three signals are required per covered stock.
 - All required universe and portfolio outputs are persisted.
 - Coverage states exactly follow the 80%/60% universe and 8/6 leg boundaries.
@@ -619,18 +658,12 @@ and economically defensible remediation.
   scraper, static quality library, new dependency, or unrelated refactor is
   introduced.
 
-## Review decision required
+## Approval boundary
 
-Production implementation has not started.
+The universe-first architecture, three fundamental signals, two-of-three rule,
+next-trading-day filing availability, 180-day staleness gate, coverage policy,
+and separate future Fundamental Alignment Scorecard are approved.
 
-Approval should first authorize Phase 5A full-universe Company Facts
-acquisition and confirm:
-
-- `filed_date + next trading day` availability;
-- 180-day fiscal-period staleness limit;
-- revenue acceleration, symmetric EPS acceleration, and year-over-year
-  operating-margin change;
-- industry normalization at ten valid peers, otherwise sector fallback;
-- the exact 80%/60% universe and 8/6 leg coverage states;
-- the six-row separate Fundamental Alignment Scorecard;
-- keeping the Phase 4 scorecard unchanged.
+Only Phase 5A acquisition and feasibility work is authorized now. Stop after
+the full acquisition and coverage audit for review before Phase 5B production
+implementation.

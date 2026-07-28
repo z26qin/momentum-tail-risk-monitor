@@ -200,19 +200,32 @@ def parse_spy_holdings(path: Path) -> tuple[pd.DataFrame, pd.Timestamp]:
     return frame.sort_values("symbol").reset_index(drop=True), as_of_date
 
 
-def sector_snapshot_from_nasdaq(payload: dict[str, Any]) -> pd.DataFrame:
-    """Extract a current sector map from the already-cached Nasdaq screener."""
+def classification_snapshot_from_nasdaq(payload: dict[str, Any]) -> pd.DataFrame:
+    """Extract current sector and industry without presenting either as PIT."""
 
     records: list[dict[str, str]] = []
     for row in (payload.get("data") or {}).get("rows") or []:
         symbol = to_canonical(_text(row.get("symbol")))
         sector = _text(row.get("sector"))
-        if symbol and sector:
-            records.append({"symbol": symbol, "sector": sector})
+        industry = _text(row.get("industry"))
+        if symbol:
+            records.append(
+                {
+                    "symbol": symbol,
+                    "sector": sector or pd.NA,
+                    "industry": industry or pd.NA,
+                }
+            )
     frame = pd.DataFrame.from_records(records)
     if frame.empty:
-        return pd.DataFrame(columns=["symbol", "sector"])
+        return pd.DataFrame(columns=["symbol", "sector", "industry"])
     return frame.drop_duplicates("symbol", keep="first")
+
+
+def sector_snapshot_from_nasdaq(payload: dict[str, Any]) -> pd.DataFrame:
+    """Backward-compatible current sector-only view."""
+
+    return classification_snapshot_from_nasdaq(payload).loc[:, ["symbol", "sector"]]
 
 
 def attach_current_sectors(

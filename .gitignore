@@ -20,6 +20,13 @@ data/raw/sp500/benchmark/
 data/raw/gdelt/*.json
 !data/raw/gdelt/*.metadata.json
 !data/raw/gdelt/acquisition_report.json
+data/raw/sec/company_facts_CIK*.json
+
+# Phase 5A issuer-level diagnostic extracts remain local. The compact
+# aggregate feasibility audit under outputs/fundamental_alignment is tracked.
+outputs/fundamental_alignment/phase_5a_acquisition_status.csv
+outputs/fundamental_alignment/phase_5a_company_coverage.csv
+outputs/fundamental_alignment/phase_5a_taxonomy_diagnostics.csv
 
 # Reference papers. Read locally, cited by number in the memo, never
 # redistributed: this repository is public and the working papers are not

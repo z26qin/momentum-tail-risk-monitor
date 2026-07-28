@@ -34,4 +34,4 @@ Current reviews:
 - `phase_3_review.md`: realized long/short risk and recovery attribution.
 - `phase_4_review.md`: minimal four-row deterministic risk scorecard.
 - `phase_5_review.md`: universe-level fundamental momentum and portfolio
-  alignment pre-implementation gate; awaiting approval.
+  alignment; Phase 5A acquisition/feasibility approved, Phase 5B unapproved.
