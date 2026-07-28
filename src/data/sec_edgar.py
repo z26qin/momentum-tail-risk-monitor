@@ -32,7 +32,7 @@ from typing import Any
 
 import pandas as pd
 
-from src.utils.http import cached_fetch
+from src.utils.http import FetchResult, cached_fetch
 from src.utils.io import (
     DEFAULT_OUTPUT_DIR,
     DEFAULT_PROCESSED_DIR,
@@ -155,6 +155,33 @@ def to_sec_ticker(symbol: str) -> str:
     """Canonical symbol to SEC's spelling: share classes use a hyphen."""
 
     return symbol.replace(".", "-").upper()
+
+
+def fetch_company_facts_by_cik(
+    cik: int,
+    *,
+    raw_dir: Path = DEFAULT_SEC_DIR,
+) -> FetchResult:
+    """Fetch one cache-first Company Facts payload for one distinct issuer.
+
+    Phase 5A deliberately keys this cache by CIK rather than ticker. Multiple
+    share classes therefore reuse one SEC response. A real contact address is
+    demanded only on a cache miss, through the existing lazy ``_headers``
+    callback.
+    """
+
+    return cached_fetch(
+        cache_path=raw_dir / f"company_facts_CIK{cik:010d}.json",
+        url=COMPANY_FACTS_URL.format(cik=cik),
+        source_key=f"sec_company_facts_CIK{cik:010d}",
+        headers=_headers,
+        absent_statuses=ABSENT_STATUSES,
+        max_retries=3,
+        backoff_seconds=1.0,
+        min_interval_seconds=MIN_INTERVAL_SECONDS,
+        tolerate_failure=True,
+        validate=_is_json,
+    )
 
 
 def fetch_shares_outstanding(

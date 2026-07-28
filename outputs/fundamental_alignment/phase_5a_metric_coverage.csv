@@ -1,0 +1,6 @@
+metric,eligible_universe_count,eligible_issuer_count,applicable_count,applicable_security_count,covered_count,covered_security_count,coverage_ratio,applicable_coverage_ratio,coverage_status,acquisition_complete,feasibility_status
+usable_company_facts,500,497,497,500,497,500,1.0,1.0,normal,True,assessable
+revenue_acceleration,500,497,497,500,449,452,0.903420523138833,0.903420523138833,normal,True,assessable
+eps_acceleration,500,497,497,500,23,24,0.04627766599597585,0.04627766599597585,insufficient,True,assessable
+operating_margin_change,500,497,401,404,324,325,0.6519114688128773,0.8079800498753117,degraded,True,assessable
+two_of_three,500,497,497,500,322,324,0.647887323943662,0.647887323943662,degraded,True,assessable

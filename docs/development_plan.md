@@ -1,7 +1,7 @@
 # Development plan: top-down risk monitoring MVP
 
-Status: Phase 4 implementation complete, revised 2026-07-28 after simplifying
-the deterministic scorecard.
+Status: Phase 4 implementation complete; Phase 5A acquisition and feasibility
+work approved on 2026-07-28, with Phase 5B still review-gated.
 
 ## 1. Delivery method
 
@@ -262,19 +262,28 @@ Minimum acceptance:
 - prioritize revenue-growth acceleration, EPS-growth acceleration, and
   operating-margin change; at least two valid signals per company;
 - use industry-relative normalization only with at least ten valid peers,
-  otherwise fall back to sector-relative normalization with at least five;
+  otherwise fall back to sector-relative normalization; at least ten peers is
+  normal, 5–9 is degraded, and fewer than five is unavailable;
 - rank fundamental momentum across all covered eligible stocks before joining
   the independently selected price-momentum portfolio;
 - output eligible/covered counts, stock-level price and fundamental scores and
   ranks, Spearman correlation, top/bottom overlap, sector coverage, and
   change versus the previous valid rebalance;
 - output average and median fundamental ranks by leg, long-minus-short score
-  spread, long-positive and short-improving shares, contradiction lists, and
-  covered/missing names for each leg;
+  spread, long-positive and short-positive-relative shares, contradiction
+  lists, and covered/missing names for each leg;
 - deterministic flags cover weak/negative correlation, insufficient long
   support, improving shorts, narrow/negative spread, and sharp deterioration;
 - thresholds use prior-only historical quantiles after at least 24 rebalances;
   earlier thresholds are labeled demonstration assumptions;
+- define `correlation_threshold = max(prior_20th_percentile, 0.0)` and
+  `spread_threshold = max(prior_20th_percentile, 0.0)`;
+- label calibration based on current-membership or current-classification
+  history as `historical_proxy_threshold`;
+- do not calculate operating-margin change for banks, insurers, REITs, or
+  other accounting categories where it is not economically comparable;
+- use Spearman rank correlation as the primary universe-alignment metric;
+  top/bottom-10 overlap is a portfolio-oriented diagnostic;
 - use the first trading day after filing as availability and reject components
   whose latest fiscal period is more than 180 days stale;
 - universe coverage is normal at 80% or more, degraded from 60% to below 80%,
@@ -288,6 +297,15 @@ Minimum acceptance:
   sector concentration;
 - do not implement forward-return IC, rolling IC, ICIR, or a static
   quality/profitability factor library.
+
+Approved execution boundary:
+
+- Phase 5A may fetch one Company Facts payload per eligible CIK and report
+  coverage by metric, sector, and current portfolio leg, including missing
+  tags, periods, staleness, and accounting-category diagnoses;
+- stop after Phase 5A review;
+- do not yet build the historical panel, calibration history, breadth module,
+  production flags, or separate production scorecard.
 
 ### Phase 6 — Crowding
 

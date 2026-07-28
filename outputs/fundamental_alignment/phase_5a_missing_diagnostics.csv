@@ -1,0 +1,20 @@
+metric,reason,security_count
+company_facts,usable,500
+eps_acceleration,stale,359
+eps_acceleration,missing_period_continuity,111
+eps_acceleration,available,24
+eps_acceleration,missing_tag,5
+eps_acceleration,missing_quarterly_periods,1
+operating_margin_change,available,325
+operating_margin_change,accounting_category_inapplicable:finance,68
+operating_margin_change,stale,37
+operating_margin_change,missing_tag,35
+operating_margin_change,accounting_category_inapplicable:real estate,28
+operating_margin_change,revenue_missing_tag,5
+operating_margin_change,missing_period_continuity,1
+operating_margin_change,revenue_no_eligible_filing_observations,1
+revenue_acceleration,available,452
+revenue_acceleration,stale,30
+revenue_acceleration,missing_tag,11
+revenue_acceleration,missing_period_continuity,6
+revenue_acceleration,no_eligible_filing_observations,1

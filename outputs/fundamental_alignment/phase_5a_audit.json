@@ -1,0 +1,37 @@
+{
+  "acquisition_ciks_attempted_or_inspected": 497,
+  "acquisition_complete": true,
+  "acquisition_expected_cik_count": 497,
+  "acquisition_nonterminal_cik_count": 0,
+  "acquisition_requested": true,
+  "acquisition_status_counts": {
+    "available": 497
+  },
+  "acquisition_unattempted_cik_count": 0,
+  "as_of_date": "2026-06-30",
+  "classification_status": "current_snapshot_proxy",
+  "distinct_mapped_cik_count": 497,
+  "eligible_security_count": 500,
+  "filing_availability": "first_trading_day_after_filed_date",
+  "mapped_security_count": 500,
+  "membership_status": "current_snapshot_proxy",
+  "operating_margin_exclusions": "banks, insurers, REITs, and other listed inapplicable industries",
+  "outputs": {
+    "acquisition_status": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_acquisition_status.csv",
+    "company_coverage": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_company_coverage.csv",
+    "metric_coverage": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_metric_coverage.csv",
+    "missing_diagnostics": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_missing_diagnostics.csv",
+    "portfolio_leg_coverage": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_portfolio_leg_coverage.csv",
+    "sector_coverage": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_sector_coverage.csv",
+    "taxonomy_diagnostics": "/Users/v/Desktop/momentum_crash/outputs/fundamental_alignment/phase_5a_taxonomy_diagnostics.csv"
+  },
+  "phase": "5A",
+  "phase_5b_authorized": false,
+  "raw_two_of_three_coverage_status": "degraded",
+  "scope": "acquisition_and_coverage_feasibility_only",
+  "staleness_days": 180,
+  "survivorship_bias": true,
+  "two_of_three_coverage_ratio": 0.647887323943662,
+  "two_of_three_coverage_status": "degraded",
+  "two_of_three_covered_count": 322
+}

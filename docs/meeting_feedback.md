@@ -96,10 +96,21 @@ operating-margin change across all covered eligible stocks, and measures
 universe and portfolio alignment.
 
 Each fundamental component is normalized within industry when at least ten
-valid peers exist; otherwise it falls back to sector. Filing or conservative
-availability dates, rather than fiscal-period end, determine when facts may be
-used. Analyst revisions remain excluded unless reliable point-in-time data
-already exist.
+valid peers exist; otherwise it falls back to sector. At least ten peers is
+normal, 5–9 sector peers is degraded, and fewer than five is unavailable.
+Filing or conservative availability dates, rather than fiscal-period end,
+determine when facts may be used. Analyst revisions remain excluded unless
+reliable point-in-time data already exist.
+
+A positive composite score means positive sector- or industry-relative
+fundamental momentum, not necessarily absolute improvement. Operating margin
+is unavailable for banks, insurers, REITs, and other accounting categories
+where the ratio is not economically comparable.
+
+Spearman rank correlation is the primary universe-alignment metric. Top-10 and
+bottom-10 overlap are portfolio-oriented diagnostics. Historical thresholds
+calibrated on current-membership or current-classification history are labeled
+`historical_proxy_threshold`.
 
 Universe coverage is normal at 80% or more, degraded from 60% to below 80%,
 and insufficient below 60%. A ten-name leg is normal with at least eight
