@@ -64,7 +64,7 @@ def test_quant_fields_identical_with_and_without_llm() -> None:
         s.to_dict() for s in without_llm.non_triggered_relevant_signals
     ]
     # The synthesis mode still records that the LLM path was requested or not.
-    assert with_llm.synthesis_mode == "deterministic_template"
+    assert with_llm.synthesis_mode == "deterministic_fallback"
     assert without_llm.synthesis_mode == "deterministic_no_llm"
 
 
@@ -129,6 +129,17 @@ def test_deterministic_fallback_when_synthesizer_fails() -> None:
     assert card.narrative_state  # deterministic narrative still present
 
 
+def test_missing_api_configuration_triggers_deterministic_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    card = build_evidence_card(as_of_date=EVIDENCE_DATE, use_llm=True)
+
+    assert card.synthesis_mode == "deterministic_fallback"
+    assert any("no external synthesizer or API configuration" in w for w in card.warnings)
+
+
 def test_injected_synthesizer_only_changes_narrative() -> None:
     class _Fixed:
         def synthesize(self, *, context):  # noqa: ANN001, ANN201
@@ -164,6 +175,74 @@ def test_missing_retrieval_produces_warning_not_crash() -> None:
     assert any("no date-matched evidence" in w for w in card.warnings)
 
 
+def test_retrieval_exception_fails_closed_without_losing_quant_state() -> None:
+    def _broken_builder(**kwargs):  # noqa: ANN003, ANN202
+        raise RuntimeError("retrieval unavailable")
+
+    baseline = build_evidence_card(as_of_date=EVIDENCE_DATE, use_llm=False)
+    card = build_evidence_card(
+        as_of_date=EVIDENCE_DATE,
+        use_llm=False,
+        evidence_builder=_broken_builder,
+    )
+
+    assert card.evidence_quality == "unavailable"
+    assert card.run_id == baseline.run_id
+    assert [s.to_dict() for s in card.triggered_quant_signals] == [
+        s.to_dict() for s in baseline.triggered_quant_signals
+    ]
+    assert any("retrieval failed closed" in w for w in card.warnings)
+
+
+def test_future_dated_injected_evidence_is_excluded() -> None:
+    def _future_builder(**kwargs):  # noqa: ANN003, ANN202
+        return {
+            "status": "sample_only",
+            "supporting": [
+                {
+                    "document_id": "future-item",
+                    "publication_timestamp": "2024-01-06T09:00:00-05:00",
+                    "source": "test",
+                    "title": "This item was not available at the cutoff",
+                    "classification_rationale": "test fixture",
+                    "citation_url": "fixture://future-item",
+                }
+            ],
+            "contradicting": [],
+            "contextual": [],
+            "limitations": [],
+        }
+
+    card = build_evidence_card(
+        as_of_date=EVIDENCE_DATE,
+        use_llm=False,
+        evidence_builder=_future_builder,
+    )
+    assert card.evidence_quality == "unavailable"
+    assert not card.supporting_evidence
+    assert any("cutoff/schema validation" in w for w in card.warnings)
+
+
+def test_malformed_retrieval_result_is_excluded_without_crashing() -> None:
+    def _malformed_builder(**kwargs):  # noqa: ANN003, ANN202
+        return {
+            "status": "sample_only",
+            "supporting": [{"document_id": "missing-required-fields"}],
+            "contradicting": [],
+            "contextual": [],
+            "limitations": [],
+        }
+
+    card = build_evidence_card(
+        as_of_date=EVIDENCE_DATE,
+        use_llm=False,
+        evidence_builder=_malformed_builder,
+    )
+    assert card.evidence_quality == "unavailable"
+    assert not card.supporting_evidence
+    assert any("cutoff/schema validation" in w for w in card.warnings)
+
+
 def test_repeated_runs_are_deterministic() -> None:
     first = build_evidence_card(
         as_of_date=EVIDENCE_DATE, compare_to_date=COMPARE_DATE, use_llm=False
@@ -191,6 +270,33 @@ def test_comparison_drives_change_analysis() -> None:
     ]
     assert changed, "expected at least one signal change vs the comparison date"
     assert with_compare.comparison_date == "2023-12-01"
+
+
+def test_run_metadata_records_selected_configuration() -> None:
+    card = build_evidence_card(
+        as_of_date=EVIDENCE_DATE,
+        compare_to_date=COMPARE_DATE,
+        threshold_profile="default",
+        horizon=20,
+        use_llm=False,
+    )
+    assert card.as_of_date == "2024-01-05"
+    assert card.comparison_date == "2023-12-01"
+    assert card.threshold_profile == "default"
+    assert card.tail_loss_horizon_days == 20
+    assert card.llm_enabled is False
+    assert card.data_version.startswith("sha256:")
+    assert card.quant_model_version.startswith("phase-1-4-deterministic-v1:")
+
+
+def test_timezone_aware_date_inputs_use_the_stated_calendar_date() -> None:
+    card = build_evidence_card(
+        as_of_date=pd.Timestamp("2024-01-05T12:00:00Z"),
+        compare_to_date=pd.Timestamp("2023-12-01T16:00:00-05:00"),
+        use_llm=False,
+    )
+    assert card.as_of_date == "2024-01-05"
+    assert card.comparison_date == "2023-12-01"
 
 
 def _sha256(path: Path) -> str:

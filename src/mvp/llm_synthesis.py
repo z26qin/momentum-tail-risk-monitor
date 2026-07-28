@@ -98,16 +98,17 @@ def _fallback_narrative_state(context: dict[str, Any]) -> str:
     triggered = context["triggered_signal_names"]
     if triggered:
         return (
-            f"The deterministic macro state is '{state}'. "
-            f"{len(triggered)} of {context['total_signals']} monitored fragility "
-            f"conditions are triggered: {', '.join(triggered)}. This describes "
-            "elevated fragility, not a forecast that a crash will occur."
+            f"The current state is fragile because {len(triggered)} of "
+            f"{context['total_signals']} deterministic risk conditions are "
+            f"triggered together: {', '.join(triggered)}. The macro state is "
+            f"'{state}'. The evidence is not sufficient to classify this as a "
+            "confirmed crash regime."
         )
     return (
-        f"The deterministic macro state is '{state}'. No monitored fragility "
-        f"condition is currently triggered ({context['available_signals']} of "
-        f"{context['total_signals']} signals are available). This is a "
-        "descriptive quiet reading, not a guarantee of calm."
+        f"No deterministic fragility warning is active in the '{state}' macro "
+        f"state: none of {context['total_signals']} monitored conditions is "
+        "triggered. This reading does not rule out risks outside the monitored "
+        "signal set."
     )
 
 
@@ -121,11 +122,15 @@ def _fallback_what_changed(context: dict[str, Any]) -> tuple[str, ...]:
         )
     lines: list[str] = []
     for change in changes[:5]:
+        if change["abs_delta"] <= 1e-12:
+            continue
         lines.append(
             f"{change['name']}: {change['from_text']} -> {change['to_text']} "
             f"(change {change['delta_text']}) versus {context['comparison_date']}."
         )
-    return tuple(lines)
+    return tuple(lines) or (
+        f"No monitored signal changed measurably versus {context['comparison_date']}.",
+    )
 
 
 def _fallback_pm_interpretation(context: dict[str, Any]) -> str:
@@ -133,19 +138,18 @@ def _fallback_pm_interpretation(context: dict[str, Any]) -> str:
     evidence = context["evidence_quality"]
     if triggered:
         lead = (
-            "A PM should read this as a fragility watch: the deterministic rules "
-            "flag conditions under which a momentum rebound could squeeze the "
-            "recent-loser leg."
+            "Treat this as a fragility watch, not a trade instruction or crash "
+            "forecast. The deterministic rules identify conditions under which "
+            "a momentum rebound could squeeze the recent-loser leg."
         )
     else:
         lead = (
-            "A PM should read this as a benign deterministic snapshot on the "
-            "monitored conditions, while remembering that crashes are rare and "
-            "state-dependent."
+            "No monitored deterministic warning is active. Keep the reading as "
+            "a baseline and watch for several conditions deteriorating together."
         )
     tail = (
-        f" Point-in-time evidence is '{evidence}'; it organizes context and "
-        "cannot create, confirm, or overturn the deterministic numbers."
+        f" Point-in-time evidence is '{evidence}'; it can support, moderate, or "
+        "leave the warning unresolved, but cannot create or overturn the signal."
     )
     return lead + tail
 
