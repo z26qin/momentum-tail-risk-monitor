@@ -1,7 +1,8 @@
 # Development plan: top-down risk monitoring MVP
 
-Status: Phase 4 implementation complete; Phase 5A acquisition and feasibility
-work approved on 2026-07-28, with Phase 5B still review-gated.
+Status: Phases 1–4 and Phase 5A are complete. The unnumbered final MVP
+integration is complete. Phase 5B, Phase 7 Crowding Monitoring, and Phase 8
+Full AI Research and Retrieval remain deferred.
 
 ## 1. Delivery method
 
@@ -26,25 +27,26 @@ After each phase:
 The review journal format and index live in `docs/phase_reviews/README.md`.
 Maintaining that journal is part of every phase's acceptance criteria.
 
-The current `src.pipeline` path remains runnable while the new modules are
-built. It is replaced or redirected only in the final integration phase.
+The earlier `src.pipeline` path remains runnable as retained research. The
+unique primary demo entry is now `src.mvp.run_demo`.
 
 ## 2. Budget and scope
 
-The implementation target is approximately 13 hours, with 1–2 hours of
-contingency inside the stated 10–15 hour review budget.
+The original reviewed plan was time-boxed to approximately 13 hours. The final
+deadline integration did not renumber or silently complete deferred research
+phases.
 
-| Phase | Deliverable | Estimate |
+| Phase | Deliverable | Estimate / status |
 |---:|---|---:|
 | 1 | Macro regime module | 1.25 h |
 | 2 | Synthetic S&P 500 portfolio | 2.75 h |
 | 3 | Long/short risk decomposition | 1.25 h |
 | 4 | Deterministic scorecard | 1.25 h |
-| 5 | Universe fundamental momentum, alignment, and minimal breadth | 3.50 h |
-| 6 | Crowding reuse and research note | 0.25 h |
-| 7 | Minimal AI evidence adaptation | 1.25 h |
-| 8 | Demo, historical case, and documentation | 1.50 h |
-| | Planned implementation | **13.00 h** |
+| 5A | SEC acquisition and fundamental coverage feasibility | Complete |
+| 5B | Production historical fundamentals and alignment | Deferred |
+| Final MVP integration | Date-safe demo, 2023 case, bounded evidence preview | Complete |
+| 7 | Crowding Monitoring | Deferred |
+| 8 | Full AI Research and Retrieval Layer | Deferred |
 
 Budget protection rules:
 
@@ -53,10 +55,10 @@ Budget protection rules:
 - If reliable point-in-time S&P 500 membership cannot be obtained quickly,
   use a frozen current-membership S&P 500 snapshot and expose
   `survivorship_bias=true`; do not substitute the current top-200 universe.
-- Phase 5 begins with full-universe Company Facts acquisition and a coverage
-  audit. Do not build a permanently disabled monitor: proceed only if at least
-  60% coverage is feasible, with 80% or more the normal target.
-- Phase 6 adds no scraper.
+- Phase 5 began with full-universe Company Facts acquisition and a coverage
+  audit. The observed 64.79% coverage is degraded but sufficient to preserve
+  Phase 5B as a future production task.
+- Phase 7 adds no fragile scraper without a separately reviewed data source.
 - Do not build a standalone IC/IR analytics framework.
 - No new predictive model is trained.
 
@@ -235,22 +237,21 @@ Expected reuse:
 - monthly 12-1 price calculations, pure Pandas rank calculations, SEC
   cache/provenance controls, and Phase 3 contribution definitions.
 
-Planned files:
+Phase 5A implemented files:
 
 - create `src/data/sec_fundamentals.py`
-- create `src/features/fundamental_momentum.py`
-- create `src/monitoring/fundamental_alignment.py`
-- create `src/risk/breadth.py`
 - create `tests/test_sec_fundamentals.py`
-- create `tests/test_fundamental_momentum.py`
-- create `tests/test_fundamental_alignment.py`
-- create `tests/test_breadth.py`
 - modify `src/data/sec_edgar.py` only to expose public cache-first Company
   Facts acquisition
 - modify `src/data/sp500.py` to expose current industry classification with
   its non-PIT status
-- leave the existing Phase 4 scorecard unchanged and create a separate visible
-  Fundamental Alignment Scorecard
+
+Deferred Phase 5B files:
+
+- `src/features/fundamental_momentum.py`
+- `src/monitoring/fundamental_alignment.py`
+- focused production tests for the historical panel and alignment contract
+- a separate visible Fundamental Alignment Scorecard
 
 Minimum acceptance:
 
@@ -307,7 +308,7 @@ Approved execution boundary:
 - do not yet build the historical panel, calibration history, breadth module,
   production flags, or separate production scorecard.
 
-### Phase 6 — Crowding
+### Phase 7 — Crowding Monitoring (deferred)
 
 Inspect first:
 
@@ -335,7 +336,7 @@ Minimum acceptance:
 - ETF overlap is included only if a ready, dated holdings source is already
   available.
 
-### Phase 7 — Minimal AI evidence
+### Phase 8 — Full AI Research and Retrieval Layer (deferred)
 
 Inspect first:
 
@@ -348,7 +349,7 @@ Expected reuse:
 - deterministic gating, archive cutoffs, retrieval hashing, structured
   validation, grounded passages, and fail-closed behavior.
 
-Planned files:
+Future planned files:
 
 - create `src/evidence/risk_research.py`
 - create `tests/test_risk_research.py`
@@ -364,9 +365,13 @@ Minimum acceptance:
 - current long/short names and selected comparison window enter the request;
 - the response cannot change metric values, thresholds, or trigger flags;
 - future, ungrounded, omitted, and retrieval-mismatched evidence fails closed;
-- no complex orchestration or multi-agent framework.
+- no unreviewed complex orchestration or multi-agent framework.
 
-### Phase 8 — Demo and documentation
+The final MVP's `src/evidence/research_preview.py` is not this phase. It is a
+bounded offline capability preview that replays only exact-date validated
+caches and fails closed.
+
+### Final MVP integration — completed, not a roadmap phase
 
 Inspect first:
 
@@ -378,31 +383,39 @@ Expected reuse:
 
 - current CLI conventions, atomic output, contracts, and Markdown reporting.
 
-Planned files:
+Implemented files:
 
-- create `src/demo.py`
+- create `src/mvp/run_demo.py`
 - create `tests/test_demo.py`
-- modify `src/reporting/pm_brief.py`
+- create `src/evidence/research_preview.py`
+- create `tests/test_research_preview.py`
 - modify `README.md`
 - modify `docs/confirmed_design.md`
 - create `docs/methodology.md`
-- create `docs/limitations.md`
+- create `docs/demo_walkthrough.md`
+- create `docs/handoff.md`
 - create `outputs/demo/` artifacts through the command, not by hand
 
 Minimum acceptance:
 
-- one command answers all ten confirmed demo questions;
+- one command produces one structured, date-aligned demo;
 - one current/as-available scorecard and one 2023 historical case are
   reproducible;
-- output includes macro regime, named holdings, leg-risk driver, triggers,
-  beta gap, breadth, concentration, fundamental-alignment status, evidence,
-  and next research questions;
+- output includes macro regime, named holdings, leg-risk drivers, triggers,
+  beta gap, Phase 5A feasibility, unavailable alignment fields, bounded
+  evidence, limitations, and next research questions;
 - architecture, methodology, limitations, and test summary match the code;
 - the full test suite passes.
 
+Explicit final-integration exclusions:
+
+- no Phase 5B, breadth, concentration, crowding, live news, vector database,
+  dashboard, deployment, predictive model, or calculation-module refactor;
+- exactly four focused demo tests and two focused evidence-preview tests.
+
 ## 4. Cross-phase test strategy
 
-Every new time-dependent calculation should receive:
+Future substantive calculation phases should receive:
 
 - a small synthetic example with an analytically known answer;
 - a future-data perturbation test;
@@ -410,8 +423,9 @@ Every new time-dependent calculation should receive:
 - missing and boundary-value tests;
 - an integration assertion that dates, holdings, returns, and benchmarks align.
 
-The full existing suite should run after any change to shared utilities,
-contracts, the active pipeline, or evidence validation.
+The final MVP integration intentionally uses only its six approved focused
+tests plus the full existing regression suite. Final validation collected 215
+tests: 211 passed and 4 cache-dependent rebuild tests skipped.
 
 ## 5. Principal delivery risks
 
@@ -428,5 +442,5 @@ contracts, the active pipeline, or evidence validation.
 
 ## 6. Review gate
 
-Phase 0 is complete. No Phase 1 code should be written until the Phase 0 audit
-and this proposed plan are reviewed.
+The final MVP integration is complete. Any work on Phase 5B, Phase 7, or the
+full Phase 8 requires a new review and explicit authorization.

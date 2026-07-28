@@ -1,180 +1,134 @@
 # Momentum Tail-Risk Monitoring MVP
 
-This repository produces one auditable daily assessment of US equity momentum
-tail risk. The primary risk number is a point-in-time historical conditional
-frequency anchored to the panic-state mechanism in Daniel and Moskowitz
-(2016). A frozen B2 logistic model is retained only as a shadow benchmark, and
-the earlier reversal checklist is retained only as a research explanation.
-Neither can replace or average into the primary result.
+This repository is a transparent research prototype for monitoring conditions
+associated with US equity momentum crashes. Its source of truth is a
+deterministic, top-down workflow:
 
-The MVP is a research prototype, not a trading system or investment
-recommendation.
+1. macro and market regime;
+2. synthetic S&P 500 12-1 momentum portfolio;
+3. realized long/short risk decomposition;
+4. four-row deterministic scorecard;
+5. SEC fundamental-data feasibility, currently frozen at Phase 5A.
 
-## Active system
+The project is not a trading system, investment recommendation, causal model,
+or production point-in-time backtest.
 
-```text
-Ken French market and momentum data
-        |
-        v
-DM-inspired PIT state + matured-label conditional frequency  [PRIMARY]
-        |
-        +--> frozen B2 OOS probability                        [SHADOW]
-        +--> reversal conditions                              [EXPERIMENT]
-        +--> FINRA loser-leg crowding                         [OVERLAY]
-        +--> GDELT panic/crowding/risk-off attention          [OVERLAY]
-        |
-        v  only when primary state is elevated
-fixture replay OR strict archived PIT retrieval              [AI / HUMAN REVIEW]
-        |
-        v  archived candidates must pass versioned classifier grounding
-directional evidence (or unavailable/unclassified)
-        |
-        v
-one JSON assessment + one Markdown PM brief
-```
+## Run the final MVP demo
 
-The paper defines a negative cumulative market return over the prior 24 months
-and interacts that bear indicator with variance from the prior 126 daily market
-returns. Its panic variable is continuous, not a published binary alert. The
-MVP operationalizes `panic_elevated` as a bear state whose 126-day variance is
-at least the expanding point-in-time mean variance observed in bear states.
-That boundary is explicitly an implementation convention, not a threshold
-claimed by the paper.
-
-## Run the MVP
-
-Python 3.11–3.14 and [`uv`](https://docs.astral.sh/uv/) are required:
+Python 3.11–3.14 and [`uv`](https://docs.astral.sh/uv/) are required.
 
 ```bash
 uv sync --locked --extra test
-uv run python -m src.pipeline --as-of-date 2020-03-24 --horizon 20
-uv run python -m pytest
+uv run python -m src.mvp.run_demo --as-of-date 2026-05-29
 ```
 
-The default evidence mode preserves the committed illustrative fixture. To
-exercise the production-shaped archive gate:
+This is the only primary demo command. It runs offline, reads the existing
+Phase 1–4 processed artifacts and compact Phase 5A aggregate audit, and writes
+only:
 
-```bash
-uv run python -m src.pipeline \
-  --as-of-date 2020-03-24 \
-  --horizon 20 \
-  --evidence-provider archived \
-  --archived-corpus /path/to/archived_corpus.json
-```
+- `outputs/demo/demo_summary_2026-05-29.json`
+- `outputs/demo/demo_scorecard_2026-05-29.csv`
+- `outputs/demo/demo_portfolio_2026-05-29.csv`
+- `outputs/demo/demo_report_2026-05-29.md`
 
-Without a classifier response, eligible documents are reported as
-`retrieved_unclassified` and no directional claims are emitted. Add
-`--classifier-response /path/to/response.json` only for a response tied to the
-exact retrieval hash. See `docs/ARCHIVED_EVIDENCE.md` for both schemas.
+The observation date is intentionally `2026-05-29`, the latest complete date
+shared by the macro and realized-risk inputs. On that date:
 
-Outputs are written under `outputs/mvp/`:
+- the risk-bearing portfolio was formed on `2026-04-30`;
+- the next portfolio was formed at the `2026-05-29` close;
+- later June data are shown only as module freshness metadata.
 
-- `assessment_<date>_h<horizon>.json`: the complete machine-readable result;
-- `risk_state_<date>_h<horizon>.json`: the primary DM/PIT assessment only;
-- `insurance_table_<date>.csv`: unconditional versus state-conditional
-  frequencies for 5- and 20-day horizons;
-- `pm_brief_<date>_h<horizon>.md`: the PM-facing daily artifact.
+The two portfolios are separately labeled. A newly formed portfolio is never
+used to explain risk realized by the previously active portfolio.
 
-Committed demonstrations cover:
+## Current demo contents
 
-- `2009-03-06`: elevated state with illustrative grounded evidence, but no
-  post-2017 alternative-data overlays;
-- `2020-03-24`: elevated state with FINRA and GDELT overlays;
-- `2024-01-05`: quiet/non-elevated control with evidence correctly skipped.
+| Section | Status | Authority |
+|---|---|---|
+| Phase 1 macro regime | Complete | Deterministic |
+| Phase 2 named 10-long/10-short portfolio | Complete | Deterministic |
+| Phase 3 contribution, beta, conditional beta, drawdown | Complete | Deterministic |
+| Phase 4 four-row scorecard | Complete and unchanged | Deterministic source of truth |
+| Phase 5A SEC coverage audit | Complete; 64.79% coverage, degraded | Feasibility only |
+| January–February 2023 case | Reproducible historical proxy | Descriptive, not causal |
+| Evidence preview | Bounded offline capability preview | Cannot change deterministic facts |
 
-## What each component is allowed to do
+Phase 5A has no fundamental ranks, Spearman alignment, long-short fundamental
+spread, or alignment flags. Those fields are explicitly `null`, with
+`alignment_status="future_work"`. Coverage never becomes a safe or low-risk
+fundamental conclusion.
 
-| Component | Role | May change primary probability? |
-|---|---|---:|
-| DM/PIT engine | Official state and conditional tail-loss frequency | Yes — it defines it |
-| B2 logistic | Frozen research-only shadow comparison | No |
-| Reversal checklist | Experimental preconditions and triggers | No |
-| FINRA positioning | Confirm, contradict, or remain neutral | No |
-| GDELT narrative | Confirm, contradict, or remain neutral | No |
-| Evidence provider | Supply timestamped, passage-grounded context | No |
+The 2023 case uses `2023-01-09` as a relative elevated-risk/high-volatility
+recovery precursor and `2023-02-02` as the realized stress observation. It is
+not labeled a formal `panic_elevated` alert, a proven crash forecast, or proof
+of a causal Fed-repricing mechanism.
 
-The active entry point is `src/pipeline.py`. The small active contracts live in
-`src/mvp/contracts.py`. Earlier modeling and monitoring modules remain in place
-for historical replay and are documented in `docs/history/README_legacy.md`;
-they are not called by the active pipeline.
+## Evidence boundary
+
+`src/evidence/research_preview.py` is labeled:
+
+> Phase 8 capability preview — not the completed Phase 8 implementation.
+
+It can only replay the versioned local corpus and an exact-date, already
+validated cached classification. It makes no network or model call, creates no
+threshold or risk probability, and cannot write back to deterministic facts.
+When reliable date-matched evidence is absent, it returns `unavailable` and
+empty supporting, contradicting, and contextual lists.
 
 ## Data and point-in-time controls
 
-- Market state uses only feature rows through the assessment date.
-- Conditional frequencies use only labels whose full forward windows have
-  matured by that date.
-- FINRA short interest enters on publication date, not settlement date.
-- SEC shares outstanding enter on filing date.
-- GDELT calendar buckets map into the next complete trading-date information
-  set and use prior-only rolling normalization.
-- Evidence publications must not postdate the assessment timestamp.
-- Relevant evidence must carry a valid URL and grounded source passage.
+- Market and risk windows end on or before the observation date.
+- Portfolio signal endpoints, formation dates, effective months, and
+  observation dates are separate fields.
+- Long weights sum to `+1`; short weights sum to `-1`.
+- Short-underlying returns and signed short contributions use explicit,
+  opposite signs.
+- SEC feasibility uses filing availability rather than fiscal-period end and
+  applies a staleness gate.
+- Missing values remain unavailable and never silently pass a threshold.
+- Evidence publications and cached classifications must satisfy the local
+  cutoff and provenance checks.
 
-The FINRA panel is based on a current large-cap universe applied historically
-and is survivorship-biased. FINRA daily short volume is off-exchange flow, not
-a consolidated position measure. The GDELT panel currently contains three
-volume-only mechanisms (`panic`, `crowding`, and `riskoff`); tone and
-five-mechanism breadth are unavailable.
+The portfolio uses a current SPY membership snapshot as a historical proxy and
+is survivorship-biased. Public-vendor price histories can contain ticker or
+corporate-action discontinuities; extreme momentum observations should be
+investigated before economic interpretation.
 
-## Evidence scope
+## Tests
 
-The default evidence output remains deliberately labeled
-`illustrative_fixture_replay`. Its small corpus was curated after the
-historical assessment dates and therefore demonstrates control flow, not a
-strict historical text backtest.
+```bash
+uv run python -m pytest -q
+git diff --check
+```
 
-The optional `archived_point_in_time` path now enforces a deterministic archive
-inventory, publication/discovery/availability/content-version cutoffs,
-deduplication, a frozen mechanism query, retrieval hashes, and exact passage
-grounding. A missing corpus never falls back to fixtures. A retrieved document
-cannot become directional evidence until a named classifier response matches
-the exact retrieval and approved prompt version. No qualifying documents means
-`unavailable`, never a low-risk interpretation.
+The final integration adds exactly four focused demo tests and two focused
+evidence-preview tests. They protect date alignment, unavailable Phase 5
+alignment, deterministic replay, upstream artifact immutability, evidence
+immutability, and fail-closed missing evidence.
 
-## Tests and reproducibility
+## Deferred roadmap
 
-The default suite covers:
+The following work remains explicitly deferred, not cancelled or completed:
 
-- label maturity and future-data invariance;
-- DM/PIT state construction and the insurance-table separation;
-- publication-date positioning joins;
-- prior-only normalization and GDELT information mapping;
-- primary/shadow/experimental isolation;
-- overlay immutability of the primary probability;
-- elevated-state evidence gating and citation cutoffs;
-- strict archive-schema, content-version, deduplication, retrieval-hash, and
-  classifier-grounding gates;
-- quiet and elevated end-to-end artifacts.
+- Phase 5B — production-grade historical SEC fundamentals and universe-level
+  fundamental alignment;
+- Phase 7 — Crowding Monitoring;
+- Phase 8 — Full AI Research and Retrieval Layer.
 
-Processed panels are committed and immediately readable. Large raw FINRA,
-price, and GDELT payload caches are not fully committed. Rebuild-only tests
-skip when their required raw payloads are absent; this is different from
-claiming that every processed artifact can be regenerated from a fresh clone
-without network access.
+Breadth, concentration, crowding, live news, vector databases, new predictive
+models, dashboards, deployment, and production infrastructure are not part of
+this final integration.
 
-## Current versus historical modules
+## Documentation
 
-Current:
+- [Methodology](docs/methodology.md)
+- [Demo walkthrough](docs/demo_walkthrough.md)
+- [Final handoff](docs/handoff.md)
+- [Confirmed design](docs/confirmed_design.md)
+- [Development plan](docs/development_plan.md)
+- [Phase 5A handoff](docs/handoff_phase5.md)
 
-- `src/risk/dm_engine.py`
-- `src/benchmarks/b2_shadow.py`
-- `src/experiments/reversal_checklist.py`
-- `src/overlays/snapshots.py`
-- `src/evidence/mvp.py`
-- `src/evidence/archived_provider.py`
-- `src/evidence/versioned_classifier.py`
-- `src/reporting/pm_brief.py`
-- `src/pipeline.py`
-
-Historical but retained:
-
-- `src/modeling/`
-- `src/monitoring/risk_state.py`
-- `src/monitoring/domain_risk.py`
-- `src/monitoring/positioning.py`
-- `src/monitoring/market_context.py`
-- `src/modeling/phase2.py` and the older aggregate-news model ablation
-
-See `docs/DECISIONS.md` for data judgments and
-`docs/history/README_legacy.md` for the original Phase 1/2 reproduction
-instructions.
+The earlier Daniel–Moskowitz conditional-frequency pipeline remains available
+through `python -m src.pipeline` as a retained research path. It is not the
+primary final-MVP entry point and does not replace the deterministic Phase 1–4
+scorecard.

@@ -1,6 +1,12 @@
 # Confirmed design: top-down momentum crash risk monitor
 
-Status: design baseline updated through Phase 4, 2026-07-28.
+Status: deterministic Phases 1–4 and Phase 5A complete; final MVP integration
+implemented, 2026-07-28.
+
+The final integration freezes the calculation modules. It adds one read-only
+demo adapter and a bounded offline evidence preview; it does not complete
+Phase 5B, Phase 7 Crowding Monitoring, or the full Phase 8 AI Research and
+Retrieval Layer.
 
 ## 1. Product objective
 
@@ -28,21 +34,25 @@ not a high-risk state.
 
 ### 2.1 Active path
 
-The current command is `python -m src.pipeline`. It produces a
-Daniel–Moskowitz-inspired state, a point-in-time conditional tail-loss
-frequency, a frozen B2 shadow prediction, a heuristic reversal checklist,
-FINRA and GDELT overlays, gated evidence, and a Markdown PM brief.
+The unique primary demo command is:
+
+`uv run python -m src.mvp.run_demo --as-of-date 2026-05-29`.
+
+It composes the frozen Phase 1–4 artifacts, the compact Phase 5A audit, the
+same-path 2023 case, and a fail-closed evidence preview. The older
+`python -m src.pipeline` conditional-frequency path remains runnable as
+retained research history but is not the primary final-MVP entry.
 
 | Area | Current modules | Current role |
 |---|---|---|
-| Active orchestration | `src/pipeline.py` | Builds one current MVP assessment and PM brief |
-| Primary state | `src/risk/dm_engine.py` | DM-inspired bear/variance state and matured-label conditional frequency |
-| Active contracts | `src/mvp/contracts.py` | Validated immutable assessment objects |
-| Shadow model | `src/benchmarks/b2_shadow.py` | Reads a frozen B2 out-of-sample prediction; cannot alter primary state |
-| Heuristic conditions | `src/experiments/reversal_checklist.py` | Explains preconditions and rebound triggers; research-only |
-| Overlays | `src/overlays/snapshots.py` | Reads FINRA positioning and GDELT narrative panels |
-| Evidence | `src/evidence/mvp.py`, `archived_provider.py`, `versioned_classifier.py` | Elevated-state gate, archive cutoff checks, retrieval hashing, grounded classifications |
-| Reporting | `src/reporting/pm_brief.py` | Deterministic Markdown report |
+| Active orchestration | `src/mvp/run_demo.py` | Read-only final-MVP composition and four demo artifacts |
+| Macro state | `src/regime/market_state.py` | Drawdown, recovery, volatility, DM state, and rate proxy |
+| Portfolio | `src/portfolio/momentum.py` | Named 12-1 long/short holdings and returns |
+| Risk | `src/risk/leg_decomposition.py` | Leg contributions, beta, conditional beta, volatility, and drawdown |
+| Scorecard | `src/monitoring/scorecard.py` | Unchanged four-row deterministic source of truth |
+| Fundamentals | `src/data/sec_fundamentals.py` | Phase 5A acquisition and feasibility only |
+| Evidence preview | `src/evidence/research_preview.py` | Exact-cache offline replay; no decision authority |
+| Retained research path | `src/pipeline.py` and related modules | Earlier conditional-frequency assessment, still runnable but not primary |
 
 ### 2.2 Research and retained legacy modules
 
@@ -74,7 +84,7 @@ No new source module was added in Phase 0.
 | State Street SPY daily holdings | Dated 503-name current S&P 500 proxy for Phase 2 | One current snapshot applied historically; not PIT membership |
 | Yahoo Finance chart API | Total-return adjusted prices for all 503 Phase 2 names and the Phase 3 SPY beta proxy | Public-vendor data and current-constituent survivorship bias; SPY is an ETF proxy, not the official index |
 | FINRA short interest and consolidated off-exchange short volume | Loser-leg crowding proxies | Short volume is flow, not a consolidated position |
-| SEC EDGAR company facts | Shares outstanding for short-interest utilisation; future filing-date fundamental momentum inputs | Full Company Facts coverage is currently too sparse to enable the fundamental monitor |
+| SEC EDGAR company facts | Shares outstanding plus Phase 5A feasibility for revenue, EPS, and margin signals | Two-of-three issuer coverage is 64.79% (`degraded`); Phase 5B alignment remains unavailable |
 | GDELT DOC 2.0 | Aggregate panic, crowding, and risk-off attention | Current active panel is volume-only and incomplete |
 | Committed evidence corpus and fixtures | Retrieval and classification demonstrations | Default fixtures were curated after the historical dates and are not a strict historical text backtest |
 
@@ -186,9 +196,10 @@ deterministic-facts/AI-interpretation separation.
 
 ### 2.9 Existing tests
 
-The suite contains 24 test modules. On 2026-07-27:
-
-`151 passed, 4 skipped`.
+The full suite includes the prior regression coverage plus exactly four final
+demo tests and two evidence-preview tests. The final handoff records the
+post-integration result: 215 collected, 211 passed, and 4 skipped because their
+documented raw-cache prerequisites are absent.
 
 Coverage includes label maturity and future-data invariance, purged temporal
 splits, fold-local preprocessing, DM state construction, contract validation,
@@ -256,11 +267,11 @@ Required invariants:
 | Named long and short holdings | Phase 2 complete | Dated signal endpoints, formation, next-month weights, and returns are persisted |
 | Leg beta and risk contribution | Phase 3 complete | Realized long, short-underlying, portfolio and conditional beta, volatility, signed contribution, drawdown, and recovery attribution are persisted |
 | Deterministic row scorecard | Phase 4 complete | Four nonredundant alert rows cover the macro gate, beta gap, portfolio drawdown, and short losses in recovery; raw Phase 1/3 metrics remain diagnostic context |
-| Minimal breadth and concentration | Missing | Add effective bets, top-five contribution share, and sector concentration only |
-| Universe Fundamental Momentum and Portfolio Alignment | Missing; feasibility gate required | Acquire Company Facts across the eligible universe, rank PIT revenue/EPS acceleration and margin change independently of price selection, then map the ranks onto the long and short legs |
-| Crowding | Useful partial | Reuse contribution/sector concentration; retain FINRA as an explicitly labeled proxy |
-| Minimal AI evidence | Strong partial | Adapt output schema and add analogs/questions/uncertainty without decision authority |
-| Final top-down demo | Missing | Current PM brief does not answer holdings, leg-risk, breadth, or quality questions |
+| Minimal breadth and concentration | Deferred | Not added during the final integration |
+| Universe Fundamental Momentum and Portfolio Alignment | Phase 5A complete; Phase 5B deferred | Coverage feasibility is visible; ranks, Spearman, spreads, and flags are null |
+| Crowding | Deferred Phase 7 | Existing proxies remain research inputs; no new crowding monitor was built |
+| AI evidence | Capability preview only | Exact-cache offline replay fails closed; full Phase 8 remains deferred |
+| Final top-down demo | Complete | One offline command produces date-aligned current and 2023 cases |
 
 ## 5. Reuse, deprecation, and future work
 
@@ -292,12 +303,11 @@ Defer beyond the MVP:
 - a multi-agent AI architecture;
 - automated trading or sizing recommendations.
 
-## 6. Phase 0 acceptance
+## 6. Final MVP boundary
 
-- Repository map: complete.
-- Data, PIT safeguards, labels, DM/B0–B3 logic, portfolios, features, evidence,
-  and tests: documented.
-- Gap analysis against the confirmed architecture: complete.
-- Reuse and deprecation boundaries: explicit.
-- Plan sized to 10–15 hours: in `docs/development_plan.md`.
-- New feature implementation: none.
+- Phases 1–4 are complete and remain the deterministic source of truth.
+- Phase 5 is frozen after Phase 5A feasibility; Phase 5B is deferred.
+- The final integration adds no breadth, concentration, or crowding metrics.
+- The evidence adapter is only a Phase 8 capability preview.
+- Phase 7 Crowding Monitoring and Phase 8 Full AI Research and Retrieval Layer
+  remain in the roadmap and are neither cancelled nor completed.
