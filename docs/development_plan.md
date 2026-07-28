@@ -1,7 +1,7 @@
 # Development plan: top-down risk monitoring MVP
 
-Status: Phase 2 implementation baseline, revised 2026-07-27 after the
-Fundamental Momentum Alignment re-scope.
+Status: Phase 4 implementation complete, revised 2026-07-28 after simplifying
+the deterministic scorecard.
 
 ## 1. Delivery method
 
@@ -31,7 +31,7 @@ built. It is replaced or redirected only in the final integration phase.
 
 ## 2. Budget and scope
 
-The implementation target is approximately 12 hours, with 1–2 hours of
+The implementation target is approximately 13 hours, with 1–2 hours of
 contingency inside the stated 10–15 hour review budget.
 
 | Phase | Deliverable | Estimate |
@@ -40,11 +40,11 @@ contingency inside the stated 10–15 hour review budget.
 | 2 | Synthetic S&P 500 portfolio | 2.75 h |
 | 3 | Long/short risk decomposition | 1.25 h |
 | 4 | Deterministic scorecard | 1.25 h |
-| 5 | Fundamental Momentum Alignment plus minimal breadth | 2.00 h |
+| 5 | Universe fundamental momentum, alignment, and minimal breadth | 3.50 h |
 | 6 | Crowding reuse and research note | 0.25 h |
 | 7 | Minimal AI evidence adaptation | 1.25 h |
 | 8 | Demo, historical case, and documentation | 1.50 h |
-| | Planned implementation | **11.50 h** |
+| | Planned implementation | **13.00 h** |
 
 Budget protection rules:
 
@@ -53,8 +53,9 @@ Budget protection rules:
 - If reliable point-in-time S&P 500 membership cannot be obtained quickly,
   use a frozen current-membership S&P 500 snapshot and expose
   `survivorship_bias=true`; do not substitute the current top-200 universe.
-- Phase 5 is configuration-gated and may ship with unavailable values if
-  public fundamentals cannot meet timestamp and coverage checks.
+- Phase 5 begins with full-universe Company Facts acquisition and a coverage
+  audit. Do not build a permanently disabled monitor: proceed only if at least
+  60% coverage is feasible, with 80% or more the normal target.
 - Phase 6 adds no scraper.
 - Do not build a standalone IC/IR analytics framework.
 - No new predictive model is trained.
@@ -196,61 +197,92 @@ Planned files:
 
 - create `src/monitoring/scorecard.py`
 - create `tests/test_scorecard.py`
-- modify `src/mvp/contracts.py` only if a shared serialized contract is needed
+- leave `src/mvp/contracts.py` unchanged; the old probability-led path is not
+  the new scorecard contract
 
 Minimum acceptance:
 
 - each row contains monitor family, metric, current value, threshold,
   threshold provenance, triggered flag, severity, direction, explanation,
   as-of date, and source module;
-- minimum monitors cover drawdown, recovery, volatility, long beta, short beta,
-  beta gap, long-short drawdown, short loss contribution, breadth, and
-  concentration;
+- expose exactly four Phase 4 alert rows: high-volatility recovery,
+  short-minus-long beta gap, portfolio drawdown, and short loss in recovery;
+- keep underlying drawdown, recovery, volatility, long beta, short beta, and
+  portfolio beta as diagnostic context rather than duplicate alerts;
+- use prior-only historical quantiles after 252 observations, with explicitly
+  labeled demonstration fallbacks;
+- measure portfolio drawdown from the trailing 63-day high-water mark and
+  bound its threshold between -20% and -5%, so stale underwater history cannot
+  make the alert progressively more tolerant;
 - boundary, missing-value, comparator-direction, schema, and repeatability
   tests pass;
 - missing is explicit and is never silently false;
-- DM/B0/B1/B2/B3 mapping is metadata or reference context, not an averaged
-  score.
+- do not emit an averaged score, unexplained risk probability, or separate
+  DM/B0/B1/B2/B3 vote.
 
-### Phase 5 — Fundamental Momentum Alignment and minimal breadth
+### Phase 5 — Universe Fundamental Momentum and Portfolio Alignment
 
 Inspect first:
 
-- Phase 2 signal, holdings, and current sector fields
+- Phase 2 full-universe signal, ranks, holdings, and current classifications
 - contribution definitions from Phase 3
 - `src/data/sec_edgar.py`
-- cached SEC Company Facts and filing-date coverage
+- ticker-to-CIK coverage, Company Facts acquisition routing, taxonomy tags,
+  quarterly/annual periods, fiscal alignment, and filing-date filters
 
 Expected reuse:
 
-- monthly price ranks, pure Pandas rank calculations, SEC filing-date
-  availability controls, and Phase 3 contribution definitions.
+- monthly 12-1 price calculations, pure Pandas rank calculations, SEC
+  cache/provenance controls, and Phase 3 contribution definitions.
 
 Planned files:
 
 - create `src/data/sec_fundamentals.py`
+- create `src/features/fundamental_momentum.py`
 - create `src/monitoring/fundamental_alignment.py`
 - create `src/risk/breadth.py`
 - create `tests/test_sec_fundamentals.py`
+- create `tests/test_fundamental_momentum.py`
 - create `tests/test_fundamental_alignment.py`
 - create `tests/test_breadth.py`
-- modify `src/monitoring/scorecard.py` only to consume optional status and flags
+- modify `src/data/sec_edgar.py` only to expose public cache-first Company
+  Facts acquisition
+- modify `src/data/sp500.py` to expose current industry classification with
+  its non-PIT status
+- leave the existing Phase 4 scorecard unchanged and create a separate visible
+  Fundamental Alignment Scorecard
 
 Minimum acceptance:
 
+- perform a full-universe SEC acquisition and feasibility gate before
+  production monitor implementation;
+- define the eligible membership/price universe first, retaining the current
+  snapshot and survivorship warnings where historical membership is missing;
+- calculate price momentum and its ranks across the full eligible universe;
 - prioritize revenue-growth acceleration, EPS-growth acceleration, and
   operating-margin change; at least two valid signals per company;
-- normalize every signal within sector before combining;
-- output price rank, fundamental rank, cross-sectional Spearman correlation,
-  long and short fundamental averages, long-minus-short spread, long-positive
-  share, short-improving share, top/bottom overlap, and change versus the
-  previous rebalance;
+- use industry-relative normalization only with at least ten valid peers,
+  otherwise fall back to sector-relative normalization with at least five;
+- rank fundamental momentum across all covered eligible stocks before joining
+  the independently selected price-momentum portfolio;
+- output eligible/covered counts, stock-level price and fundamental scores and
+  ranks, Spearman correlation, top/bottom overlap, sector coverage, and
+  change versus the previous valid rebalance;
+- output average and median fundamental ranks by leg, long-minus-short score
+  spread, long-positive and short-improving shares, contradiction lists, and
+  covered/missing names for each leg;
 - deterministic flags cover weak/negative correlation, insufficient long
   support, improving shorts, narrow/negative spread, and sharp deterioration;
 - thresholds use prior-only historical quantiles after at least 24 rebalances;
   earlier thresholds are labeled demonstration assumptions;
-- use filing/availability dates, never fiscal-period end as availability;
-- status is `disabled`, `unavailable`, `insufficient_coverage`, or `available`;
+- use the first trading day after filing as availability and reject components
+  whose latest fiscal period is more than 180 days stale;
+- universe coverage is normal at 80% or more, degraded from 60% to below 80%,
+  and insufficient below 60%;
+- leg coverage is normal at 8–10 names, degraded at 6–7, and insufficient
+  below 6;
+- insufficient inputs remain nullable, not silently safe;
+- produce a separate six-row visible Fundamental Alignment Scorecard;
 - imperfect fundamentals cannot block macro, portfolio, beta, or scorecard;
 - retain only effective number of bets, top-five contribution share, and
   sector concentration;
