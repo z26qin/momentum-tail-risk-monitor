@@ -1153,3 +1153,82 @@ are in the leg* changed. Normalising each name to its own history removes
 exactly that. Neither is redundant: utilisation answers "how crowded is this leg
 in absolute terms", the ratio answers "is crowding unusual for these names".
 Four episodes, no significance testing, nothing fitted.
+
+## Streamlined MVP: one primary answer, two isolated alternatives
+
+**Decision taken 2026-07-26.**
+
+The active system now has exactly one primary risk number. It comes from a
+Daniel–Moskowitz-inspired state and a point-in-time empirical frequency of
+matured forward tail-loss labels. The frozen B2 logistic model remains
+available only as a shadow benchmark. The earlier domain checklist remains
+available only as experimental reversal conditions. Neither can replace,
+average into, or modify the primary probability.
+
+**What is taken from the paper.** Daniel and Moskowitz define the ex-ante bear
+indicator as one when the cumulative value-weighted market return over the
+prior 24 months is negative. They estimate market variance from the 126 daily
+returns preceding the forecast month and use the interaction of the bear
+indicator and variance as a continuous panic variable. Source: Kent Daniel and
+Tobias J. Moskowitz, “Momentum Crashes,” *Journal of Financial Economics*
+122(2), 2016; working-paper version
+<https://www.nber.org/papers/w20439>.
+
+**What is an MVP convention rather than a paper threshold.** The paper does not
+publish a binary high-volatility alert boundary. For daily orchestration, the
+MVP calls the state `panic_elevated` when the bear indicator is true and the
+126-day variance is at least the expanding point-in-time mean variance among
+bear-state observations. This retains the paper's bear-times-variance structure
+without presenting the implementation boundary as a literature result.
+
+**Why conditional frequency rather than a fitted probability.** Every
+historical row enters only after its forward label is mature. The system then
+reports the observed tail-loss frequency, mean forward return, fifth
+percentile, and sample size for the current state. The full-sample insurance
+table is retained beside it. This is transparent, spreadsheet-reproducible, and
+does not require selecting a model or alert threshold from sparse episodes.
+
+**Alternative-data boundary.** The active positioning adapter reads the real
+FINRA loser-leg panel; the decile return-dispersion proxy is no longer called
+positioning in the active path. The active narrative adapter reads the three
+available volume-only mechanisms. Both can return `confirm`, `contradict`,
+`neutral`, or `unavailable`, but neither has a code path to the primary
+probability.
+
+**Evidence boundary.** Evidence is triggered only for an elevated primary
+state. Current classified outputs are explicitly labeled
+`illustrative_fixture_replay` because their corpus was curated after the
+historical assessment dates. Timestamp and passage-grounding checks remain
+enforced. Missing evidence is unavailable, never evidence of low risk.
+
+**Disposition of the old architecture.** `src/modeling/` and the earlier
+`src/monitoring/` adapters remain importable for historical replay and their
+tests remain in the full suite. The default entry point does not call them.
+Their original reproduction instructions moved to
+`docs/history/README_legacy.md`.
+
+## Archived evidence is a separate, fail-closed provider
+
+**Decision taken 2026-07-26.**
+
+The post-date curated fixture remains available for demonstration, but it
+cannot be passed to the archived provider or relabeled as point-in-time
+evidence. Archive mode requires a versioned deterministic inventory, exact
+content hashes, and separate publication, discovery, availability, and
+content-version timestamps. Uncertain content versions are retained as
+exclusions for audit and cannot be classified.
+
+Retrieval and classification are two gates. Retrieval is deterministic and
+produces request/result hashes plus explicit exclusion reasons. Its candidates
+remain `retrieved_unclassified` until an exact-hash classifier response names
+an approved prompt version and explicit model identifier, covers every
+candidate once, and grounds every relevant passage in archived content.
+Failure at either gate emits no directional claims and never falls back to the
+fixture.
+
+GDELT 2.0 is usable as a discovery inventory only from 2015-02-19 onward and
+GKG metadata does not itself preserve article bodies. A strict 2020 track
+therefore also requires archived page or WARC content; 2009 requires an
+official-release archive or another older inventory. Until those bytes are
+acquired, the code path is production-shaped but the production corpus remains
+an explicit blocker.

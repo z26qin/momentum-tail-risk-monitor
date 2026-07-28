@@ -1,4 +1,4 @@
-"""Adapt frozen Phase 1 outputs into an inspectable deterministic RiskState."""
+"""Legacy B2 adapter retained for replay; the active MVP uses src.risk."""
 
 from __future__ import annotations
 

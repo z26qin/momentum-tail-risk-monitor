@@ -1,0 +1,17 @@
+{
+  "adjustment": "split- and dividend-adjusted close for momentum and returns",
+  "coverage_rate": 1.0,
+  "covered_symbols": 503,
+  "download_requested": 309,
+  "downloaded_symbols": 309,
+  "empty": [],
+  "first_date": "2016-01-04",
+  "last_date": "2026-07-27",
+  "price_source": "Yahoo Finance chart API; existing top-200 histories reused byte-for-value and new S&P 500 symbols cached separately",
+  "processed_path": "data/processed/sp500_prices.parquet",
+  "requested": 503,
+  "reused_symbols": 194,
+  "rows": 1293310,
+  "unavailable": [],
+  "uncovered_symbols": []
+}

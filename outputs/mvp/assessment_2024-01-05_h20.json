@@ -1,0 +1,114 @@
+{
+  "evidence": {
+    "as_of_date": "2024-01-05",
+    "citations": [],
+    "classifier_input_sha256": null,
+    "classifier_mode": null,
+    "contextual_items": 0,
+    "contradicting_items": 0,
+    "corpus_sha256": null,
+    "corpus_version": null,
+    "detail": "Evidence retrieval is intentionally skipped because the primary DM state is not elevated.",
+    "excluded_documents": 0,
+    "exclusions": [],
+    "mode": "illustrative_fixture_replay",
+    "model_identifier": null,
+    "prompt_version": null,
+    "provider_name": "fixture_evidence_provider_v1",
+    "request_sha256": null,
+    "retrieval_sha256": null,
+    "retrieved_document_ids": [],
+    "retrieved_documents": 0,
+    "status": "skipped_quiet_state",
+    "supporting_items": 0
+  },
+  "experimental_conditions": {
+    "detail": "Research heuristics retained to explain reversal conditions. Thresholds are not the primary DM rule, are not calibrated, and cannot change the primary probability.",
+    "research_only": true,
+    "status": "normal",
+    "total_conditions": 6,
+    "triggered_conditions": []
+  },
+  "narrative": {
+    "as_of_date": "2024-01-05",
+    "available_mechanisms": [
+      "crowding",
+      "panic",
+      "riskoff"
+    ],
+    "crowding_volume_z": 1.6744926886828433,
+    "limitations": [
+      "The current panel contains volume intensity for panic, crowding, and risk-off only; tone and five-mechanism breadth are unavailable.",
+      "The estimand is attention share in GDELT-monitored English-language global news, not US financial-news sentiment or article counts.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": "2024-01-05",
+    "panic_volume_z": -0.27650292090813283,
+    "read": "neutral",
+    "riskoff_volume_z": -0.23680285653467392,
+    "stale_trading_days": 0
+  },
+  "positioning": {
+    "as_of_date": "2024-01-05",
+    "limitations": [
+      "The proxy universe is current membership applied historically and is therefore survivorship-biased.",
+      "FINRA daily short volume is off-exchange flow, not a position, and is not consolidated with exchange short-sale volume.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": "2024-01-05",
+    "read": "neutral",
+    "short_interest_ratio_z": 1.4899036825964789,
+    "short_interest_utilisation_z": -0.2748533340811539,
+    "short_volume_share_z": 0.6696796933320764,
+    "stale_trading_days": 0
+  },
+  "primary": {
+    "as_of_date": "2024-01-05",
+    "as_of_timestamp": "2024-01-05T16:00:00-05:00",
+    "bear_state": true,
+    "conditional_fifth_percentile": -0.07915407821764413,
+    "conditional_mean_forward_return": -0.0013091367075875918,
+    "conditioning_sample_size": 3110,
+    "elevated": false,
+    "elevation_rule": "bear_state is true and 126-day market variance is at least the point-in-time expanding mean variance among bear-state observations",
+    "horizon_days": 20,
+    "label_maturity_cutoff_date": "2024-01-05",
+    "limitations": [
+      "The paper defines a continuous bear-state-times-variance variable; the binary elevation boundary is an explicit operationalization.",
+      "Daily Ken French and broad-market public proxies replace the paper's monthly CRSP implementation.",
+      "Conditional frequencies are descriptive historical rates, not calibrated forecasts or trading thresholds."
+    ],
+    "market_return_504d": -0.009631416200273153,
+    "market_variance_126d": 5.9810549841270596e-05,
+    "method": "dm_pit_conditional_frequency",
+    "panic_intensity": 0.23092178977099637,
+    "provenance": [
+      {
+        "path": "data/processed/market_features.parquet",
+        "role": "market_features",
+        "sha256": "92e760b47167ba167f16de05208c07538d6cb8ce510ccee633b630e1e46ff5b9"
+      },
+      {
+        "path": "data/processed/momentum_labels_h20.parquet",
+        "role": "matured_tail_labels",
+        "sha256": "8a3fd5f1b25787f50ea08b4535ed5dbc1bcf9858c386b9601b55e57bfe216632"
+      }
+    ],
+    "schema_version": "mvp-v1",
+    "state": "bear_low_volatility",
+    "tail_loss_probability": 0.08167202572347267,
+    "unconditional_sample_size": 25029,
+    "unconditional_tail_loss_probability": 0.051340445083702904
+  },
+  "schema_version": "mvp-v1",
+  "shadow_benchmarks": [
+    {
+      "agrees_with_primary": true,
+      "detail": "Research-only frozen OOS B2 probability. Agreement compares the primary elevated flag with whether B2 is at or above its 75th PIT percentile inside the same saved split; this is not an alert threshold and does not modify primary risk.",
+      "name": "B2_logistic",
+      "shadow_percentile": 0.09803921568627451,
+      "shadow_probability": 0.011176025072649668,
+      "status": "available"
+    }
+  ]
+}

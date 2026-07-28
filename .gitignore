@@ -15,6 +15,14 @@ dist/
 # manifests under data/raw/*/ and in the processed extracts.
 data/raw/finra/daily/
 data/raw/prices/
+data/raw/sp500/prices/
+data/raw/sp500/benchmark/
 data/raw/gdelt/*.json
 !data/raw/gdelt/*.metadata.json
 !data/raw/gdelt/acquisition_report.json
+
+# Reference papers. Read locally, cited by number in the memo, never
+# redistributed: this repository is public and the working papers are not
+# ours to republish. Daniel-Moskowitz (2016) is NBER w20439.
+momentum crash paper/
+*.pdf

@@ -1,0 +1,117 @@
+{
+  "evidence": {
+    "as_of_date": "2020-03-24",
+    "citations": [],
+    "classifier_input_sha256": null,
+    "classifier_mode": null,
+    "contextual_items": 0,
+    "contradicting_items": 0,
+    "corpus_sha256": null,
+    "corpus_version": "momentum-evidence-v1",
+    "detail": "Primary state is elevated, but no cached illustrative classification fixture exists for this date.",
+    "excluded_documents": 0,
+    "exclusions": [],
+    "mode": "illustrative_fixture_replay",
+    "model_identifier": null,
+    "prompt_version": null,
+    "provider_name": "fixture_evidence_provider_v1",
+    "request_sha256": null,
+    "retrieval_sha256": null,
+    "retrieved_document_ids": [],
+    "retrieved_documents": 0,
+    "status": "unavailable",
+    "supporting_items": 0
+  },
+  "experimental_conditions": {
+    "detail": "Research heuristics retained to explain reversal conditions. Thresholds are not the primary DM rule, are not calibrated, and cannot change the primary probability.",
+    "research_only": true,
+    "status": "normal",
+    "total_conditions": 6,
+    "triggered_conditions": [
+      "high_market_volatility",
+      "exposure_instability_confirmation"
+    ]
+  },
+  "narrative": {
+    "as_of_date": "2020-03-24",
+    "available_mechanisms": [
+      "crowding",
+      "panic",
+      "riskoff"
+    ],
+    "crowding_volume_z": -0.07013463414733848,
+    "limitations": [
+      "The current panel contains volume intensity for panic, crowding, and risk-off only; tone and five-mechanism breadth are unavailable.",
+      "The estimand is attention share in GDELT-monitored English-language global news, not US financial-news sentiment or article counts.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": "2020-03-24",
+    "panic_volume_z": 1.3464747737313292,
+    "read": "confirm",
+    "riskoff_volume_z": 0.4353463396632695,
+    "stale_trading_days": 0
+  },
+  "positioning": {
+    "as_of_date": "2020-03-24",
+    "limitations": [
+      "The proxy universe is current membership applied historically and is therefore survivorship-biased.",
+      "FINRA daily short volume is off-exchange flow, not a position, and is not consolidated with exchange short-sale volume.",
+      "The overlay can confirm or contradict context but cannot modify the primary tail-loss probability."
+    ],
+    "observation_date": "2020-03-24",
+    "read": "neutral",
+    "short_interest_ratio_z": 0.36640706306084275,
+    "short_interest_utilisation_z": -0.05732747748571946,
+    "short_volume_share_z": -1.1768480651686377,
+    "stale_trading_days": 0
+  },
+  "primary": {
+    "as_of_date": "2020-03-24",
+    "as_of_timestamp": "2020-03-24T16:00:00-04:00",
+    "bear_state": true,
+    "conditional_fifth_percentile": -0.18325083179665183,
+    "conditional_mean_forward_return": -0.012858300377268459,
+    "conditioning_sample_size": 1367,
+    "elevated": true,
+    "elevation_rule": "bear_state is true and 126-day market variance is at least the point-in-time expanding mean variance among bear-state observations",
+    "horizon_days": 20,
+    "label_maturity_cutoff_date": "2020-03-24",
+    "limitations": [
+      "The paper defines a continuous bear-state-times-variance variable; the binary elevation boundary is an explicit operationalization.",
+      "Daily Ken French and broad-market public proxies replace the paper's monthly CRSP implementation.",
+      "Conditional frequencies are descriptive historical rates, not calibrated forecasts or trading thresholds."
+    ],
+    "market_return_504d": -0.05011363128511087,
+    "market_variance_126d": 0.0005957976565079366,
+    "method": "dm_pit_conditional_frequency",
+    "panic_intensity": 2.254647712728815,
+    "provenance": [
+      {
+        "path": "data/processed/market_features.parquet",
+        "role": "market_features",
+        "sha256": "92e760b47167ba167f16de05208c07538d6cb8ce510ccee633b630e1e46ff5b9"
+      },
+      {
+        "path": "data/processed/momentum_labels_h20.parquet",
+        "role": "matured_tail_labels",
+        "sha256": "8a3fd5f1b25787f50ea08b4535ed5dbc1bcf9858c386b9601b55e57bfe216632"
+      }
+    ],
+    "schema_version": "mvp-v1",
+    "state": "panic_elevated",
+    "tail_loss_probability": 0.23847841989758595,
+    "unconditional_sample_size": 24076,
+    "unconditional_tail_loss_probability": 0.04822229606246885
+  },
+  "schema_version": "mvp-v1",
+  "shadow_benchmarks": [
+    {
+      "agrees_with_primary": null,
+      "detail": "No unique frozen OOS B2 prediction exists for this date; primary DM state is unaffected.",
+      "name": "B2_logistic",
+      "shadow_percentile": null,
+      "shadow_probability": null,
+      "status": "unavailable"
+    }
+  ]
+}

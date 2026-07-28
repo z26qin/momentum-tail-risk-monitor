@@ -1,4 +1,4 @@
-"""Build one point-in-time return-dispersion proxy for momentum crowding."""
+"""Legacy return-dispersion proxy; active MVP positioning reads the FINRA panel."""
 
 from __future__ import annotations
 

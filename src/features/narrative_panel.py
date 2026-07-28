@@ -49,7 +49,13 @@ from src.data.gdelt import (
     validate_queries,
 )
 from src.data.trading_calendar import build_trading_calendar
-from src.utils.io import DEFAULT_OUTPUT_DIR, DEFAULT_PROCESSED_DIR, DEFAULT_RAW_DIR, write_json
+from src.utils.io import (
+    DEFAULT_OUTPUT_DIR,
+    DEFAULT_PROCESSED_DIR,
+    DEFAULT_RAW_DIR,
+    REPO_ROOT,
+    write_json,
+)
 from src.utils.pit import (
     NARRATIVE_MIN_OBSERVATIONS,
     ROLLING_WINDOW,
@@ -482,7 +488,9 @@ def build_panel(
     report["gdelt_diagnostics"] = diagnostics
     report["rolling_z_diagnostics"] = z_diagnostics
     report["trading_calendar"] = calendar.as_dict()
-    report["panel_path"] = str(panel_path)
+    report["panel_path"] = str(
+        panel_path.resolve().relative_to(REPO_ROOT.resolve())
+    )
     report["rows"] = int(len(panel))
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "narrative_panel_coverage.json", report)

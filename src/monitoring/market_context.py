@@ -1,4 +1,4 @@
-"""Build a concise point-in-time market context without model fitting."""
+"""Legacy context adapter retained for historical evidence replay."""
 
 from __future__ import annotations
 

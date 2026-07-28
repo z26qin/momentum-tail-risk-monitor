@@ -1,0 +1,77 @@
+{
+  "as_of_date": "2026-06-30",
+  "source_start_date": "2017-01-01",
+  "development_end_exclusive": "2025-07-01",
+  "final_test_start": "2025-07-01",
+  "query_design_is_label_blind": true,
+  "query_freeze_status": "frozen before any model evaluation",
+  "coverage_rule_status": "refrozen after a label-blind dry-run audit rejected an incomplete final-test calendar",
+  "queries": {
+    "Q_PANIC": {
+      "query": "(\"stock market crash\" OR \"market panic\" OR \"forced selling\" OR \"margin call\") (stocks OR equities) sourcecountry:US sourcelang:english",
+      "economic_intuition": "Abrupt selling pressure and financing stress can precede a momentum unwind as crowded winners are liquidated and beaten-down losers rebound.",
+      "likely_false_positives": "Historical retrospectives, warnings that no crash is expected, and company-specific margin calls.",
+      "semantic_check": "Retains only explicit market-panic or forced-selling phrases combined with stocks/equities; generic crash and panic terms were excluded."
+    },
+    "Q_ROTATION": {
+      "query": "(\"sector rotation\" OR \"factor rotation\" OR \"value rotation\") sourcecountry:US sourcelang:english",
+      "economic_intuition": "A rapid move away from recent winners and toward lagging sectors or value can directly reverse cross-sectional equity momentum.",
+      "likely_false_positives": "Routine portfolio commentary, slow strategic reallocations, and non-US sector discussions repeated by US outlets.",
+      "semantic_check": "The initial sample contained incidental portfolio and single-stock mentions. The frozen query keeps only explicit factor/sector/value-rotation phrases; generic rotation and growth-to-value wording were excluded. A repeat-count operator was rejected because it made the historical request unnecessarily expensive."
+    },
+    "Q_POLICY": {
+      "query": "(\"Federal Reserve\" OR Fed) (\"rate hike\" OR \"rate cut\" OR liquidity OR hawkish OR dovish) (stocks OR markets) sourcecountry:US sourcelang:english",
+      "economic_intuition": "Unexpected monetary tightening or impaired liquidity can change discount rates and trigger a sharp market regime transition.",
+      "likely_false_positives": "Post-event policy recaps, non-equity market reactions, and hypothetical central-bank scenarios.",
+      "semantic_check": "The initial shock-only query returned too few titles. The frozen query still requires an explicit Fed reference and stocks/markets, but uses interpretable policy and liquidity terms broad enough to form a daily aggregate."
+    },
+    "Q_CROWDING": {
+      "query": "(\"crowded trade\" OR \"forced deleveraging\" OR \"short squeeze\" OR \"quant unwind\") (stocks OR equities OR \"hedge fund\") sourcecountry:US sourcelang:english",
+      "economic_intuition": "Crowded positioning, forced deleveraging, and short squeezes are direct mechanisms through which momentum winners can fall while losers rally.",
+      "likely_false_positives": "Single-stock squeezes, cryptocurrency deleveraging, and company balance-sheet deleveraging.",
+      "semantic_check": "The unquoted deleveraging term made the initial request excessively broad. The frozen query requires forced deleveraging or an explicit crowding/squeeze/unwind phrase plus an equity or hedge-fund context."
+    },
+    "Q_RISKOFF": {
+      "query": "(\"risk off\" OR \"flight to safety\" OR \"market turmoil\") (stocks OR equities OR \"Wall Street\") sourcecountry:US sourcelang:english",
+      "economic_intuition": "Broad risk aversion may precede forced exposure reduction and destabilize momentum portfolios, especially when volatility and correlations rise.",
+      "likely_false_positives": "Generic macro risk commentary, overseas crises with little US-equity impact, and retrospective market summaries.",
+      "semantic_check": "Requires explicit market-risk phrases plus an equity or Wall Street context; generic investor fear and standalone turmoil were excluded."
+    }
+  },
+  "feature_specification": {
+    "rolling_window_trading_days": 126,
+    "normalization_history": "strictly prior observations",
+    "minimum_observed_volume_days": 101,
+    "minimum_observed_volume_fraction": 0.8,
+    "minimum_observed_tone_days": 20,
+    "primary_text_features": [
+      "attention_max",
+      "narrative_breadth",
+      "tone_min"
+    ],
+    "volume_threshold_for_breadth": 1.0
+  },
+  "model_specification": {
+    "models": [
+      "B2c",
+      "B3"
+    ],
+    "primary_horizon_days": 20,
+    "secondary_horizon_days": 5,
+    "initial_train_years": 3,
+    "test_block_years": 1,
+    "step_years": 1,
+    "logistic_C": 1.0,
+    "bootstrap_block_length": 20,
+    "bootstrap_replications": 2000,
+    "episode_warning_lookback_trading_days": 10,
+    "episode_warning_rule": "retrospective scope-and-model top decile"
+  },
+  "evaluation_metrics": [
+    "log_loss",
+    "brier_score",
+    "pr_auc",
+    "roc_auc",
+    "episode_capture"
+  ]
+}

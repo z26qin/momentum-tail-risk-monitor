@@ -60,7 +60,12 @@ from src.data.finra import (
 from src.data.finra import TICKER_IDENTITY_FROM
 from src.data.sec_edgar import point_in_time_shares_outstanding
 from src.data.trading_calendar import build_trading_calendar
-from src.utils.io import DEFAULT_OUTPUT_DIR, DEFAULT_PROCESSED_DIR, write_json
+from src.utils.io import (
+    DEFAULT_OUTPUT_DIR,
+    DEFAULT_PROCESSED_DIR,
+    REPO_ROOT,
+    write_json,
+)
 from src.utils.pit import ROLLING_WINDOW, rolling_z_pit
 
 
@@ -641,7 +646,7 @@ def build_panel(
     reconciliation = reconcile_days_to_cover(expanded)
 
     report: dict[str, Any] = {
-        "panel_path": str(panel_path),
+        "panel_path": str(panel_path.resolve().relative_to(REPO_ROOT.resolve())),
         "rows": int(len(panel)),
         "first_trading_date": trading_dates.min().date().isoformat(),
         "last_trading_date": trading_dates.max().date().isoformat(),

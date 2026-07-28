@@ -1,0 +1,84 @@
+{
+  "assessment_timestamps": [
+    "2020-03-18T16:00:00-04:00",
+    "2020-03-23T16:00:00-04:00",
+    "2020-03-24T16:00:00-04:00"
+  ],
+  "evaluation_name": "march-2020-momentum-retrieval-gold-v1",
+  "evidence_directions": [
+    "supporting",
+    "contradicting",
+    "contextual",
+    "irrelevant"
+  ],
+  "existing_runtime_mapping": {
+    "crowding or deleveraging": [
+      "crowded_positioning",
+      "short_covering_or_position_unwind"
+    ],
+    "factor rotation": "market_rebound",
+    "generic risk-off or risk-on": [
+      "market_stress_or_panic",
+      "generic_macro_context"
+    ],
+    "loser squeeze": [
+      "short_covering_or_position_unwind",
+      "loser_leg_recovery"
+    ],
+    "policy or liquidity shock": "policy_or_liquidity_support",
+    "rapid market rebound after stress": "market_rebound",
+    "winner liquidation": "short_covering_or_position_unwind"
+  },
+  "human_annotation_required": true,
+  "mechanism_taxonomy": [
+    "market_stress_or_panic",
+    "market_rebound",
+    "policy_or_liquidity_support",
+    "short_covering_or_position_unwind",
+    "loser_leg_recovery",
+    "crowded_positioning",
+    "generic_macro_context",
+    "other"
+  ],
+  "metrics": [
+    "Precision@3",
+    "Precision@5",
+    "nDCG@5",
+    "timestamp_valid_rate",
+    "citation_valid_rate",
+    "exact_passage_match_rate",
+    "unsupported_claim_rate",
+    "mechanism_coverage"
+  ],
+  "non_claims": [
+    "text predicts momentum crashes",
+    "text adds incremental alpha",
+    "retrieved evidence is causal",
+    "GDELT themes are ground truth"
+  ],
+  "primary_presentation_timestamp": "2020-03-24T16:00:00-04:00",
+  "protocol_hash": "a98253267addd04fc5db833c2b8b74f6ed0b9ab915d1c484d00bc7e224c8949c",
+  "protocol_version": "1.0",
+  "quiet_control_date": "2024-01-05",
+  "quiet_control_role": "Verify that retrieval is skipped; no historical article corpus is required for the control.",
+  "relevance_labels": {
+    "0": "irrelevant, keyword-only, duplicate, or not useful for this investigation",
+    "1": "useful background, but the mechanism connection is indirect",
+    "2": "directly useful for explaining the momentum-reversal environment"
+  },
+  "research_objective": "When the deterministic momentum-risk state is elevated, can the retrieval layer surface timestamp-valid, relevant, passage-grounded evidence that helps explain the contemporaneous momentum-reversal environment?",
+  "rules": [
+    "invalid_future cannot receive relevance greater than zero for that assessment timestamp",
+    "uncertain is retained for audit and excluded from strict evaluation metrics",
+    "retrieval rank and model output are not gold labels",
+    "semantic labels must be assigned by a human reviewer",
+    "relevance 2 requires one exact supporting passage copied from the candidate passage",
+    "irrelevant rows use evidence_direction=irrelevant and no semantic mechanism other than other"
+  ],
+  "small_sample_policy": "Return not_reported with a reason when the strict completed sample cannot support a requested metric. Do not calculate confidence intervals.",
+  "timestamp_validity_labels": [
+    "valid",
+    "invalid_future",
+    "uncertain"
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "annotation_sampling": {
+    "saved_random_seed": 20200324,
+    "strata": [
+      "high_rank",
+      "middle_rank",
+      "low_rank_or_keyword_only",
+      "future_invalid",
+      "near_duplicate",
+      "generic_macro_or_covid",
+      "official_policy",
+      "market_rebound",
+      "timestamp_uncertain"
+    ],
+    "target_pairs": 45
+  },
+  "annotation_sampling_window": {
+    "end_timestamp": "2020-03-24T16:00:00-04:00",
+    "start_timestamp": "2020-03-09T00:00:00-04:00"
+  },
+  "archive_content_requirements": [
+    "publication timestamp",
+    "discovery timestamp",
+    "availability timestamp",
+    "content-version timestamp",
+    "archive source and locator",
+    "minimal passage",
+    "content SHA-256",
+    "GDELT metadata alone is content_version_uncertain and excluded from strict retrieval"
+  ],
+  "assessment_timestamps": [
+    "2020-03-18T16:00:00-04:00",
+    "2020-03-23T16:00:00-04:00",
+    "2020-03-24T16:00:00-04:00"
+  ],
+  "candidate_source_name": "US official historical release archives with two GDELT-discovery uncertainty audits",
+  "deduplication_rules": [
+    "normalized URL",
+    "content SHA-256",
+    "normalized title"
+  ],
+  "evaluation_name": "march-2020-momentum-retrieval-gold-v1",
+  "future_returns_used": false,
+  "human_labels_used": false,
+  "language_rule": "English-language records only",
+  "maximum_candidate_count": 100,
+  "minimum_candidate_target": 50,
+  "protocol_hash": "04fa65a58cf5b80203d4ca4f6ec297d035ea9a7502f481c4c95868811f6e7a9d",
+  "protocol_version": "1.0",
+  "provider_retrieval_window": {
+    "behavior_changed_for_evaluation": false,
+    "lookback_days": 120
+  },
+  "query_notes": [
+    "momentum stocks is retained because it already exists in the runtime GDELT rotation vocabulary",
+    "momentum crash, March 24 momentum crash, known reversal date, tickers, and dated event terms are forbidden",
+    "generic official releases remain eligible as low-score controls; they are not semantically pre-labeled"
+  ],
+  "query_vocabulary": [
+    {
+      "mechanism": "market_stress_or_panic",
+      "query_id": "q01_market_stress",
+      "terms": [
+        "market stress",
+        "market turmoil",
+        "financial conditions",
+        "financial stability",
+        "volatility",
+        "economic disruption"
+      ]
+    },
+    {
+      "mechanism": "market_rebound",
+      "query_id": "q02_market_rebound",
+      "terms": [
+        "market rebound",
+        "stock rally",
+        "stocks rally",
+        "recovery",
+        "risk appetite"
+      ]
+    },
+    {
+      "mechanism": "policy_or_liquidity_support",
+      "query_id": "q03_policy_liquidity",
+      "terms": [
+        "liquidity",
+        "credit",
+        "federal reserve",
+        "funding",
+        "facility",
+        "stimulus",
+        "rate cut",
+        "policy intervention",
+        "bank lending",
+        "money market",
+        "commercial paper"
+      ]
+    },
+    {
+      "mechanism": "short_covering_or_position_unwind",
+      "query_id": "q04_position_unwind",
+      "terms": [
+        "short covering",
+        "short squeeze",
+        "forced deleveraging",
+        "position unwind",
+        "liquidation",
+        "margin call",
+        "momentum stocks"
+      ]
+    },
+    {
+      "mechanism": "loser_leg_recovery",
+      "query_id": "q05_loser_recovery",
+      "terms": [
+        "distressed stocks rebound",
+        "loser stocks",
+        "bank stocks rebound",
+        "beaten-down stocks"
+      ]
+    },
+    {
+      "mechanism": "crowded_positioning",
+      "query_id": "q06_crowding",
+      "terms": [
+        "crowded trade",
+        "crowding",
+        "leverage",
+        "deleveraging"
+      ]
+    },
+    {
+      "mechanism": "generic_macro_context",
+      "query_id": "q07_generic_macro",
+      "terms": [
+        "recession",
+        "unemployment",
+        "employment",
+        "economic activity",
+        "economic growth",
+        "financial markets"
+      ]
+    }
+  ],
+  "query_vocabulary_provenance": [
+    "active deterministic state name panic_elevated",
+    "src/evidence/archived_provider.py MECHANISM_TERMS",
+    "src/data/gdelt.py label-blind mechanism vocabulary",
+    "paper-informed economic concepts"
+  ],
+  "ranking_rule": "deterministic title/passage phrase matching; title match=3, passage match=1.5; ties use publication timestamp descending then document_id",
+  "source_domain_rules": {
+    "allowlist": [
+      "federalreserve.gov",
+      "home.treasury.gov",
+      "sec.gov",
+      "bls.gov"
+    ],
+    "blocklist": [],
+    "source_categories": [
+      "official",
+      "news"
+    ],
+    "uncertain_audit_domains": [
+      "cnbc.com",
+      "cnn.com"
+    ]
+  },
+  "source_inventories": [
+    {
+      "name": "Federal Reserve 2020 Press Release Archive",
+      "role": "strict candidate discovery and archived passage",
+      "url": "https://www.federalreserve.gov/newsevents/pressreleases/2020-press.htm"
+    },
+    {
+      "name": "Treasury Press Release Archive",
+      "role": "strict candidate discovery and archived passage",
+      "url": "https://home.treasury.gov/news/press-releases?publication-start-date=03%2F09%2F2020&publication-end-date=03%2F24%2F2020"
+    },
+    {
+      "name": "SEC 2020 Press Release Archive",
+      "role": "strict candidate discovery and archived passage",
+      "url": "https://www.sec.gov/newsroom/press-releases?month=3&year=2020"
+    },
+    {
+      "name": "BLS March 2020 Release Schedule and Archives",
+      "role": "strict candidate discovery and archived passage",
+      "url": "https://www.bls.gov/schedule/2020/03_sched_list.htm"
+    },
+    {
+      "name": "GDELT DOC 2.0 artlist metadata",
+      "role": "uncertain candidate discovery only; never proof of historical passage availability",
+      "url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28%22stock+rally%22+OR+%22market+rebound%22+OR+%22short+covering%22+OR+liquidity%29+%28stocks+OR+markets%29+sourcelang%3Aenglish&mode=artlist&format=json&maxrecords=50&sort=hybridrel&startdatetime=20200309000000&enddatetime=20200324160000"
+    }
+  ],
+  "source_inventory_version": "official-release-archive-2020-03-v1",
+  "timestamp_field": "publication_timestamp"
+}

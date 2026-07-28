@@ -18,7 +18,7 @@
     18,
     20
   ],
-  "panel_path": "/Users/aaronqin/Desktop/momentum_crash/.claude/worktrees/remote-control-f6040f/data/processed/positioning_panel.parquet",
+  "panel_path": "data/processed/positioning_panel.parquet",
   "publication_date_rules": {
     "finra_published_schedule": 186,
     "settlement_plus_8_business_days": 20

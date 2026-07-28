@@ -1,0 +1,14 @@
+{
+  "bytes": 54416,
+  "cached_path": "data/raw/sp500/holdings-daily-us-en-spy.xlsx",
+  "membership_status": "current_snapshot_proxy",
+  "observation_as_of_date": "2026-07-24",
+  "retained_equity_holdings": 503,
+  "retained_source_weight_pct": 99.924362,
+  "retrieval_method": "direct_download",
+  "retrieval_timestamp_utc": "2026-07-28T01:51:34+00:00",
+  "sha256": "b44323a93d34744d358626cce580d113f697e9afa3b52d5442bb50ba48c13141",
+  "source_key": "state_street_spy_daily_holdings",
+  "source_url": "https://www.ssga.com/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx",
+  "survivorship_bias": true
+}

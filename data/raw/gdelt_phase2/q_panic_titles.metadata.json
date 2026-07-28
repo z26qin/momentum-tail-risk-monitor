@@ -1,0 +1,6 @@
+{
+  "bytes": 7513,
+  "request_url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28%22stock+market+crash%22+OR+%22market+panic%22+OR+%22forced+selling%22+OR+%22margin+call%22%29+%28stocks+OR+equities%29+sourcecountry%3AUS+sourcelang%3Aenglish&mode=artlist&format=json&maxrecords=15&sort=hybridrel&startdatetime=20250401000000&enddatetime=20250501000000",
+  "response_kind": "artlist",
+  "retrieval_timestamp_utc": "2026-07-24T21:05:33+00:00"
+}
