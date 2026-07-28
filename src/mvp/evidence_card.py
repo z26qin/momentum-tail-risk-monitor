@@ -24,7 +24,7 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Callable
 
@@ -49,6 +49,7 @@ from src.utils.io import (
     REPO_ROOT,
     iso_date,
     parse_as_of_date,
+    sha256_file,
     write_json,
 )
 
@@ -78,6 +79,14 @@ RISK_FILE = "leg_risk_history.parquet"
 FEATURES_FILE = "market_features.parquet"
 
 DEFAULT_EVIDENCE_CARD_DIR = DEFAULT_OUTPUT_DIR / "demo"
+QUANT_MODEL_FAMILY = "phase-1-4-deterministic-v1"
+DATA_VERSION_FILES = (
+    FEATURES_FILE,
+    RISK_FILE,
+    FACTORS_FILE,
+    "momentum_labels_h5.parquet",
+    "momentum_labels_h20.parquet",
+)
 
 
 def resolve_threshold_profile(name: str) -> ScorecardConfig:
@@ -202,6 +211,8 @@ class EvidenceCard:
     invalidation_conditions: tuple[str, ...]
 
     threshold_profile: str
+    data_version: str
+    quant_model_version: str
     data_cutoff: str
     run_id: str
     llm_enabled: bool
@@ -239,8 +250,32 @@ class EvidenceCard:
                 raise ValueError("non_triggered_relevant_signals cannot be triggered")
         if not self.narrative_state or not self.pm_interpretation:
             raise ValueError("narrative_state and pm_interpretation are required")
-        if not self.run_id or not self.data_cutoff or not self.threshold_profile:
-            raise ValueError("run_id, data_cutoff, and threshold_profile are required")
+        if not all(
+            (
+                self.run_id,
+                self.data_cutoff,
+                self.threshold_profile,
+                self.data_version,
+                self.quant_model_version,
+            )
+        ):
+            raise ValueError(
+                "run_id, cutoff, threshold profile, data version, and model "
+                "version are required"
+            )
+        cutoff = _require_iso_datetime(self.data_cutoff, "data_cutoff")
+        for item in (
+            self.supporting_evidence
+            + self.contradicting_evidence
+            + self.contextual_evidence
+        ):
+            publication = _require_iso_datetime(
+                item.timestamp, f"evidence {item.evidence_id} timestamp"
+            )
+            if publication > cutoff:
+                raise ValueError(
+                    f"evidence {item.evidence_id} is later than data_cutoff"
+                )
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
@@ -253,6 +288,45 @@ def _require_iso_date(value: str, name: str) -> None:
         raise ValueError(f"{name} must be YYYY-MM-DD") from exc
     if parsed.isoformat() != value:
         raise ValueError(f"{name} must be YYYY-MM-DD")
+
+
+def _require_iso_datetime(value: str, name: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be an ISO-8601 timestamp") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{name} must include a timezone offset")
+    return parsed
+
+
+def _normalise_input_date(value: Any, name: str) -> pd.Timestamp:
+    """Normalize a date-like input while preserving its stated calendar date."""
+
+    try:
+        parsed = pd.Timestamp(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a valid date") from exc
+    if pd.isna(parsed):
+        raise ValueError(f"{name} must be a valid date")
+    if parsed.tzinfo is not None:
+        parsed = parsed.tz_localize(None)
+    return parsed.normalize()
+
+
+def _data_version(processed_dir: Path) -> str:
+    payload = {
+        name: sha256_file(processed_dir / name)
+        for name in DATA_VERSION_FILES
+    }
+    seed = json.dumps(payload, sort_keys=True)
+    return "sha256:" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16]
+
+
+def _quant_model_version(config: ScorecardConfig) -> str:
+    seed = json.dumps(dataclasses.asdict(config), sort_keys=True, allow_nan=False)
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
+    return f"{QUANT_MODEL_FAMILY}:{digest}"
 
 
 # ---------------------------------------------------------------------------
@@ -359,6 +433,8 @@ def _run_id(
     horizon: int,
     state: str,
     signals: tuple[QuantSignal, ...],
+    data_version: str,
+    quant_model_version: str,
 ) -> str:
     seed = {
         "as_of_date": iso_date(as_of_date),
@@ -367,6 +443,8 @@ def _run_id(
         "horizon": horizon,
         "overall_risk_state": state,
         "signals": {signal.name: signal.current_value for signal in signals},
+        "data_version": data_version,
+        "quant_model_version": quant_model_version,
     }
     payload = json.dumps(seed, sort_keys=True, allow_nan=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
@@ -396,11 +474,16 @@ def build_evidence_card(
     """
 
     config = resolve_threshold_profile(threshold_profile)
-    as_of_date = pd.Timestamp(as_of_date).normalize()
+    as_of_date = _normalise_input_date(as_of_date, "as_of_date")
     warnings: list[str] = []
 
     features = pd.read_parquet(processed_dir / FEATURES_FILE, columns=["date"])
     max_date = pd.to_datetime(features["date"]).max().normalize()
+    if as_of_date > pd.Timestamp(date.today()):
+        raise ValueError(
+            f"as_of_date {iso_date(as_of_date)} is in the future; future dates "
+            "are rejected"
+        )
     if as_of_date > max_date:
         raise ValueError(
             f"as_of_date {iso_date(as_of_date)} is beyond available data "
@@ -409,7 +492,7 @@ def build_evidence_card(
 
     comparison_date: pd.Timestamp | None = None
     if compare_to_date is not None:
-        comparison_date = pd.Timestamp(compare_to_date).normalize()
+        comparison_date = _normalise_input_date(compare_to_date, "compare_to_date")
         if comparison_date >= as_of_date:
             raise ValueError("compare_to_date must be strictly before as_of_date")
 
@@ -476,11 +559,22 @@ def build_evidence_card(
         "triggered_metrics": sorted(s.name for s in triggered_signals),
     }
     builder = evidence_builder or build_research_preview
-    evidence = builder(
-        deterministic_summary=facts_seed,
-        evidence_case_date=as_of_date,
-        classification_dir=output_dir / "debug",
-    )
+    try:
+        evidence = builder(
+            deterministic_summary=facts_seed,
+            evidence_case_date=as_of_date,
+            classification_dir=output_dir / "debug",
+        )
+    except Exception as exc:  # noqa: BLE001 - retrieval must fail closed
+        evidence = {
+            "status": "unavailable",
+            "uncertainty": f"Point-in-time evidence retrieval failed: {exc}.",
+            "limitations": [],
+        }
+        warnings.append(
+            "evidence retrieval failed closed; deterministic quantitative facts "
+            f"remain available ({exc})"
+        )
     supporting: tuple[RetrievedEvidence, ...] = ()
     contradicting: tuple[RetrievedEvidence, ...] = ()
     contextual: tuple[RetrievedEvidence, ...] = ()
@@ -497,9 +591,34 @@ def build_evidence_card(
         )
     else:
         evidence_quality = "available"
-        supporting = _evidence_items(evidence.get("supporting", []), "supporting")
-        contradicting = _evidence_items(evidence.get("contradicting", []), "contradicting")
-        contextual = _evidence_items(evidence.get("contextual", []), "contextual")
+        try:
+            supporting = _evidence_items(
+                evidence.get("supporting", []), "supporting"
+            )
+            contradicting = _evidence_items(
+                evidence.get("contradicting", []), "contradicting"
+            )
+            contextual = _evidence_items(
+                evidence.get("contextual", []), "contextual"
+            )
+            cutoff = _require_iso_datetime(primary.as_of_timestamp, "data_cutoff")
+            for item in supporting + contradicting + contextual:
+                if (
+                    _require_iso_datetime(item.timestamp, "evidence timestamp")
+                    > cutoff
+                ):
+                    raise ValueError(
+                        f"evidence {item.evidence_id} is later than the data cutoff"
+                    )
+        except (KeyError, TypeError, ValueError) as exc:
+            evidence_quality = "unavailable"
+            supporting = ()
+            contradicting = ()
+            contextual = ()
+            missing.append(f"Point-in-time evidence was rejected: {exc}.")
+            warnings.append(
+                "evidence failed cutoff/schema validation and was excluded"
+            )
         if not contradicting:
             missing.append(
                 "No contradicting point-in-time evidence was retrieved at this "
@@ -525,14 +644,12 @@ def build_evidence_card(
         "tail_loss_frequency": _clean_float(primary.tail_loss_probability),
     }
 
-    if use_llm:
-        active = synthesizer if synthesizer is not None else DeterministicSynthesizer()
-        external = synthesizer is not None
+    if use_llm and synthesizer is not None:
         try:
-            result = active.synthesize(context=context)
+            result = synthesizer.synthesize(context=context)
             if not isinstance(result, SynthesisResult):
                 raise TypeError("synthesizer did not return a SynthesisResult")
-            synthesis_mode = "external_synthesizer" if external else "deterministic_template"
+            synthesis_mode = "external_synthesizer"
         except Exception as exc:  # noqa: BLE001 - any failure falls back safely
             result = DeterministicSynthesizer().synthesize(context=context)
             synthesis_mode = "deterministic_fallback"
@@ -540,10 +657,19 @@ def build_evidence_card(
                 f"narrative synthesis failed and fell back to deterministic "
                 f"text: {exc}"
             )
+    elif use_llm:
+        result = DeterministicSynthesizer().synthesize(context=context)
+        synthesis_mode = "deterministic_fallback"
+        warnings.append(
+            "LLM synthesis was requested, but no external synthesizer or API "
+            "configuration is installed; deterministic text was used"
+        )
     else:
         result = DeterministicSynthesizer().synthesize(context=context)
         synthesis_mode = "deterministic_no_llm"
 
+    data_version = _data_version(processed_dir)
+    quant_model_version = _quant_model_version(config)
     run_id = _run_id(
         as_of_date=as_of_date,
         comparison_date=comparison_date,
@@ -551,6 +677,8 @@ def build_evidence_card(
         horizon=horizon,
         state=primary.state,
         signals=tuple(signals),
+        data_version=data_version,
+        quant_model_version=quant_model_version,
     )
 
     return EvidenceCard(
@@ -575,6 +703,8 @@ def build_evidence_card(
         monitoring_questions=result.monitoring_questions,
         invalidation_conditions=result.invalidation_conditions,
         threshold_profile=threshold_profile,
+        data_version=data_version,
+        quant_model_version=quant_model_version,
         data_cutoff=primary.as_of_timestamp,
         run_id=run_id,
         llm_enabled=bool(use_llm),
@@ -613,17 +743,18 @@ def _escape(value: Any) -> str:
 
 def _signal_rows_html(signals: tuple[QuantSignal, ...]) -> str:
     if not signals:
-        return "<tr><td colspan='6'><em>No signals.</em></td></tr>"
+        return "<tr><td colspan='5'><em>No signals.</em></td></tr>"
     rows: list[str] = []
     for signal in signals:
+        operator = "&ge;" if signal.direction == "greater_than_or_equal" else "&le;"
+        display_name = signal.name.replace("_", " ").title()
         rows.append(
             "<tr>"
-            f"<td>{_escape(signal.name)}</td>"
+            f"<td>{_escape(display_name)}</td>"
             f"<td style='text-align:right'>{_fmt(signal.current_value)}</td>"
-            f"<td style='text-align:right'>{_fmt(signal.threshold)}</td>"
+            f"<td style='text-align:right'>{operator} {_fmt(signal.threshold)}</td>"
             f"<td>{_escape(signal.status)}</td>"
             f"<td style='text-align:right'>{_fmt(signal.change_vs_comparison, signed=True)}</td>"
-            f"<td>{_escape(signal.interpretation)}</td>"
             "</tr>"
         )
     return "".join(rows)
@@ -633,8 +764,8 @@ def render_signal_table_html(card: EvidenceCard) -> str:
     """Render the deterministic quantitative signal table."""
 
     header = (
-        "<tr><th>Signal</th><th>Value</th><th>Threshold</th><th>State</th>"
-        "<th>&Delta; vs compare</th><th>Interpretation</th></tr>"
+        "<tr><th>Indicator</th><th>Current</th><th>Trigger rule</th><th>Status</th>"
+        "<th>&Delta; vs compare</th></tr>"
     )
     body = _signal_rows_html(
         card.triggered_quant_signals + card.non_triggered_relevant_signals
@@ -690,7 +821,8 @@ def render_evidence_card_html(card: EvidenceCard) -> str:
             f" &middot; triggered: {_escape(triggered)}"
             f" &middot; {card.tail_loss_horizon_days}-day conditional tail-loss frequency (descriptive): {tail}"
             f" &middot; profile {_escape(card.threshold_profile)}"
-            f" &middot; LLM {'on' if card.llm_enabled else 'off'} ({_escape(card.synthesis_mode)})"
+            f" &middot; LLM requested: {'yes' if card.llm_enabled else 'no'}"
+            f"; result: {_escape(card.synthesis_mode)}"
             f" &middot; run {_escape(card.run_id)}"
             "</p>"
         ),
@@ -704,7 +836,9 @@ def render_evidence_card_html(card: EvidenceCard) -> str:
         "<h3>Supporting evidence</h3>",
         _evidence_list_html(card.supporting_evidence),
         "<h3>Contradicting or moderating evidence</h3>",
-        _evidence_list_html(card.contradicting_evidence + card.contextual_evidence),
+        _evidence_list_html(card.contradicting_evidence),
+        "<h3>Contextual evidence</h3>",
+        _evidence_list_html(card.contextual_evidence),
         "<h3>Missing or uncertain evidence</h3>",
         _list_html(card.missing_or_uncertain_evidence),
         "<h3>PM interpretation</h3>",

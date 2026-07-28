@@ -1,172 +1,212 @@
-# Final MVP demo walkthrough
+# PM Evidence Card — 20-minute walkthrough
 
-## Run
+## Pre-demo check
 
-From the repository root:
-
-```bash
-uv run python -m src.mvp.run_demo --as-of-date 2026-05-29
-```
-
-The command is offline and writes four files under `outputs/demo/`. A
-successful run prints a compact JSON status line naming the summary file.
-
-## Read the outputs
-
-Start with `demo_report_2026-05-29.md`. Its eight sections are ordered to
-prevent later context from overwriting deterministic facts:
-
-1. observation, active-portfolio, next-rebalance, and module-latest dates;
-2. macro regime;
-3. separately labeled active and next portfolios;
-4. return, contribution, beta, and conditional beta;
-5. unchanged Phase 4 scorecard;
-6. Phase 5A feasibility with alignment fields explicitly unavailable;
-7. January-to-February 2023 historical case;
-8. evidence-preview status and limitations.
-
-Use `demo_summary_2026-05-29.json` for complete structured values,
-`demo_scorecard_2026-05-29.csv` for the four deterministic decisions, and
-`demo_portfolio_2026-05-29.csv` for the named holdings.
-
-## Current observation
-
-The current case is anchored on `2026-05-29`. The active portfolio was formed
-on `2026-04-30` for May. A different portfolio was formed at the May 29 close
-for June and is labeled `next_rebalance_portfolio`.
-
-The report answers:
-
-- What macro state is active?
-- Is the market in early or high-volatility recovery?
-- Which names are currently long and short?
-- Which names enter the next rebalance?
-- Did daily and trailing losses come from the long or short side?
-- How large are long, short-underlying, portfolio, up-market, and down-market
-  betas?
-- Which of the four scorecard rules triggered?
-- Is Phase 5 coverage sufficient for production alignment? No: it is degraded
-  feasibility only.
-- Are fundamental alignment ranks or flags available? No: they remain `null`.
-- What historical stress case illustrates the mechanism?
-- What evidence is available without changing the deterministic result?
-- What limitations should prevent over-interpretation?
-
-## 2023 case
-
-The report embeds two observations created by the same code path:
-
-- `2023-01-09` shows a severe prior drawdown, an 8%+ recovery from the recent
-  trough, realized volatility above its prior-only threshold, and a large
-  short-minus-long beta gap. It is described only as relative elevated risk,
-  a stress precursor, and a high-volatility recovery example.
-- `2023-02-02` shows the realized stress outcome, including a large negative
-  daily portfolio return and short-side loss contribution.
-
-Do not present January 9 as a formal `panic_elevated` alert or a proven crash
-forecast. Do not infer that Fed repricing caused the February loss.
-
-## Phase 5 and evidence
-
-Phase 5A displays 64.79% coverage and `degraded` status. Its alignment status
-is `future_work`; ranks, Spearman correlation, spread, and flags are `null`.
-This prevents acquisition coverage from being mistaken for fundamental
-support.
-
-The evidence section is explicitly a Phase 8 capability preview. The 2023
-case lacks an exact-date validated local classification, so it fails safely to
-`unavailable` with empty evidence lists. This absence is uncertainty, not a
-benign finding.
-
-## Reproduce and review
+From the repository root, run:
 
 ```bash
-uv run python -m pytest -q tests/test_demo.py tests/test_research_preview.py
-uv run python -m pytest -q
-git diff --check
+.venv/bin/python -m src.mvp.demo_smoke_test
+.venv/bin/python -m pytest -q tests/test_evidence_card.py tests/test_demo_smoke_test.py
 ```
 
-Repeated demo runs for the same date produce identical structured JSON. The
-test suite also hashes the existing Phase 1–5 artifacts before and after the
-demo to confirm they are not modified.
-
----
-
-# Phase 6A — interactive PM Evidence Card (20-minute walkthrough)
-
-This is the date-driven demo. It reuses the same Phase 1–4 deterministic code
-and the point-in-time evidence replay, exposed through one notebook whose
-parameter cell recomputes the whole card.
-
-## Open it
+The smoke result must say `status: ready`. Then open the pre-executed notebook:
 
 ```bash
-uv run --with jupyterlab jupyter lab notebooks/03_pm_evidence_card_demo.ipynb
+.venv/bin/jupyter lab notebooks/03_pm_evidence_card_demo.ipynb
 ```
 
-The notebook ships pre-executed, so it can also be read directly. The single
-parameter cell is:
+The reliable default is `DEMO_MODE = True`, `AS_OF_DATE = "2024-01-05"`,
+`COMPARE_TO_DATE = "2023-12-01"`, `THRESHOLD_PROFILE = "default"`, and
+`USE_LLM = False`. The pipeline computes the output; demo mode does not hardcode
+an analytical result.
 
-```python
-AS_OF_DATE = "2024-01-05"
-COMPARE_TO_DATE = "2023-12-01"
-THRESHOLD_PROFILE = "default"
-USE_LLM = True
-```
+## Minute 0–2 — Problem framing
 
-Edit it and **Run All** to recompute. A headless card is also available:
+Ask one question:
 
-```bash
-uv run python -m src.mvp.evidence_card --as-of-date 2024-01-05 --compare-to-date 2023-12-01
-```
+> Is the current momentum environment becoming fragile, what is driving that
+> change, and what evidence would confirm or invalidate the warning?
 
-## Minute 0–2 — Problem
-
-Momentum crashes are rare and state-dependent. The system **monitors fragility
-conditions** — situations where a market rebound could squeeze the recent-loser
-leg — rather than claiming perfect crash prediction. Every number on the card is
-deterministic; the language layer only phrases text.
+The system monitors momentum-fragility conditions. It does not claim to predict
+every crash or convert the reading into a portfolio instruction. The intended
+use is an auditable watch process for states in which a rebound can squeeze the
+recent-loser leg.
 
 ## Minute 2–5 — Research foundation
 
-Walk the four Phase 4 scorecard signals (macro high-volatility-recovery gate,
-short-minus-long beta gap, long-short drawdown, short-loss-in-recovery). Point
-out prior-only thresholds and the post-close cutoff: the card's `data_cutoff` is
-the selected date's close, and no later information is used.
+Show the compact architecture and the four deterministic indicators:
 
-## Minute 5–9 — Interactive quantitative demo
+- high-volatility recovery;
+- short-minus-long beta gap;
+- long-short portfolio drawdown;
+- short-leg loss during recovery.
 
-Keep `AS_OF_DATE = 2024-01-05`, then change it (e.g. to `2026-05-29`) and Run
-All. The risk state, signal values, and triggers recompute from the selected
-date. Change `COMPARE_TO_DATE` and show the `Δ vs compare` column and the
-**What changed** list update. This proves the output is computed, not fixed.
+The quantitative layer determines the state and triggers. Thresholds use only
+prior observations. The selected date establishes a post-close cutoff, and
+retrieved text published later than that cutoff is rejected. Narrative
+synthesis receives structured facts only and has no field through which it can
+change a number, threshold, status, or run ID.
+
+## Minute 5–9 — Interactive quant demo
+
+Start with `2024-01-05` versus `2023-12-01` and run all cells. Show:
+
+1. the state summary and four-indicator table;
+2. the trailing 252-observation context clipped at the selected date;
+3. the three material changes versus the comparison date.
+
+Then use the elevated fixed case:
+
+```python
+AS_OF_DATE = "2020-03-24"
+COMPARE_TO_DATE = "2020-02-24"
+```
+
+Run all cells again. The state changes from `bear_low_volatility` to
+`panic_elevated`, the triggered set changes from zero indicators to three, the
+comparison deltas change, and a new run ID is produced. The notebook's
+date-interactivity regression cell computes both cases and fails if their
+quantitative signatures are identical.
+
+Return to `2024-01-05` before the evidence discussion because it is the only
+date with both complete quantitative history and a validated date-matched
+evidence cache.
 
 ## Minute 9–14 — Evidence layer
 
-On `2024-01-05`, section 6 shows real supporting, contradicting/moderating, and
-missing evidence with timestamps and source locators. Emphasize:
+Read the evidence in three separate groups:
 
-- the LLM (when enabled) **organizes** evidence; it does not create the
-  quantitative signal, and cannot change any number;
-- evidence is point-in-time — nothing after the cutoff appears;
-- on a date with no cache (e.g. `2026-05-29`) evidence fails safe to
-  `unavailable` with a warning. Absence is uncertainty, not a benign finding.
+- supporting;
+- contradicting or moderating;
+- contextual, uncertain, or missing.
 
-## Minute 14–17 — Comparison and historical context
+The evidence is a replay of a small validated local cache, not live retrieval.
+It may organize support or contradiction but does not establish causality. Point
+out the publication timestamps and the `2024-01-05T16:00:00-05:00` cutoff.
 
-Section 5 summarizes the largest signal changes versus the comparison date.
-Section 8 shows state-conditional tail-loss frequencies (`build_insurance_table`)
-as descriptive base rates by regime — not a claim that history must repeat.
+Set `USE_LLM = True` only if you want to demonstrate failure behavior. No
+external synthesizer or API configuration is installed in this repository, so
+the card explicitly reports `deterministic_fallback` and continues. An injected
+external synthesizer must return the narrative-only `SynthesisResult` schema;
+any exception or invalid response also falls back.
 
-## Minute 17–20 — PM use and limitations
+## Minute 14–17 — Historical context or comparison
 
-- **How a PM uses it:** read the state and triggered signals as a fragility
-  watch, corroborate with point-in-time evidence, and track the monitoring
-  questions.
-- **What confirms the warning:** the monitoring questions in section 7.
-- **What invalidates it:** the invalidation conditions in section 7 (beta gap
-  falling back below threshold, drawdown recovering, macro gate exiting
-  recovery, contradicting evidence outweighing support).
-- **What productionization needs:** an archived point-in-time content corpus, a
-  real guarded model invocation, a point-in-time universe, and approved policy
-  thresholds (see `docs/phase_6a_review.md` and `NEXT_STEPS.md`).
+Use the comparison section as the primary historical view. It shows what
+materially changed without implying that a historical episode must repeat.
+
+If time permits, show the compact state-conditional table. These are descriptive
+20-day tail-loss frequencies from matured labels, not calibrated crash
+probabilities or causal estimates. Do not present the `2020-03-24` case as proof
+that the system forecasts every momentum crash.
+
+## Minute 17–20 — Implications and limitations
+
+A PM can use the card to decide what deserves monitoring, what evidence is
+missing, and what would invalidate the warning. It is not an investment
+recommendation. Productionization would require a larger archived
+point-in-time corpus, a point-in-time security universe, approved policy
+thresholds, and an explicitly configured and monitored language-model client.
+
+### Three main messages
+
+1. The quantitative layer determines the risk state.
+2. The LLM explains and organizes evidence but does not invent the signal.
+3. The value is auditable decision support, not an opaque crash forecast.
+
+### Likely PM questions
+
+**What action should I take from this?**
+
+Treat it as a monitoring escalation, not a trade instruction. Review exposures,
+liquidity, and the named invalidation conditions under the firm's own mandate.
+
+**Why not just use a dashboard?**
+
+A dashboard can display the same deterministic layer. The Evidence Card adds an
+auditable explanation of what changed, separates support from contradiction,
+and makes missing evidence and invalidation conditions explicit.
+
+**What does the LLM add?**
+
+Only narrative organization. It can shorten and structure the evidence review;
+it cannot calculate or edit quantitative fields. The demo remains complete
+without it.
+
+**How do you know the news is causal?**
+
+We do not. Co-occurrence is context, not causal identification, and the card
+says so.
+
+**How sensitive is this to thresholds?**
+
+The demo uses one approved default profile. Thresholds are prior-only research
+rules, not tuned on the demo dates. A production review should add governed
+sensitivity analysis rather than silently changing the profile.
+
+**Does it detect the current semiconductor selloff?**
+
+That case was not added because the repository lacks sufficient supported
+point-in-time sector evidence. A thematic correction is not automatically a
+canonical cross-sectional UMD momentum crash.
+
+**What happens if the LLM is wrong?**
+
+Its response is schema-validated and narrative-only. Invalid output or a failed
+call is discarded, a warning is shown, and deterministic text is used.
+
+### Likely quant-researcher objections
+
+**Look-ahead leakage**
+
+Labels are admitted only after their horizon matures; thresholds use prior
+observations; evidence must precede the selected post-close cutoff.
+
+**Threshold overfitting**
+
+The demo does not tune thresholds on showcased dates. Only the frozen default
+profile is supported.
+
+**Data snooping**
+
+The card composes existing research outputs and does not retrain or select a new
+model from these examples. The examples demonstrate mechanics, not new
+statistical significance.
+
+**Weak crowding proxies**
+
+Agreed. Beta, drawdown, and short-leg loss are fragility proxies, not direct
+positioning measurements.
+
+**Selection bias in retrieved text**
+
+Agreed. The cached corpus is small, and missing contradiction is explicitly not
+treated as confirmation.
+
+**Unstable LLM outputs**
+
+The deterministic path is the default. External output is constrained to five
+narrative fields, validated, and discarded on failure.
+
+**Confusing sector momentum with UMD**
+
+The system monitors a cross-sectional momentum construction. A sector or theme
+selloff requires separate labeling and must not be called a UMD crash without
+supporting evidence.
+
+**Lack of causal identification**
+
+The evidence layer is corroborative and descriptive. It makes no causal claim.
+
+### Demo failure fallback
+
+- **LLM API fails:** leave `USE_LLM = False`, or show the explicit
+  `deterministic_fallback`. The quantitative card is unchanged.
+- **Retrieval is empty:** show the deterministic card and its
+  `evidence_quality = unavailable` warning. Absence is uncertainty.
+- **Kernel needs restarting:** restart, confirm the repository root, and Run
+  All. The notebook bootstraps `src` imports from either the root or
+  `notebooks/`.
+- **One visualization fails:** run the smoke command and use the pre-executed
+  state table plus final deterministic Evidence Card. The chart is not needed
+  to compute the result.
