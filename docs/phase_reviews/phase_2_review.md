@@ -100,6 +100,10 @@ Ranking ties use ticker ascending as the deterministic secondary key.
 Defaults are configurable `n_long=10` and `n_short=10`. Long weights are
 `+0.1`; short weights are `-0.1`.
 
+Each leg is reset to equal gross-one weights at the start of its holding
+month. Constituent weights then drift with relative wealth until the next
+monthly rebalance. They are not reset to equal weights every day.
+
 Daily output distinguishes:
 
 - `long_basket_return`;
@@ -110,7 +114,9 @@ Daily output distinguishes:
 - cumulative return and drawdown.
 
 If any selected constituent lacks a daily return, that leg and the portfolio
-return are null. There is no zero fill and no hidden reweighting.
+return are null from that date through month-end because later drifted weights
+cannot be reconstructed without imputation. There is no zero fill or hidden
+reweighting.
 
 ## Built output
 
@@ -122,7 +128,7 @@ return are null. There is no zero fill and no hidden reweighting.
 | Holdings rows | 2,280 |
 | Daily portfolio-return rows | 2,365 |
 | Complete daily-return rows | 2,365 |
-| Maximum arithmetic reconciliation error | `1.39e-17` |
+| Maximum arithmetic reconciliation error | `2.78e-17` |
 
 The frozen portfolio artifacts were regenerated twice and their SHA-256 hashes
 were identical.
@@ -172,14 +178,17 @@ investment interpretation.
 
 ## Tests
 
-Phase 2 targeted suite:
+Phase 2 targeted suite after the Phase 3 pre-audit correction:
 
-- 7 passed.
+- 8 passed.
 
-Full repository suite:
+Full repository suite at the original Phase 2 gate:
 
 - 164 passed;
 - 4 skipped for the existing raw-payload prerequisites.
+
+After the monthly-drift correction and Phase 3 additions, the full suite is
+172 passed and the same 4 existing skips.
 
 Tests cover:
 
@@ -188,6 +197,7 @@ Tests cover:
 - invariance of an earlier formation to future price changes;
 - deterministic ticker tie-breaking;
 - next-month weight application and signed long/short weights;
+- month-start equal weights and intra-month weight drift;
 - exclusion of an incomplete latest month from portfolio formation;
 - exact long/short contribution reconciliation;
 - explicit null output when a constituent return is missing.
@@ -230,6 +240,20 @@ recovery-window attribution phase.
 Equal-weighting only the names that happen to report a return would change the
 portfolio without a rebalance decision. The strict completeness rule is more
 auditable and did not cost any rows in the built sample.
+
+### 7. Phase 3 pre-audit corrected an implicit daily-rebalance assumption
+
+The first Phase 2 implementation reapplied the equal target weights on every
+daily return. That is daily rebalancing, despite the intended monthly
+rebalance contract. The Phase 3 pre-audit detected and corrected it before any
+beta or recovery attribution was built.
+
+The difference was material: 2,252 of 2,365 daily returns changed, average
+absolute daily difference was 11.3 basis points, maximum daily difference was
+5.20%, and annualized tracking error between the two conventions was 3.82%.
+The corrected portfolio sets equal weights once at month start and lets them
+drift. This finding is why each later phase must audit economic conventions,
+not only date alignment and arithmetic identities.
 
 ## Limitations
 

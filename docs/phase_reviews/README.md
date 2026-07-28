@@ -30,4 +30,5 @@ Current reviews:
 
 - `phase_0_review.md`: repository audit and re-scope;
 - `phase_1_review.md`: deterministic macro regime monitor;
-- `phase_2_review.md`: S&P 500 proxy and monthly 12-2 momentum portfolio.
+- `phase_2_review.md`: S&P 500 proxy and monthly 12-1 momentum portfolio;
+- `phase_3_review.md`: realized long/short risk and recovery attribution.

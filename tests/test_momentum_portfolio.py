@@ -7,6 +7,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from src.data.sp500 import parse_spy_holdings
 from src.portfolio.momentum import (
@@ -225,6 +226,46 @@ def test_daily_returns_reconcile_long_and_short_contributions() -> None:
     assert np.allclose(feb["short_contribution"], 0.02)
     assert np.allclose(feb["portfolio_return"], 0.03)
     assert feb["return_complete"].all()
+
+
+def test_month_start_equal_weights_drift_without_daily_rebalancing() -> None:
+    dates = pd.to_datetime(["2024-01-31", "2024-02-01", "2024-02-02"])
+    prices = pd.DataFrame(
+        {
+            "date": [*dates, *dates, *dates],
+            "symbol": ["L1"] * 3 + ["L2"] * 3 + ["S"] * 3,
+            "close_total_return_adjusted": [
+                100.0,
+                110.0,
+                121.0,
+                100.0,
+                90.0,
+                81.0,
+                100.0,
+                100.0,
+                100.0,
+            ],
+        }
+    )
+    holdings = pd.DataFrame(
+        {
+            "formation_date": [pd.Timestamp("2024-01-31")] * 3,
+            "effective_month": [pd.Period("2024-02")] * 3,
+            "symbol": ["L1", "L2", "S"],
+            "leg": ["long", "long", "short"],
+            "weight": [0.5, 0.5, -1.0],
+        }
+    )
+    returns = build_portfolio_returns(
+        prices,
+        holdings,
+        exclude_incomplete_last_month=False,
+    ).set_index("date")
+
+    # Day one is +10% and -10% at equal weights: zero.  The winners then carry
+    # 55% of the leg, so the same constituent returns produce +1% on day two.
+    assert returns.loc[pd.Timestamp("2024-02-01"), "long_basket_return"] == pytest.approx(0.0)
+    assert returns.loc[pd.Timestamp("2024-02-02"), "long_basket_return"] == pytest.approx(0.01)
 
 
 def test_missing_constituent_return_is_not_zero_filled_or_reweighted() -> None:

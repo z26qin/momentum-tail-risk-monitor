@@ -454,6 +454,91 @@ def build_sp500_prices(
     return report
 
 
+def build_benchmark_frame(prices: pd.DataFrame) -> pd.DataFrame:
+    """Convert one SPY adjusted-close history to an auditable return series."""
+
+    required = {"date", "symbol", "close_total_return_adjusted"}
+    missing = sorted(required - set(prices.columns))
+    if missing:
+        raise KeyError(f"benchmark prices missing required columns: {missing}")
+    frame = prices.loc[:, sorted(required)].copy()
+    frame["date"] = pd.to_datetime(frame["date"])
+    frame = frame.sort_values("date")
+    if frame.empty or frame["date"].duplicated().any():
+        raise ValueError("benchmark prices must contain sorted unique dates")
+    symbols = frame["symbol"].dropna().astype(str).unique()
+    if len(symbols) != 1 or symbols[0] != "SPY":
+        raise ValueError("benchmark price history must contain only SPY")
+    frame["benchmark_return"] = frame["close_total_return_adjusted"].pct_change(
+        fill_method=None
+    )
+    frame["benchmark_symbol"] = "SPY"
+    frame["benchmark_source"] = (
+        "Yahoo Finance SPY split- and dividend-adjusted close"
+    )
+    frame["benchmark_status"] = "primary_spy_total_return_proxy"
+    return frame.loc[
+        :,
+        [
+            "date",
+            "benchmark_symbol",
+            "close_total_return_adjusted",
+            "benchmark_return",
+            "benchmark_source",
+            "benchmark_status",
+        ],
+    ].reset_index(drop=True)
+
+
+def build_sp500_benchmark(
+    *,
+    raw_dir: Path = DEFAULT_RAW_DIR / "sp500" / "benchmark",
+    processed_path: Path = DEFAULT_PROCESSED_DIR / "sp500_benchmark.parquet",
+    start: pd.Timestamp = PRICE_START,
+    end: pd.Timestamp | None = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Acquire and persist the SPY total-return proxy used for Phase 3 beta."""
+
+    outcome = fetch_symbol(
+        "SPY",
+        raw_dir=raw_dir,
+        start=start,
+        end=end,
+        force=force,
+        min_interval_seconds=0.25,
+    )
+    if outcome["status"] != "ok":
+        report = {
+            "status": "unavailable",
+            "symbol": "SPY",
+            "source": "Yahoo Finance chart API",
+            "reason": outcome["status"],
+        }
+        write_json(raw_dir.parent / "benchmark_acquisition_report.json", report)
+        return report
+
+    benchmark = build_benchmark_frame(outcome["frame"])
+    write_parquet(benchmark, processed_path)
+    report = {
+        "status": "available",
+        "benchmark_status": "primary_spy_total_return_proxy",
+        "symbol": "SPY",
+        "source": "Yahoo Finance chart API",
+        "adjustment": "split- and dividend-adjusted close",
+        "rows": int(len(benchmark)),
+        "first_date": benchmark["date"].min().date().isoformat(),
+        "last_date": benchmark["date"].max().date().isoformat(),
+        "processed_path": str(processed_path.relative_to(REPO_ROOT)),
+        "interpretation": (
+            "investable ETF total-return proxy for the S&P 500; not the cash "
+            "index or an official index total-return series"
+        ),
+    }
+    write_json(raw_dir.parent / "benchmark_acquisition_report.json", report)
+    return report
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw-dir", type=Path, default=DEFAULT_RAW_DIR / "sp500")
@@ -464,6 +549,11 @@ def main() -> None:
         "--prices",
         action="store_true",
         help="After building the snapshot, reuse/fetch its daily price histories.",
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Acquire the SPY adjusted-close benchmark used by Phase 3.",
     )
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
@@ -478,6 +568,11 @@ def main() -> None:
         report["prices"] = build_sp500_prices(
             universe_path=args.processed_path,
             raw_dir=args.raw_dir / "prices",
+            force=args.force,
+        )
+    if args.benchmark:
+        report["benchmark"] = build_sp500_benchmark(
+            raw_dir=args.raw_dir / "benchmark",
             force=args.force,
         )
     print(json.dumps(report, indent=2, sort_keys=True))

@@ -16,6 +16,7 @@ dist/
 data/raw/finra/daily/
 data/raw/prices/
 data/raw/sp500/prices/
+data/raw/sp500/benchmark/
 data/raw/gdelt/*.json
 !data/raw/gdelt/*.metadata.json
 !data/raw/gdelt/acquisition_report.json

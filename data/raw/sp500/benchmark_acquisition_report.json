@@ -1,0 +1,12 @@
+{
+  "adjustment": "split- and dividend-adjusted close",
+  "benchmark_status": "primary_spy_total_return_proxy",
+  "first_date": "2016-01-04",
+  "interpretation": "investable ETF total-return proxy for the S&P 500; not the cash index or an official index total-return series",
+  "last_date": "2026-07-27",
+  "processed_path": "data/processed/sp500_benchmark.parquet",
+  "rows": 2655,
+  "source": "Yahoo Finance chart API",
+  "status": "available",
+  "symbol": "SPY"
+}

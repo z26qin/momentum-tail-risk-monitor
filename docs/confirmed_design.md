@@ -71,7 +71,7 @@ No new source module was added in Phase 0.
 | Nasdaq stock screener | Current top-200 US large-cap universe | Current membership applied historically; not an S&P 500 universe |
 | Yahoo Finance chart API, with Stooq fallback | Adjusted prices and volumes for the current top-200 universe | Current-universe survivorship bias; history starts in 2016 |
 | State Street SPY daily holdings | Dated 503-name current S&P 500 proxy for Phase 2 | One current snapshot applied historically; not PIT membership |
-| Yahoo Finance chart API | Total-return adjusted prices for all 503 Phase 2 names | Public-vendor data and current-constituent survivorship bias |
+| Yahoo Finance chart API | Total-return adjusted prices for all 503 Phase 2 names and the Phase 3 SPY beta proxy | Public-vendor data and current-constituent survivorship bias; SPY is an ETF proxy, not the official index |
 | FINRA short interest and consolidated off-exchange short volume | Loser-leg crowding proxies | Short volume is flow, not a consolidated position |
 | SEC EDGAR company facts | Shares outstanding for short-interest utilisation; future filing-date fundamental momentum inputs | Full Company Facts coverage is currently too sparse to enable the fundamental monitor |
 | GDELT DOC 2.0 | Aggregate panic, crowding, and risk-off attention | Current active panel is volume-only and incomplete |
@@ -251,7 +251,7 @@ Required invariants:
 | Synthetic S&P 500 10×10 portfolio | Phase 2 complete | Uses an official dated 503-name SPY snapshot and explicit current-constituent-proxy status |
 | Point-in-time membership | Missing | Phase 2 freezes and labels a current-membership fallback; production still needs constituent history |
 | Named long and short holdings | Phase 2 complete | Dated signal endpoints, formation, next-month weights, and returns are persisted |
-| Leg beta and risk contribution | Missing | Aggregate French legs do not supply required security-level decomposition |
+| Leg beta and risk contribution | Phase 3 complete | Realized long, short-underlying, portfolio and conditional beta, volatility, signed contribution, drawdown, and recovery attribution are persisted |
 | Deterministic row scorecard | Partial legacy checklist | Replace single-state presentation with auditable metric rows |
 | Minimal breadth and concentration | Missing | Add effective bets, top-five contribution share, and sector concentration only |
 | Fundamental Momentum Alignment | Missing and data-gated | Add sector-normalized revenue/EPS acceleration and margin change using filing dates; no standalone static quality phase |

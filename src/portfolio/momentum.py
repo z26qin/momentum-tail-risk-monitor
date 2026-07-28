@@ -224,7 +224,18 @@ def build_portfolio_returns(
     *,
     exclude_incomplete_last_month: bool = True,
 ) -> pd.DataFrame:
-    """Apply fixed monthly weights to daily returns with strict missing-data rules."""
+    """Apply month-start equal weights that drift until the next rebalance.
+
+    Each leg is normalized to gross exposure one at the start of its holding
+    month.  Thereafter its constituent weights move with relative wealth until
+    the next month begins.  This is a monthly-rebalanced portfolio, not the
+    daily equal-weighted average that would result from reapplying the target
+    weights every session.
+
+    If any selected constituent return is missing, that leg is unavailable
+    from that date through month-end because its subsequent drifted weights
+    cannot be reconstructed without an imputation.
+    """
 
     if holdings.empty:
         return pd.DataFrame()
@@ -243,29 +254,73 @@ def build_portfolio_returns(
         on="effective_month",
         how="inner",
         validate="many_to_many",
-    )
-    joined = expected.merge(
+    ).merge(
         frame.loc[:, ["date", "symbol", "asset_return"]],
         on=["date", "symbol"],
         how="left",
         validate="many_to_one",
     )
-    joined["signed_contribution"] = joined["weight"] * joined["asset_return"]
 
-    daily = (
-        joined.groupby(["date", "formation_date", "effective_month", "leg"])
-        .agg(
-            observed_names=("asset_return", "count"),
-            expected_names=("symbol", "size"),
-            underlying_return=("asset_return", "mean"),
-            signed_contribution=("signed_contribution", "sum"),
+    records: list[pd.DataFrame] = []
+    grouping = ["formation_date", "effective_month", "leg"]
+    for keys, group in expected.groupby(grouping, sort=True):
+        formation_date, effective_month, leg = keys
+        symbols = sorted(group["symbol"].unique())
+        returns = group.pivot(
+            index="date",
+            columns="symbol",
+            values="asset_return",
+        ).reindex(columns=symbols)
+        target = (
+            active.loc[
+                active["effective_month"].eq(effective_month)
+                & active["leg"].eq(leg),
+                ["symbol", "weight"],
+            ]
+            .drop_duplicates("symbol")
+            .set_index("symbol")["weight"]
+            .abs()
+            .reindex(symbols)
         )
-        .reset_index()
-    )
-    daily.loc[
-        daily["observed_names"] != daily["expected_names"],
-        ["underlying_return", "signed_contribution"],
-    ] = np.nan
+        if target.isna().any() or not np.isclose(target.sum(), 1.0):
+            raise ValueError(
+                f"{effective_month} {leg} target weights do not sum to one"
+            )
+
+        valid_today = returns.notna().all(axis=1)
+        valid_through_today = valid_today.cummin()
+        prior_relative_wealth = (
+            (1.0 + returns).cumprod(skipna=False).shift(1).fillna(1.0)
+        )
+        beginning_values = prior_relative_wealth.mul(target, axis="columns")
+        beginning_weights = beginning_values.div(
+            beginning_values.sum(axis=1),
+            axis="index",
+        )
+        underlying_return = (beginning_weights * returns).sum(
+            axis=1,
+            min_count=len(symbols),
+        )
+        underlying_return = underlying_return.where(valid_through_today)
+        signed_contribution = (
+            underlying_return if leg == "long" else -underlying_return
+        )
+        records.append(
+            pd.DataFrame(
+                {
+                    "date": returns.index,
+                    "formation_date": formation_date,
+                    "effective_month": effective_month,
+                    "leg": leg,
+                    "observed_names": returns.notna().sum(axis=1).to_numpy(),
+                    "expected_names": len(symbols),
+                    "underlying_return": underlying_return.to_numpy(),
+                    "signed_contribution": signed_contribution.to_numpy(),
+                }
+            )
+        )
+
+    daily = pd.concat(records, ignore_index=True) if records else pd.DataFrame()
 
     returns = daily.pivot(
         index=["date", "formation_date", "effective_month"],
@@ -377,11 +432,16 @@ def portfolio_audit(
         "n_short": n_short,
         "signal": "P[m-1] / P[m-12] - 1; month m skipped",
         "formation_and_execution": (
-            "rank after month-m close; fixed weights apply in month m+1"
+            "rank after month-m close; equal weights are set at the start of "
+            "month m+1 and drift until the next monthly rebalance"
         ),
         "missing_return_rule": (
-            "portfolio return is unavailable unless every selected long and short "
-            "name has a return; no zero fill and no hidden reweighting"
+            "each leg is unavailable from its first missing constituent return "
+            "through month-end; no zero fill and no hidden reweighting"
+        ),
+        "intra_month_weighting": (
+            "equal gross-one leg weights at month start; weights drift with "
+            "relative constituent wealth until the next monthly rebalance"
         ),
         "membership_status": MEMBERSHIP_STATUS,
         "survivorship_bias": True,
