@@ -1,6 +1,6 @@
 # Confirmed design: top-down momentum crash risk monitor
 
-Status: design baseline updated through Phase 2, 2026-07-27.
+Status: design baseline updated through Phase 4, 2026-07-28.
 
 ## 1. Product objective
 
@@ -11,8 +11,9 @@ order:
 2. What does a synthetic S&P 500 12-1 momentum portfolio own and short?
 3. Is risk concentrated in the long leg or the short leg?
 4. Which deterministic thresholds are triggered?
-5. Is price momentum supported by improving, sector-normalized fundamentals,
-   and is portfolio risk concentrated?
+5. Across the eligible universe, is price momentum supported by improving,
+   industry- or sector-relative fundamentals, and does that support map onto
+   the selected portfolio?
 6. What external evidence supports or challenges those deterministic facts?
 
 The deterministic monitor is the source of truth. Retrieval and language-model
@@ -247,14 +248,14 @@ Required invariants:
 
 | Confirmed capability | Current state | Gap |
 |---|---|---|
-| Macro drawdown/volatility state | Strong partial | Add trough recovery, early recovery, high-vol recovery, and rate-policy proxy |
+| Macro drawdown/volatility state | Phase 1 complete | Drawdown, trough recovery, realized volatility, early/high-volatility recovery, and a labeled rate-policy proxy are persisted |
 | Synthetic S&P 500 10×10 portfolio | Phase 2 complete | Uses an official dated 503-name SPY snapshot and explicit current-constituent-proxy status |
 | Point-in-time membership | Missing | Phase 2 freezes and labels a current-membership fallback; production still needs constituent history |
 | Named long and short holdings | Phase 2 complete | Dated signal endpoints, formation, next-month weights, and returns are persisted |
 | Leg beta and risk contribution | Phase 3 complete | Realized long, short-underlying, portfolio and conditional beta, volatility, signed contribution, drawdown, and recovery attribution are persisted |
-| Deterministic row scorecard | Partial legacy checklist | Replace single-state presentation with auditable metric rows |
+| Deterministic row scorecard | Phase 4 complete | Four nonredundant alert rows cover the macro gate, beta gap, portfolio drawdown, and short losses in recovery; raw Phase 1/3 metrics remain diagnostic context |
 | Minimal breadth and concentration | Missing | Add effective bets, top-five contribution share, and sector concentration only |
-| Fundamental Momentum Alignment | Missing and data-gated | Add sector-normalized revenue/EPS acceleration and margin change using filing dates; no standalone static quality phase |
+| Universe Fundamental Momentum and Portfolio Alignment | Missing; feasibility gate required | Acquire Company Facts across the eligible universe, rank PIT revenue/EPS acceleration and margin change independently of price selection, then map the ranks onto the long and short legs |
 | Crowding | Useful partial | Reuse contribution/sector concentration; retain FINRA as an explicitly labeled proxy |
 | Minimal AI evidence | Strong partial | Adapt output schema and add analogs/questions/uncertainty without decision authority |
 | Final top-down demo | Missing | Current PM brief does not answer holdings, leg-risk, breadth, or quality questions |

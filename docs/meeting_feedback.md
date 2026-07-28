@@ -88,12 +88,24 @@ The previous standalone breadth/IC/IR phase and static
 quality/profitability phase are replaced by one focused Fundamental Momentum
 Alignment Monitor.
 
-The monitor asks whether the price-momentum portfolio is supported by
-improving fundamentals. It prioritizes revenue-growth acceleration,
-EPS-growth acceleration, and operating-margin change, normalizes each within
-sector, and uses filing or availability dates rather than fiscal-period end.
-Analyst revisions are excluded unless reliable point-in-time data already
-exist.
+The monitor first builds an independent universe-level fundamental-momentum
+panel and only then maps it onto the price-selected portfolio. At each
+rebalance it ranks 12-1 price momentum across the eligible S&P 500 universe,
+calculates revenue-growth acceleration, EPS-growth acceleration, and
+operating-margin change across all covered eligible stocks, and measures
+universe and portfolio alignment.
+
+Each fundamental component is normalized within industry when at least ten
+valid peers exist; otherwise it falls back to sector. Filing or conservative
+availability dates, rather than fiscal-period end, determine when facts may be
+used. Analyst revisions remain excluded unless reliable point-in-time data
+already exist.
+
+Universe coverage is normal at 80% or more, degraded from 60% to below 80%,
+and insufficient below 60%. A ten-name leg is normal with at least eight
+covered names, degraded with six or seven, and insufficient below six.
+Phase 5 first performs a full-universe Company Facts acquisition and coverage
+audit rather than implementing a permanently disabled module.
 
 The only retained low-cost breadth measures are effective number of bets,
 top-five contribution share, and sector concentration. A full forward-return
@@ -105,7 +117,9 @@ effort is approved for 13F, options, social media, ETF flows, or short-interest
 extensions.
 
 Sparse or unreliable fundamentals are configuration-gated and must not block
-the macro, portfolio, beta, or deterministic scorecard paths.
+the macro, portfolio, beta, or deterministic scorecard paths. Phase 5 produces
+a separate visible Fundamental Alignment Scorecard; the Phase 4 scorecard
+remains unchanged.
 
 ## 7. Evidence decisions
 

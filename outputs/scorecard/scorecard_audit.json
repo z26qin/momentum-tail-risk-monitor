@@ -1,0 +1,106 @@
+{
+  "assessment_timing": "post-close facts on as-of date; earliest use is next trading session",
+  "assessments": [
+    {
+      "as_of_date": "2020-03-24",
+      "rows": 4,
+      "thresholds": {
+        "high_volatility_recovery": {
+          "provenance": "demo_threshold",
+          "value": 1.0
+        },
+        "portfolio_drawdown": {
+          "provenance": "historical_quantile",
+          "value": -0.1445314333859717
+        },
+        "short_loss_in_recovery": {
+          "provenance": "historical_quantile",
+          "value": 0.15370220083518035
+        },
+        "short_minus_long_beta_gap": {
+          "provenance": "demo_threshold",
+          "value": 0.0
+        }
+      },
+      "triggered_metrics": [
+        "high_volatility_recovery",
+        "short_minus_long_beta_gap",
+        "short_loss_in_recovery"
+      ],
+      "unavailable_metrics": []
+    },
+    {
+      "as_of_date": "2026-05-29",
+      "rows": 4,
+      "thresholds": {
+        "high_volatility_recovery": {
+          "provenance": "demo_threshold",
+          "value": 1.0
+        },
+        "portfolio_drawdown": {
+          "provenance": "historical_quantile",
+          "value": -0.17408140972421293
+        },
+        "short_loss_in_recovery": {
+          "provenance": "historical_quantile",
+          "value": 0.25042021587620455
+        },
+        "short_minus_long_beta_gap": {
+          "provenance": "historical_quantile",
+          "value": 0.24897918694136156
+        }
+      },
+      "triggered_metrics": [],
+      "unavailable_metrics": []
+    },
+    {
+      "as_of_date": "2026-06-30",
+      "rows": 4,
+      "thresholds": {
+        "high_volatility_recovery": {
+          "provenance": "demo_threshold",
+          "value": 1.0
+        },
+        "portfolio_drawdown": {
+          "provenance": "historical_quantile",
+          "value": -0.1719900887412792
+        },
+        "short_loss_in_recovery": {
+          "provenance": "historical_quantile",
+          "value": 0.2493993582550193
+        },
+        "short_minus_long_beta_gap": {
+          "provenance": "historical_quantile",
+          "value": 0.24721795202227598
+        }
+      },
+      "triggered_metrics": [],
+      "unavailable_metrics": [
+        "high_volatility_recovery",
+        "short_loss_in_recovery"
+      ]
+    }
+  ],
+  "drawdown_maximum_tolerance": -0.2,
+  "drawdown_minimum_material_depth": -0.05,
+  "drawdown_window": 63,
+  "historical_min_observations": 252,
+  "no_composite_probability": true,
+  "output_paths": [
+    "outputs/scorecard/scorecard_2020-03-24.csv",
+    "outputs/scorecard/scorecard_2026-05-29.csv",
+    "outputs/scorecard/scorecard_2026-06-30.csv"
+  ],
+  "regime_first_date": "1926-07-01",
+  "regime_last_date": "2026-05-29",
+  "risk_first_date": "2017-02-01",
+  "risk_last_date": "2026-06-30",
+  "scorecard_metrics": [
+    "high_volatility_recovery",
+    "short_minus_long_beta_gap",
+    "portfolio_drawdown",
+    "short_loss_in_recovery"
+  ],
+  "scorecard_rows_per_date": 4,
+  "short_loss_window": 21
+}
