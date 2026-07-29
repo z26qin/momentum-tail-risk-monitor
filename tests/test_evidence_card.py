@@ -6,6 +6,7 @@ artifacts and never modify them.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 from datetime import datetime
 from pathlib import Path
@@ -13,10 +14,13 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.monitoring.scorecard import SCORECARD_METRICS
+from src.monitoring.scorecard import DEFAULT_CONFIG, SCORECARD_METRICS
 from src.mvp.evidence_card import (
+    SCHEMA_VERSION,
+    THRESHOLD_PROFILES,
     EvidenceCard,
     QuantSignal,
+    RetrievedEvidence,
     build_evidence_card,
     resolve_threshold_profile,
 )
@@ -28,6 +32,74 @@ EVIDENCE_DATE = pd.Timestamp("2024-01-05")
 COMPARE_DATE = pd.Timestamp("2023-12-01")
 # 2026-05-29 has quantitative history but no evidence cache (fails safe).
 CURRENT_DATE = pd.Timestamp("2026-05-29")
+
+
+def test_notebook_facing_contract_is_frozen() -> None:
+    assert SCHEMA_VERSION == "evidence-card-v1"
+    assert tuple(field.name for field in dataclasses.fields(QuantSignal)) == (
+        "name",
+        "current_value",
+        "threshold",
+        "status",
+        "direction",
+        "change_vs_comparison",
+        "interpretation",
+        "source_component",
+    )
+    assert tuple(field.name for field in dataclasses.fields(RetrievedEvidence)) == (
+        "evidence_id",
+        "timestamp",
+        "source",
+        "headline_or_summary",
+        "relevance_reason",
+        "stance",
+        "citation_or_locator",
+    )
+    evidence_card_fields = tuple(
+        field.name for field in dataclasses.fields(EvidenceCard)
+    )
+    assert evidence_card_fields == (
+        "schema_version",
+        "as_of_date",
+        "comparison_date",
+        "overall_risk_state",
+        "deterministic_score",
+        "tail_loss_frequency",
+        "tail_loss_horizon_days",
+        "evidence_quality",
+        "triggered_quant_signals",
+        "non_triggered_relevant_signals",
+        "narrative_state",
+        "what_changed",
+        "supporting_evidence",
+        "contradicting_evidence",
+        "contextual_evidence",
+        "missing_or_uncertain_evidence",
+        "historical_analogs",
+        "pm_interpretation",
+        "monitoring_questions",
+        "invalidation_conditions",
+        "threshold_profile",
+        "data_version",
+        "quant_model_version",
+        "data_cutoff",
+        "run_id",
+        "llm_enabled",
+        "synthesis_mode",
+        "model_or_prompt_version",
+        "warnings",
+    )
+    assert not {
+        "fundamental_alignment",
+        "fundamental_ranks",
+        "spearman_alignment",
+        "alignment_flags",
+    }.intersection(evidence_card_fields)
+
+
+def test_default_is_the_only_approved_threshold_profile() -> None:
+    assert THRESHOLD_PROFILES == {"default": DEFAULT_CONFIG}
+    assert resolve_threshold_profile("default") is DEFAULT_CONFIG
 
 
 def test_future_as_of_date_is_rejected() -> None:
@@ -318,6 +390,4 @@ def test_build_does_not_modify_existing_artifacts() -> None:
 
 
 def _mutated_card(card: EvidenceCard, **changes) -> EvidenceCard:
-    import dataclasses
-
     return dataclasses.replace(card, **changes)

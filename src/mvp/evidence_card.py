@@ -55,6 +55,7 @@ from src.utils.io import (
 
 
 SCHEMA_VERSION = "evidence-card-v1"
+DETERMINISTIC_INPUT_SCHEMA_VERSION = "deterministic-evidence-input-v1"
 
 RISK_STATES = frozenset({"normal", "bear_low_volatility", "panic_elevated"})
 SIGNAL_STATUSES = frozenset({"triggered", "not_triggered", "unavailable"})
@@ -174,6 +175,113 @@ class RetrievedEvidence:
             raise ValueError("evidence source and headline are required")
         if self.stance is not None and self.stance not in EVIDENCE_STANCES:
             raise ValueError(f"unsupported evidence stance: {self.stance}")
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclass(frozen=True)
+class DeterministicEvidenceInput:
+    """Validated, narrative-free input for an Evidence Card.
+
+    This is a projection of the existing deterministic card assembly. It keeps
+    the repository's established ``QuantSignal`` and ``RetrievedEvidence``
+    contracts rather than introducing parallel indicator or evidence models.
+    """
+
+    schema_version: str
+    as_of_date: str
+    comparison_date: str | None
+    overall_risk_state: str
+    deterministic_score: float | None
+
+    triggered_quant_signals: tuple[QuantSignal, ...]
+    non_triggered_relevant_signals: tuple[QuantSignal, ...]
+
+    retrieved_evidence: tuple[RetrievedEvidence, ...]
+    historical_analogs: tuple[dict[str, Any], ...]
+    data_warnings: tuple[str, ...]
+
+    threshold_profile: str
+    data_cutoff: str
+    run_id: str
+    audit_metadata: dict[str, Any]
+
+    def __post_init__(self) -> None:
+        if self.schema_version != DETERMINISTIC_INPUT_SCHEMA_VERSION:
+            raise ValueError("unsupported deterministic evidence-input schema")
+        _require_iso_date(self.as_of_date, "as_of_date")
+        if self.comparison_date is not None:
+            _require_iso_date(self.comparison_date, "comparison_date")
+            if self.comparison_date >= self.as_of_date:
+                raise ValueError("comparison_date must be strictly before as_of_date")
+        if self.overall_risk_state not in RISK_STATES:
+            raise ValueError(f"unsupported risk state: {self.overall_risk_state}")
+        if self.deterministic_score is not None and not math.isfinite(
+            float(self.deterministic_score)
+        ):
+            raise ValueError("deterministic_score must be finite or null")
+        for signal in self.triggered_quant_signals:
+            if signal.status != "triggered":
+                raise ValueError("triggered_quant_signals must all be triggered")
+        for signal in self.non_triggered_relevant_signals:
+            if signal.status == "triggered":
+                raise ValueError(
+                    "non_triggered_relevant_signals cannot contain a trigger"
+                )
+        signal_names = [
+            signal.name
+            for signal in (
+                self.triggered_quant_signals
+                + self.non_triggered_relevant_signals
+            )
+        ]
+        if len(signal_names) != len(set(signal_names)):
+            raise ValueError("deterministic signal names must be unique")
+        if not self.threshold_profile or not self.run_id or not self.data_cutoff:
+            raise ValueError("profile, cutoff, and run_id are required")
+        cutoff = _require_iso_datetime(self.data_cutoff, "data_cutoff")
+        evidence_ids: list[str] = []
+        for item in self.retrieved_evidence:
+            publication = _require_iso_datetime(
+                item.timestamp, f"evidence {item.evidence_id} timestamp"
+            )
+            if publication > cutoff:
+                raise ValueError(
+                    f"evidence {item.evidence_id} is later than data_cutoff"
+                )
+            evidence_ids.append(item.evidence_id)
+        if len(evidence_ids) != len(set(evidence_ids)):
+            raise ValueError("retrieved evidence IDs must be unique")
+        if any(
+            not isinstance(item, dict) for item in self.historical_analogs
+        ):
+            raise ValueError("historical_analogs must contain dictionaries")
+        if any(
+            not isinstance(item, str) or not item.strip()
+            for item in self.data_warnings
+        ):
+            raise ValueError("data_warnings must contain non-empty strings")
+        if not isinstance(self.audit_metadata, dict):
+            raise ValueError("audit_metadata must be a dictionary")
+        if (
+            self.audit_metadata.get("adapter_version")
+            != DETERMINISTIC_INPUT_SCHEMA_VERSION
+        ):
+            raise ValueError("audit_metadata adapter_version is missing or invalid")
+        try:
+            json.dumps(
+                {
+                    "historical_analogs": self.historical_analogs,
+                    "audit_metadata": self.audit_metadata,
+                },
+                sort_keys=True,
+                allow_nan=False,
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "historical analogs and audit metadata must be strict JSON"
+            ) from exc
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
@@ -711,6 +819,96 @@ def build_evidence_card(
         synthesis_mode=synthesis_mode,
         model_or_prompt_version=result.model_or_prompt_version,
         warnings=tuple(warnings),
+    )
+
+
+def build_deterministic_evidence_input(
+    *,
+    as_of_date: pd.Timestamp,
+    threshold_profile: str = "default",
+    compare_to_date: pd.Timestamp | None = None,
+    horizon: int = 20,
+    processed_dir: Path = DEFAULT_PROCESSED_DIR,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    evidence_builder: Callable[..., dict[str, Any]] | None = None,
+) -> DeterministicEvidenceInput:
+    """Return the validated deterministic and PIT-evidence card input.
+
+    The existing Evidence Card builder remains the single integration path for
+    Phase 1--4 calculations and point-in-time evidence. Setting ``use_llm`` to
+    false guarantees that no external synthesizer is invoked. This adapter
+    removes all narrative fields and makes unavailable upstream components
+    explicit in ``data_warnings``.
+    """
+
+    card = build_evidence_card(
+        as_of_date=as_of_date,
+        threshold_profile=threshold_profile,
+        compare_to_date=compare_to_date,
+        use_llm=False,
+        horizon=horizon,
+        processed_dir=processed_dir,
+        output_dir=output_dir,
+        evidence_builder=evidence_builder,
+    )
+    if card.synthesis_mode != "deterministic_no_llm":
+        raise AssertionError("deterministic adapter unexpectedly enabled LLM synthesis")
+
+    retrieved_evidence = (
+        card.supporting_evidence
+        + card.contradicting_evidence
+        + card.contextual_evidence
+    )
+    warnings = [
+        *card.missing_or_uncertain_evidence,
+        *card.warnings,
+        (
+            "No composite deterministic score is defined; the adapter preserves "
+            "the four indicator states and leaves deterministic_score null."
+        ),
+        (
+            "Phase 5A contains acquisition-feasibility coverage only; Phase 5B "
+            "fundamental alignment is unavailable and is not represented as a "
+            "risk signal."
+        ),
+    ]
+    unique_warnings: list[str] = []
+    for warning in warnings:
+        if warning not in unique_warnings:
+            unique_warnings.append(warning)
+
+    audit_metadata = {
+        "adapter_version": DETERMINISTIC_INPUT_SCHEMA_VERSION,
+        "source_card_schema_version": card.schema_version,
+        "source_entry_point": "src.mvp.evidence_card.build_evidence_card",
+        "tail_loss_frequency": card.tail_loss_frequency,
+        "tail_loss_horizon_days": card.tail_loss_horizon_days,
+        "evidence_quality": card.evidence_quality,
+        "data_version": card.data_version,
+        "quant_model_version": card.quant_model_version,
+        "quantitative_signal_count": len(
+            card.triggered_quant_signals
+            + card.non_triggered_relevant_signals
+        ),
+        "retrieved_evidence_count": len(retrieved_evidence),
+        "phase_5_alignment_status": "unavailable_unapproved",
+        "llm_invoked": False,
+    }
+    return DeterministicEvidenceInput(
+        schema_version=DETERMINISTIC_INPUT_SCHEMA_VERSION,
+        as_of_date=card.as_of_date,
+        comparison_date=card.comparison_date,
+        overall_risk_state=card.overall_risk_state,
+        deterministic_score=card.deterministic_score,
+        triggered_quant_signals=card.triggered_quant_signals,
+        non_triggered_relevant_signals=card.non_triggered_relevant_signals,
+        retrieved_evidence=retrieved_evidence,
+        historical_analogs=card.historical_analogs,
+        data_warnings=tuple(unique_warnings),
+        threshold_profile=card.threshold_profile,
+        data_cutoff=card.data_cutoff,
+        run_id=card.run_id,
+        audit_metadata=audit_metadata,
     )
 
 
