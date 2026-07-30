@@ -867,9 +867,11 @@ def build_deterministic_evidence_input(
             "the four indicator states and leaves deterministic_score null."
         ),
         (
-            "Phase 5A contains acquisition-feasibility coverage only; Phase 5B "
-            "fundamental alignment is unavailable and is not represented as a "
-            "risk signal."
+            "The legacy Phase 6 adapter contract contains Phase 5A feasibility "
+            "metadata only and does not embed the separate Phase 5 unwind "
+            "scorecard; the notebook renders that deterministic assessment "
+            "alongside this card. Its fundamental row remains unavailable "
+            "unless exact-date company coverage is supplied."
         ),
     ]
     unique_warnings: list[str] = []

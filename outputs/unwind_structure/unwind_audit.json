@@ -1,0 +1,17 @@
+{
+  "as_of_date": "2024-01-05",
+  "assessment": {
+    "available_rows": 5,
+    "breadth_min_observations": 24,
+    "formation_date": "2023-12-29",
+    "forward_rebound_in_live_assessment": false,
+    "fundamental_formation_date": "2024-01-05",
+    "high_volatility_recovery": false,
+    "no_composite_probability": true,
+    "scorecard_rows": 6,
+    "threshold_min_observations": 252
+  },
+  "breadth_rows": 114,
+  "fingerprint_rows": 2365,
+  "schema_version": "momentum-unwind-assessment-v1"
+}

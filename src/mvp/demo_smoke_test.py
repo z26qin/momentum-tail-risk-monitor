@@ -20,6 +20,10 @@ from src.mvp.evidence_card import (
     build_deterministic_evidence_input,
 )
 from src.mvp.evidence_interpretation import interpret_evidence_card
+from src.monitoring.unwind_structure import (
+    UNWIND_SCORECARD_METRICS,
+    build_unwind_assessment,
+)
 from src.utils.io import DEFAULT_PROCESSED_DIR, REPO_ROOT
 
 
@@ -78,6 +82,9 @@ def run_smoke_test() -> dict[str, object]:
         primary,
         use_llm=DEMO_USE_LLM,
     )
+    unwind = build_unwind_assessment(
+        as_of_date=pd.Timestamp(DEMO_AS_OF_DATE),
+    )
     regression = build_deterministic_evidence_input(
         as_of_date=pd.Timestamp(REGRESSION_AS_OF_DATE),
         compare_to_date=pd.Timestamp(REGRESSION_COMPARE_TO_DATE),
@@ -91,6 +98,10 @@ def run_smoke_test() -> dict[str, object]:
         raise TypeError(
             "demo result did not validate as a DeterministicEvidenceInput"
         )
+    if tuple(row.metric for row in unwind.scorecard) != UNWIND_SCORECARD_METRICS:
+        raise AssertionError("unwind assessment does not contain six ordered rows")
+    if unwind.as_of_date != primary.as_of_date:
+        raise AssertionError("unwind assessment date differs from Evidence Card")
     if _quant_signature(primary) == _quant_signature(regression):
         raise AssertionError("fixed historical dates produced identical quant results")
     if (
@@ -106,6 +117,8 @@ def run_smoke_test() -> dict[str, object]:
     for marker in (
         "build_deterministic_evidence_input",
         "interpret_evidence_card",
+        "build_unwind_assessment",
+        "Momentum Unwind Structure",
         "Final Interactive Evidence Card",
     ):
         if marker not in notebook_source:
@@ -128,6 +141,9 @@ def run_smoke_test() -> dict[str, object]:
             primary_interpretation.model_or_prompt_version
         ),
         "threshold_profile": primary.threshold_profile,
+        "unwind_scenario": unwind.scenario_classification,
+        "unwind_completeness": unwind.completeness_confidence,
+        "unwind_scorecard_rows": len(unwind.scorecard),
         "validated_inputs": inputs,
         "notebook_dependencies": dependencies,
     }
