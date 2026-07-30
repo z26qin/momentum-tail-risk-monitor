@@ -8,38 +8,41 @@ deterministic, top-down workflow:
 2. synthetic S&P 500 12-1 momentum portfolio;
 3. realized long/short risk decomposition;
 4. four-row deterministic scorecard;
-5. SEC fundamental-data feasibility, currently frozen at Phase 5A.
+5. six-row momentum unwind inputs;
+6. three independent momentum-crash mechanism scenarios;
+7. point-in-time evidence and an optional constrained interpretation layer.
 
 The project is not a trading system, investment recommendation, causal model,
 or production point-in-time backtest.
 
-## Run the final MVP demo
+## Run the interactive PM demo
 
 Python 3.11–3.14 and [`uv`](https://docs.astral.sh/uv/) are required.
 
 ```bash
-uv sync --locked --extra test
-uv run python -m src.mvp.run_demo --as-of-date 2026-05-29
+uv sync --locked --all-groups
+uv run python -m src.mvp.demo_smoke_test
+uv run jupyter-execute \
+  --inplace \
+  --timeout=180 \
+  notebooks/03_pm_evidence_card_demo.ipynb
 ```
 
-This is the only primary demo command. It runs offline, reads the existing
-Phase 1–4 processed artifacts and compact Phase 5A aggregate audit, and writes
-only:
+The notebook parameter cell drives the full deterministic flow:
 
-- `outputs/demo/demo_summary_2026-05-29.json`
-- `outputs/demo/demo_scorecard_2026-05-29.csv`
-- `outputs/demo/demo_portfolio_2026-05-29.csv`
-- `outputs/demo/demo_report_2026-05-29.md`
+```python
+AS_OF_DATE = "2024-01-05"
+COMPARE_TO_DATE = "2023-12-01"
+THRESHOLD_PROFILE = "default"
+USE_LLM = False
+```
 
-The observation date is intentionally `2026-05-29`, the latest complete date
-shared by the macro and realized-risk inputs. On that date:
+`USE_LLM=False` is the reliable offline path and still renders the complete
+Evidence Card. The CLI summary remains available:
 
-- the risk-bearing portfolio was formed on `2026-04-30`;
-- the next portfolio was formed at the `2026-05-29` close;
-- later June data are shown only as module freshness metadata.
-
-The two portfolios are separately labeled. A newly formed portfolio is never
-used to explain risk realized by the previously active portfolio.
+```bash
+uv run python -m src.mvp.run_demo --as-of-date 2026-05-29
+```
 
 ## Current demo contents
 
@@ -50,13 +53,44 @@ used to explain risk realized by the previously active portfolio.
 | Phase 3 contribution, beta, conditional beta, drawdown | Complete | Deterministic |
 | Phase 4 four-row scorecard | Complete and unchanged | Deterministic source of truth |
 | Phase 5A SEC coverage audit | Complete; 64.79% coverage, degraded | Feasibility only |
+| Phase 5B–5E unwind structure | Complete | Separate six-row deterministic monitor |
+| Correlated-theme concentration | Complete | Public-data proxy; cluster fixed at `t-1` |
+| Scenario v2 | Complete | Three independent, potentially multi-label rules |
+| Final Evidence Card notebook | Complete | Deterministic-first; LLM optional |
 | January–February 2023 case | Reproducible historical proxy | Descriptive, not causal |
 | Evidence preview | Bounded offline capability preview | Cannot change deterministic facts |
 
-Phase 5A has no fundamental ranks, Spearman alignment, long-short fundamental
-spread, or alignment flags. Those fields are explicitly `null`, with
-`alignment_status="future_work"`. Coverage never becomes a safe or low-risk
-fundamental conclusion.
+### Scenario v2
+
+`build_unwind_assessment(...)` retains the original six-row scorecard and now
+returns three independent mechanism states:
+
+1. `bear_market_recovery_crash` — recent severe market drawdown, rapid
+   recovery from the trough, and high realized volatility;
+2. `short_book_reversal_crash` — an extreme short-minus-long reversal with
+   broad gains in the active short-underlying basket;
+3. `crowded_theme_unwind` — a pre-event correlated cluster in the active long
+   book followed by an extreme, broad, loss- or volume-confirmed selloff.
+
+The mechanisms can trigger together. `scenario_classification` remains only as
+a lossy v1 compatibility field; new consumers should use
+`mechanism_scenarios` and `active_scenarios`.
+
+Validated date contrasts make the separation visible:
+
+- `2020-03-24`: `bear_market_recovery_crash` triggers;
+- `2024-01-05`: recovery is on watch, with neither reversal nor theme unwind
+  confirmed;
+- `2026-05-29`: `crowded_theme_unwind` triggers for the pre-event
+  `CIEN` / `COHR` / `LITE` correlated cluster, without requiring a bear-market
+  precondition or short-book reversal.
+
+The theme calculation uses 63 trading days of benchmark-demeaned returns
+ending at `t-1`, an all-pairs correlated cluster, strictly prior loss and
+volume thresholds, and the existing monthly holdings. It is explicitly a
+`correlated_theme_proxy`: it does not observe common ownership, leverage,
+financing, or forced selling. Industry classification is unavailable in the
+current repository and is reported as missing rather than invented.
 
 The 2023 case uses `2023-01-09` as a relative elevated-risk/high-volatility
 recovery precursor and `2023-02-02` as the realized stress observation. It is
@@ -88,6 +122,11 @@ empty supporting, contradicting, and contextual lists.
 - Missing values remain unavailable and never silently pass a threshold.
 - Evidence publications and cached classifications must satisfy the local
   cutoff and provenance checks.
+- Theme-cluster membership and its correlation cutoff stop at `t-1`; the
+  selected-date return can affect liquidation evidence but not cluster
+  definition.
+- The bear-market recovery scenario keeps drawdown, recovery-from-trough, and
+  realized volatility as three separately visible conditions.
 
 The portfolio uses a current SPY membership snapshot as a historical proxy and
 is survivorship-biased. Public-vendor price histories can contain ticker or
@@ -101,23 +140,22 @@ uv run python -m pytest -q
 git diff --check
 ```
 
-The final integration adds exactly four focused demo tests and two focused
-evidence-preview tests. They protect date alignment, unavailable Phase 5
-alignment, deterministic replay, upstream artifact immutability, evidence
-immutability, and fail-closed missing evidence.
+Focused theme and scenario tests protect cross-sector cluster detection,
+unchanged name-level effective bets, `t-1` cluster definition, future-row
+invariance, independent scenario triggers, multi-label output, and fail-closed
+missing evidence.
 
 ## Deferred roadmap
 
 The following work remains explicitly deferred, not cancelled or completed:
 
-- Phase 5B — production-grade historical SEC fundamentals and universe-level
-  fundamental alignment;
-- Phase 7 — Crowding Monitoring;
+- point-in-time historical membership and industry classifications;
+- observed holdings, leverage, financing, and order-flow data;
+- predictive validation of the three descriptive mechanism rules;
 - Phase 8 — Full AI Research and Retrieval Layer.
 
-Breadth, concentration, crowding, live news, vector databases, new predictive
-models, dashboards, deployment, and production infrastructure are not part of
-this final integration.
+Live news, vector databases, new predictive models, dashboards, deployment,
+and production infrastructure are not part of this research prototype.
 
 ## Documentation
 
@@ -127,6 +165,8 @@ this final integration.
 - [Confirmed design](docs/confirmed_design.md)
 - [Development plan](docs/development_plan.md)
 - [Phase 5A handoff](docs/handoff_phase5.md)
+- [Phase 5 unwind monitor review](docs/phase_reviews/phase_5_unwind_monitor_review.md)
+- [Phase 5 unwind handoff](docs/handoff_phase5_unwind.md)
 
 The earlier Daniel–Moskowitz conditional-frequency pipeline remains available
 through `python -m src.pipeline` as a retained research path. It is not the

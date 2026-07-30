@@ -20,6 +20,12 @@ import numpy as np
 import pandas as pd
 
 from src.features.momentum_breadth import build_momentum_breadth_history
+from src.regime.market_state import (
+    EARLY_RECOVERY_MAX_AGE,
+    RECOVERY_FROM_TROUGH_THRESHOLD,
+    SEVERE_DRAWDOWN_THRESHOLD,
+    build_regime_history,
+)
 from src.monitoring.fundamental_anchor import (
     FundamentalAnchor,
     build_fundamental_anchor_for_date,
@@ -29,6 +35,12 @@ from src.risk.concentration import (
     build_concentration_history,
     build_constituent_return_history,
     build_rebalance_diagnostics,
+)
+from src.risk.theme_concentration import (
+    DEFAULT_THEME_CONFIG,
+    ThemeConcentrationConfig,
+    ThemeConcentrationSnapshot,
+    build_theme_concentration_snapshot,
 )
 from src.utils.io import (
     DEFAULT_OUTPUT_DIR,
@@ -67,7 +79,8 @@ FINGERPRINT_HISTORY_COLUMNS = (
     "survivorship_bias",
 )
 
-UNWIND_SCHEMA_VERSION = "momentum-unwind-assessment-v1"
+LEGACY_UNWIND_SCHEMA_VERSION = "momentum-unwind-assessment-v1"
+UNWIND_SCHEMA_VERSION = "momentum-unwind-assessment-v2"
 UNWIND_SCORECARD_METRICS = (
     "portfolio_concentration",
     "momentum_breadth_deterioration",
@@ -104,6 +117,23 @@ UNWIND_THRESHOLD_PROVENANCE = frozenset(
         "insufficient_history",
     }
 )
+MECHANISM_SCENARIOS = (
+    "bear_market_recovery_crash",
+    "short_book_reversal_crash",
+    "crowded_theme_unwind",
+)
+MECHANISM_SCENARIO_STATUSES = frozenset(
+    {"triggered", "watch", "not_confirmed", "unavailable"}
+)
+MECHANISM_CONDITION_DIRECTIONS = frozenset(
+    {
+        "boolean_true",
+        "greater_than_or_equal",
+        "less_than_or_equal",
+        "context_only",
+        "rule_based",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -126,6 +156,8 @@ class UnwindMonitorConfig:
     volume_history_min_observations: int = 63
     volume_quantile: float = 0.80
     liquidity_breadth_gate: float = 0.50
+    short_rise_gate: float = 0.70
+    short_beta_quantile: float = 0.20
     minimum_active_names: int = 6
 
     def __post_init__(self) -> None:
@@ -147,10 +179,15 @@ class UnwindMonitorConfig:
             "volume_quantile",
             "concentration_quantile",
             "breadth_quantile",
+            "short_beta_quantile",
         ):
             if not 0.0 < getattr(self, name) < 1.0:
                 raise ValueError(f"{name} must lie strictly between zero and one")
-        for name in ("co_decline_gate", "liquidity_breadth_gate"):
+        for name in (
+            "co_decline_gate",
+            "liquidity_breadth_gate",
+            "short_rise_gate",
+        ):
             if not 0.0 <= getattr(self, name) <= 1.0:
                 raise ValueError(f"{name} must lie between zero and one")
         for name in ("reversal_floor", "downside_return_gate"):
@@ -223,12 +260,86 @@ class UnwindScorecardRow:
 
 
 @dataclass(frozen=True)
+class ScenarioCondition:
+    """One auditable condition inside an independent crash mechanism."""
+
+    name: str
+    value: float | bool | str | None
+    threshold: float | bool | str | None
+    direction: str
+    met: bool | None
+    required: bool
+    source_component: str
+
+    def __post_init__(self) -> None:
+        if not self.name.strip() or not self.source_component.strip():
+            raise ValueError("scenario condition labels must be non-empty")
+        if self.direction not in MECHANISM_CONDITION_DIRECTIONS:
+            raise ValueError("unsupported scenario condition direction")
+        for value in (self.value, self.threshold):
+            if isinstance(value, (float, np.floating)) and not np.isfinite(value):
+                raise ValueError("scenario condition values must be finite or null")
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclass(frozen=True)
+class MechanismScenario:
+    """One independent, non-probabilistic momentum-crash mechanism."""
+
+    scenario: str
+    status: str
+    conditions: tuple[ScenarioCondition, ...]
+    supporting_evidence: tuple[str, ...]
+    contradictory_evidence: tuple[str, ...]
+    missing_evidence: tuple[str, ...]
+    summary: str
+
+    def __post_init__(self) -> None:
+        if self.scenario not in MECHANISM_SCENARIOS:
+            raise ValueError("unsupported momentum-crash mechanism")
+        if self.status not in MECHANISM_SCENARIO_STATUSES:
+            raise ValueError("unsupported momentum-crash mechanism status")
+        if not self.conditions:
+            raise ValueError("mechanism scenario requires conditions")
+        names = tuple(condition.name for condition in self.conditions)
+        if len(set(names)) != len(names):
+            raise ValueError("mechanism condition names must be unique")
+        expected_support = tuple(
+            condition.name for condition in self.conditions if condition.met is True
+        )
+        expected_contradictory = tuple(
+            condition.name
+            for condition in self.conditions
+            if condition.required and condition.met is False
+        )
+        expected_missing = tuple(
+            condition.name
+            for condition in self.conditions
+            if condition.required and condition.met is None
+        )
+        if self.supporting_evidence != expected_support:
+            raise ValueError("supporting evidence must match met conditions")
+        if self.contradictory_evidence != expected_contradictory:
+            raise ValueError("contradictory evidence must match required conditions")
+        if self.missing_evidence != expected_missing:
+            raise ValueError("missing evidence must match required conditions")
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclass(frozen=True)
 class UnwindAssessment:
-    """Validated six-row Phase 5 assessment and scenario classification."""
+    """Validated six-row Phase 5 assessment plus independent mechanisms."""
 
     schema_version: str
     as_of_date: str
     scorecard: tuple[UnwindScorecardRow, ...]
+    mechanism_scenarios: tuple[MechanismScenario, ...]
+    active_scenarios: tuple[str, ...]
+    theme_concentration: ThemeConcentrationSnapshot
     scenario_classification: str
     scenario_rule: str
     completeness_confidence: str
@@ -249,6 +360,19 @@ class UnwindAssessment:
             raise ValueError("all unwind rows must share the assessment date")
         if self.scenario_classification not in UNWIND_SCENARIOS:
             raise ValueError("unsupported unwind scenario classification")
+        if tuple(item.scenario for item in self.mechanism_scenarios) != (
+            MECHANISM_SCENARIOS
+        ):
+            raise ValueError("assessment requires three ordered mechanism scenarios")
+        expected_active = tuple(
+            item.scenario
+            for item in self.mechanism_scenarios
+            if item.status == "triggered"
+        )
+        if self.active_scenarios != expected_active:
+            raise ValueError("active_scenarios must match triggered mechanisms")
+        if self.theme_concentration.as_of_date != self.as_of_date:
+            raise ValueError("theme proxy must share the assessment date")
         if self.completeness_confidence not in {
             "high",
             "moderate",
@@ -1024,6 +1148,382 @@ def classify_unwind_scenario(
     return scenario, rule, confidence
 
 
+def _condition(
+    *,
+    name: str,
+    value: float | bool | str | None,
+    threshold: float | bool | str | None,
+    direction: str,
+    met: bool | None,
+    required: bool,
+    source_component: str,
+) -> ScenarioCondition:
+    return ScenarioCondition(
+        name=name,
+        value=value,
+        threshold=threshold,
+        direction=direction,
+        met=met,
+        required=required,
+        source_component=source_component,
+    )
+
+
+def _nullable_or(left: bool | None, right: bool | None) -> bool | None:
+    if left is True or right is True:
+        return True
+    if left is False and right is False:
+        return False
+    return None
+
+
+def _mechanism(
+    scenario: str,
+    conditions: tuple[ScenarioCondition, ...],
+    *,
+    triggered_summary: str,
+    watch_summary: str,
+    normal_summary: str,
+) -> MechanismScenario:
+    required = tuple(condition.met for condition in conditions if condition.required)
+    if all(value is True for value in required):
+        status = "triggered"
+        summary = triggered_summary
+    elif any(value is False for value in required):
+        if any(value is True for value in required):
+            status = "watch"
+            summary = watch_summary
+        else:
+            status = "not_confirmed"
+            summary = normal_summary
+    else:
+        status = "unavailable"
+        summary = "Required point-in-time evidence is unavailable."
+    if status == "unavailable" and any(value is True for value in required):
+        status = "watch"
+        summary = watch_summary
+    return MechanismScenario(
+        scenario=scenario,
+        status=status,
+        conditions=conditions,
+        supporting_evidence=tuple(
+            condition.name for condition in conditions if condition.met is True
+        ),
+        contradictory_evidence=tuple(
+            condition.name
+            for condition in conditions
+            if condition.required and condition.met is False
+        ),
+        missing_evidence=tuple(
+            condition.name
+            for condition in conditions
+            if condition.required and condition.met is None
+        ),
+        summary=summary,
+    )
+
+
+def classify_momentum_crash_scenarios(
+    scorecard: tuple[UnwindScorecardRow, ...],
+    *,
+    regime_context: dict[str, Any],
+    signed_short_beta: float | None,
+    signed_short_beta_threshold: float | None,
+    theme_snapshot: ThemeConcentrationSnapshot,
+    config: UnwindMonitorConfig = DEFAULT_UNWIND_CONFIG,
+) -> tuple[MechanismScenario, ...]:
+    """Evaluate three independent, potentially simultaneous crash mechanisms."""
+
+    rows = {row.metric: row for row in scorecard}
+    reversal_row = rows["cross_sectional_reversal"]
+    short_rise_share = _optional_float(
+        reversal_row.context.get("short_rise_share_5d")
+    )
+    short_rise_met = _greater_equal(short_rise_share, config.short_rise_gate)
+    signed_beta_met = (
+        None
+        if signed_short_beta is None or signed_short_beta_threshold is None
+        else _less_equal(signed_short_beta, signed_short_beta_threshold)
+    )
+
+    recent_severe_drawdown = _optional_bool(
+        regime_context.get("recent_severe_drawdown")
+    )
+    recovery_from_trough = _optional_float(
+        regime_context.get("recovery_from_trough_126d")
+    )
+    trough_age = _optional_float(
+        regime_context.get("trough_age_trading_days")
+    )
+    recovery_met = (
+        None
+        if recovery_from_trough is None or trough_age is None
+        else bool(
+            recovery_from_trough >= RECOVERY_FROM_TROUGH_THRESHOLD
+            and 1 <= trough_age <= EARLY_RECOVERY_MAX_AGE
+        )
+    )
+    high_volatility = _optional_bool(regime_context.get("high_volatility"))
+    bear_conditions = (
+        _condition(
+            name="recent_severe_market_drawdown",
+            value=_optional_float(
+                regime_context.get("recent_min_drawdown_126d")
+            ),
+            threshold=SEVERE_DRAWDOWN_THRESHOLD,
+            direction="less_than_or_equal",
+            met=recent_severe_drawdown,
+            required=True,
+            source_component="src.regime.market_state",
+        ),
+        _condition(
+            name="rapid_recovery_from_trough",
+            value=recovery_from_trough,
+            threshold=(
+                f">={RECOVERY_FROM_TROUGH_THRESHOLD:.0%} within "
+                f"{EARLY_RECOVERY_MAX_AGE} trading days"
+            ),
+            direction="rule_based",
+            met=recovery_met,
+            required=True,
+            source_component="src.regime.market_state",
+        ),
+        _condition(
+            name="high_realized_market_volatility",
+            value=_optional_float(
+                regime_context.get("realized_volatility_21d")
+            ),
+            threshold=_optional_float(
+                regime_context.get("realized_volatility_threshold_80pct")
+            ),
+            direction="greater_than_or_equal",
+            met=high_volatility,
+            required=True,
+            source_component="src.regime.market_state",
+        ),
+    )
+    short_conditions = (
+        _condition(
+            name="short_minus_long_reversal_extreme",
+            value=(
+                _optional_float(reversal_row.current_value)
+                if not isinstance(reversal_row.current_value, str)
+                else None
+            ),
+            threshold=(
+                _optional_float(reversal_row.threshold)
+                if not isinstance(reversal_row.threshold, str)
+                else None
+            ),
+            direction="greater_than_or_equal",
+            met=reversal_row.triggered,
+            required=True,
+            source_component="cross_sectional_reversal",
+        ),
+        _condition(
+            name="short_book_rise_breadth",
+            value=short_rise_share,
+            threshold=config.short_rise_gate,
+            direction="greater_than_or_equal",
+            met=short_rise_met,
+            required=True,
+            source_component="src.monitoring.unwind_structure",
+        ),
+        _condition(
+            name="signed_short_beta_tail",
+            value=signed_short_beta,
+            threshold=signed_short_beta_threshold,
+            direction="less_than_or_equal",
+            met=signed_beta_met,
+            required=False,
+            source_component="src.risk.leg_decomposition",
+        ),
+    )
+
+    pre_event_cluster_met = (
+        None
+        if theme_snapshot.status != "available"
+        else bool(
+            theme_snapshot.cluster_size
+            >= theme_snapshot.audit_metadata["minimum_cluster_size"]
+            and theme_snapshot.cluster_exposure_share is not None
+            and theme_snapshot.cluster_exposure_share
+            >= theme_snapshot.audit_metadata["cluster_exposure_gate"]
+        )
+    )
+    theme_loss_met = (
+        None
+        if theme_snapshot.cluster_residual_loss_5d is None
+        or theme_snapshot.residual_loss_threshold is None
+        else _greater_equal(
+            theme_snapshot.cluster_residual_loss_5d,
+            theme_snapshot.residual_loss_threshold,
+        )
+    )
+    theme_decline_met = (
+        None
+        if theme_snapshot.cluster_decline_share_5d is None
+        else _greater_equal(
+            theme_snapshot.cluster_decline_share_5d,
+            theme_snapshot.audit_metadata["decline_share_gate"],
+        )
+    )
+    loss_contribution_met = (
+        None
+        if theme_snapshot.cluster_loss_contribution_share_5d is None
+        else _greater_equal(
+            theme_snapshot.cluster_loss_contribution_share_5d,
+            theme_snapshot.audit_metadata["loss_contribution_gate"],
+        )
+    )
+    volume_confirmation_met = (
+        None
+        if theme_snapshot.cluster_abnormal_volume_share_5d is None
+        else _greater_equal(
+            theme_snapshot.cluster_abnormal_volume_share_5d,
+            theme_snapshot.audit_metadata["abnormal_volume_share_gate"],
+        )
+    )
+    liquidation_confirmation = _nullable_or(
+        loss_contribution_met,
+        volume_confirmation_met,
+    )
+    if pre_event_cluster_met is False:
+        theme_loss_met = False
+        theme_decline_met = False
+        liquidation_confirmation = False
+    theme_conditions = (
+        _condition(
+            name="pre_event_correlated_cluster_concentration",
+            value=theme_snapshot.cluster_exposure_share,
+            threshold=theme_snapshot.audit_metadata.get("cluster_exposure_gate"),
+            direction="greater_than_or_equal",
+            met=pre_event_cluster_met,
+            required=True,
+            source_component="src.risk.theme_concentration",
+        ),
+        _condition(
+            name="cluster_residual_loss_extreme",
+            value=theme_snapshot.cluster_residual_loss_5d,
+            threshold=theme_snapshot.residual_loss_threshold,
+            direction="greater_than_or_equal",
+            met=theme_loss_met,
+            required=True,
+            source_component="src.risk.theme_concentration",
+        ),
+        _condition(
+            name="cluster_decline_breadth",
+            value=theme_snapshot.cluster_decline_share_5d,
+            threshold=theme_snapshot.audit_metadata.get("decline_share_gate"),
+            direction="greater_than_or_equal",
+            met=theme_decline_met,
+            required=True,
+            source_component="src.risk.theme_concentration",
+        ),
+        _condition(
+            name="cluster_loss_or_volume_confirmation",
+            value=(
+                "loss_contribution="
+                f"{theme_snapshot.cluster_loss_contribution_share_5d};"
+                "abnormal_volume="
+                f"{theme_snapshot.cluster_abnormal_volume_share_5d}"
+            ),
+            threshold="loss contribution >= gate OR abnormal volume >= gate",
+            direction="rule_based",
+            met=liquidation_confirmation,
+            required=True,
+            source_component="src.risk.theme_concentration",
+        ),
+    )
+
+    return (
+        _mechanism(
+            "bear_market_recovery_crash",
+            bear_conditions,
+            triggered_summary=(
+                "A severe bear-market drawdown, rapid recovery, and high "
+                "realized volatility are jointly present."
+            ),
+            watch_summary=(
+                "Some bear-market-recovery preconditions are present, but the "
+                "three-part mechanism is not confirmed."
+            ),
+            normal_summary="Bear-market-recovery conditions are not present.",
+        ),
+        _mechanism(
+            "short_book_reversal_crash",
+            short_conditions,
+            triggered_summary=(
+                "Prior losers are reversing broadly and outperforming prior "
+                "winners at an extreme rate."
+            ),
+            watch_summary=(
+                "One short-book reversal condition is present, but the "
+                "two-part mechanism is not confirmed."
+            ),
+            normal_summary="Short-book reversal conditions are not present.",
+        ),
+        _mechanism(
+            "crowded_theme_unwind",
+            theme_conditions,
+            triggered_summary=(
+                "A pre-event correlated long cluster is concentrated and is "
+                "experiencing broad, extreme, loss- or volume-confirmed selling."
+            ),
+            watch_summary=(
+                "Some correlated-theme conditions are present, but the "
+                "liquidation proxy is not fully confirmed."
+            ),
+            normal_summary="Correlated-theme unwind conditions are not present.",
+        ),
+    )
+
+
+def legacy_scenario_from_mechanisms(
+    mechanisms: tuple[MechanismScenario, ...],
+    scorecard: tuple[UnwindScorecardRow, ...],
+    *,
+    high_volatility_recovery: bool | None,
+) -> tuple[str, str, str]:
+    """Map v2 multi-label mechanisms onto the retained v1 single label."""
+
+    active = tuple(
+        mechanism.scenario
+        for mechanism in mechanisms
+        if mechanism.status == "triggered"
+    )
+    available_count = sum(row.status == "available" for row in scorecard)
+    confidence = "high" if available_count == 6 else "moderate"
+    if len(active) > 1:
+        return (
+            "mixed_repricing_and_unwind",
+            "Compatibility view: multiple independent v2 mechanisms trigger.",
+            confidence,
+        )
+    if active == ("bear_market_recovery_crash",):
+        return (
+            "panic_recovery_momentum_crash",
+            "Compatibility view of the v2 bear-market-recovery mechanism.",
+            confidence,
+        )
+    if active == ("crowded_theme_unwind",):
+        return (
+            "crowded_momentum_unwind",
+            "Compatibility view of the v2 correlated-theme unwind mechanism.",
+            confidence,
+        )
+    if active == ("short_book_reversal_crash",):
+        return (
+            "normal_drawdown",
+            "Compatibility view has no v1 short-only label; inspect active_scenarios.",
+            confidence,
+        )
+    return classify_unwind_scenario(
+        scorecard,
+        high_volatility_recovery=high_volatility_recovery,
+    )
+
+
 def _build_monitor_histories(
     *,
     processed_dir: Path,
@@ -1035,12 +1535,18 @@ def _build_monitor_histories(
     )
     risk = pd.read_parquet(processed_dir / "leg_risk_history.parquet")
     universe = pd.read_parquet(processed_dir / "sp500_universe.parquet")
+    benchmark = pd.read_parquet(processed_dir / "sp500_benchmark.parquet")
+    research_factors = pd.read_parquet(
+        processed_dir / "french_research_factors_daily.parquet"
+    )
     constituent = build_constituent_return_history(prices, holdings)
     return {
         "prices": prices,
         "holdings": holdings,
         "risk": risk,
         "universe": universe,
+        "benchmark": benchmark,
+        "regime": build_regime_history(research_factors),
         "constituent": constituent,
         "concentration": build_concentration_history(
             constituent,
@@ -1092,6 +1598,7 @@ def _assemble_unwind_assessment(
     company_coverage: pd.DataFrame | None,
     load_fundamentals: bool,
     config: UnwindMonitorConfig,
+    theme_config: ThemeConcentrationConfig,
 ) -> UnwindAssessment:
     as_of_date = pd.Timestamp(as_of_date).normalize()
     risk = histories["risk"].copy()
@@ -1103,6 +1610,37 @@ def _assemble_unwind_assessment(
         name="risk history",
     )
     formation_date = pd.Timestamp(risk_row["formation_date"]).normalize()
+    theme_snapshot = build_theme_concentration_snapshot(
+        histories["prices"],
+        histories["holdings"],
+        histories["benchmark"],
+        as_of_date=as_of_date,
+        universe=histories["universe"],
+        config=theme_config,
+    )
+    regime = histories["regime"].copy()
+    regime["date"] = pd.to_datetime(regime["date"]).dt.normalize()
+    regime_selected = regime.loc[regime["date"].eq(as_of_date)]
+    regime_context = (
+        regime_selected.iloc[0].to_dict()
+        if len(regime_selected) == 1
+        else {}
+    )
+    risk_for_beta = risk.copy()
+    risk_for_beta["signed_short_beta_126d"] = -pd.to_numeric(
+        risk_for_beta["short_underlying_beta_126d"],
+        errors="coerce",
+    )
+    signed_short_beta = _optional_float(
+        -risk_row["short_underlying_beta_126d"]
+    )
+    signed_short_beta_threshold = prior_only_quantile(
+        risk_for_beta,
+        as_of_date=as_of_date,
+        column="signed_short_beta_126d",
+        quantile=config.short_beta_quantile,
+        min_observations=config.threshold_min_observations,
+    )
 
     concentration = histories["concentration"]
     concentration_row = _selected_row(
@@ -1405,7 +1943,21 @@ def _assemble_unwind_assessment(
     high_volatility_recovery = _optional_bool(
         risk_row.get("high_volatility_recovery_state")
     )
-    scenario, rule, confidence = classify_unwind_scenario(
+    mechanisms = classify_momentum_crash_scenarios(
+        rows,
+        regime_context=regime_context,
+        signed_short_beta=signed_short_beta,
+        signed_short_beta_threshold=signed_short_beta_threshold.value,
+        theme_snapshot=theme_snapshot,
+        config=config,
+    )
+    active_scenarios = tuple(
+        mechanism.scenario
+        for mechanism in mechanisms
+        if mechanism.status == "triggered"
+    )
+    scenario, rule, confidence = legacy_scenario_from_mechanisms(
+        mechanisms,
         rows,
         high_volatility_recovery=high_volatility_recovery,
     )
@@ -1429,7 +1981,10 @@ def _assemble_unwind_assessment(
             [
                 *fingerprint_snapshot["warnings"],
                 *fundamental.warnings,
+                *theme_snapshot.warnings,
                 "No composite probability is calculated from the six rows.",
+                "scenario_classification is a lossy v1 compatibility view; "
+                "use mechanism_scenarios for the v2 result.",
             ]
         )
     )
@@ -1437,6 +1992,9 @@ def _assemble_unwind_assessment(
         schema_version=UNWIND_SCHEMA_VERSION,
         as_of_date=iso_date(as_of_date),
         scorecard=rows,
+        mechanism_scenarios=mechanisms,
+        active_scenarios=active_scenarios,
+        theme_concentration=theme_snapshot,
         scenario_classification=scenario,
         scenario_rule=rule,
         completeness_confidence=confidence,
@@ -1449,6 +2007,14 @@ def _assemble_unwind_assessment(
             "available_rows": sum(row.status == "available" for row in rows),
             "scorecard_rows": len(rows),
             "high_volatility_recovery": high_volatility_recovery,
+            "signed_short_beta_126d": signed_short_beta,
+            "signed_short_beta_prior_20pct": (
+                signed_short_beta_threshold.to_dict()
+            ),
+            "mechanism_scenario_count": len(mechanisms),
+            "active_scenario_count": len(active_scenarios),
+            "legacy_schema_version": LEGACY_UNWIND_SCHEMA_VERSION,
+            "legacy_scenario_is_lossy": True,
             "fundamental_formation_date": fundamental.formation_date,
             "threshold_min_observations": config.threshold_min_observations,
             "breadth_min_observations": config.breadth_min_observations,
@@ -1466,6 +2032,7 @@ def build_unwind_assessment(
     company_coverage: pd.DataFrame | None = None,
     load_fundamentals: bool = False,
     config: UnwindMonitorConfig = DEFAULT_UNWIND_CONFIG,
+    theme_config: ThemeConcentrationConfig = DEFAULT_THEME_CONFIG,
 ) -> UnwindAssessment:
     """Build the complete six-row Phase 5 assessment for one exact date.
 
@@ -1487,6 +2054,7 @@ def build_unwind_assessment(
         company_coverage=company_coverage,
         load_fundamentals=load_fundamentals,
         config=config,
+        theme_config=theme_config,
     )
 
 
@@ -1550,6 +2118,7 @@ def run_unwind_assessment(
     output_dir: Path = DEFAULT_OUTPUT_DIR / "unwind_structure",
     load_fundamentals: bool = False,
     config: UnwindMonitorConfig = DEFAULT_UNWIND_CONFIG,
+    theme_config: ThemeConcentrationConfig = DEFAULT_THEME_CONFIG,
 ) -> UnwindAssessment:
     """Build and persist histories plus one exact-date assessment."""
 
@@ -1565,6 +2134,7 @@ def run_unwind_assessment(
         company_coverage=None,
         load_fundamentals=load_fundamentals,
         config=config,
+        theme_config=theme_config,
     )
     write_parquet(
         histories["breadth"],
@@ -1605,6 +2175,17 @@ def run_unwind_assessment(
             "as_of_date": assessment.as_of_date,
             "breadth_rows": len(histories["breadth"]),
             "fingerprint_rows": len(histories["fingerprint"]),
+            "mechanism_statuses": {
+                item.scenario: item.status
+                for item in assessment.mechanism_scenarios
+            },
+            "active_scenarios": list(assessment.active_scenarios),
+            "theme_proxy_schema": (
+                assessment.theme_concentration.schema_version
+            ),
+            "theme_cluster_definition_cutoff": (
+                assessment.theme_concentration.cluster_definition_cutoff
+            ),
             "assessment": assessment.audit_metadata,
         },
     )

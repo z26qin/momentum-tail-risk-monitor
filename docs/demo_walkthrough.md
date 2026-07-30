@@ -17,7 +17,7 @@ Expected results:
 
 - smoke output contains `"status": "ready"`;
 - the notebook saves without an execution error;
-- the full suite reports `253 passed, 4 skipped`;
+- the full suite reports `292 passed, 4 skipped`;
 - the default run ID is `53c34aa57bb437fc`.
 
 Open the pre-executed notebook:
@@ -61,6 +61,8 @@ Show the architecture cell:
 ```text
 date + approved threshold profile
 → deterministic indicators and risk state
+→ six-row unwind inputs
+→ three independent momentum-crash mechanisms
 → point-in-time evidence retrieval
 → optional constrained interpretation
 → final PM Evidence Card
@@ -74,6 +76,19 @@ Point to the four deterministic indicators:
 - short-minus-long beta gap;
 - long-short portfolio drawdown;
 - short-leg loss during recovery.
+
+Then explain the separate Phase 5 scenario layer:
+
+- bear-market recovery keeps recent severe drawdown, recovery from trough, and
+  realized volatility as separate conditions;
+- short-book reversal requires both an extreme short-minus-long move and broad
+  gains across short underlyings;
+- crowded-theme unwind uses a correlated active-long cluster fixed at `t-1`,
+  then tests selected-date liquidation evidence.
+
+These mechanisms are independent and may be multi-label. The
+`scenario_classification` field shown in audit detail is retained only for v1
+compatibility.
 
 Explain the discipline:
 
@@ -109,7 +124,18 @@ Run all cells and show:
 2. the complete four-indicator quantitative table;
 3. the trailing selected-date context chart;
 4. the before-versus-after table ranked by absolute structured change;
-5. the deterministic section of the final card before discussing narrative.
+5. the three-row mechanism matrix above the retained six-row scorecard;
+6. the deterministic section of the final card before discussing narrative.
+
+For `2024-01-05`, explain the distinction:
+
+- bear-market recovery is `watch` because recovery is present without both a
+  recent severe drawdown and high volatility;
+- short-book reversal is `not_confirmed`;
+- crowded-theme unwind is `not_confirmed`, with no qualifying pre-event
+  cluster;
+- synchronous winner liquidation can still trigger as a component without
+  forcing a complete mechanism label.
 
 For a clear date-driven contrast, change the parameter cell to:
 
@@ -135,6 +161,12 @@ quantitative signatures, interpretations, or run IDs do not change.
 Return to `2024-01-05` before the evidence discussion. It is the only date with
 both complete quantitative history and a validated date-matched evidence
 cache.
+
+If time permits, use `2026-05-29` only to demonstrate mechanism separation:
+the correlated-theme proxy selects `CIEN`, `COHR`, and `LITE` using data
+through `2026-05-28`; `crowded_theme_unwind` triggers while bear-market
+recovery remains `watch` and short-book reversal is `not_confirmed`. This is a
+mechanism-proxy demonstration, not a semiconductor case study or causal claim.
 
 ## Minute 9–14 — Evidence Layer
 

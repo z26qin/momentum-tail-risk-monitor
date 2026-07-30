@@ -10,6 +10,11 @@ threshold profile; recomputes the existing quantitative pipeline; applies the
 point-in-time evidence cutoff; optionally invokes a constrained interpretation
 interface; and renders one auditable PM Evidence Card.
 
+The deterministic card now also shows the Phase 5 scenario-v2 extension:
+bear-market recovery, short-book reversal, and crowded-theme unwind are
+independent, potentially simultaneous mechanisms. The existing six-row unwind
+scorecard remains unchanged beneath this layer.
+
 The reliable default is fully offline:
 
 ```python
@@ -50,6 +55,8 @@ AS_OF_DATE + COMPARE_TO_DATE + approved THRESHOLD_PROFILE
                             |
             existing deterministic Phase 1–4 pipeline
                             |
+       six-row unwind inputs + three mechanism scenarios
+                            |
             validated DeterministicEvidenceInput
                             |
        cutoff-enforced cached point-in-time evidence
@@ -74,6 +81,8 @@ AS_OF_DATE + COMPARE_TO_DATE + approved THRESHOLD_PROFILE
 | Existing narrative convention | `src.mvp.llm_synthesis.Synthesizer` / `SynthesisResult` pattern | Provider-neutral dependency-injection and fail-closed design precedent |
 | Repository I/O/date helpers | `src.utils.io` | Date normalization, versions, paths, hashes, and serialization conventions |
 | Phase 5A outputs | Acquisition-feasibility review only | Reported as unavailable warning; no Phase 5B alignment signal is fabricated |
+| Unwind structure | `src.monitoring.unwind_structure.build_unwind_assessment` | Retained six rows plus the v2 multi-label mechanism contract |
+| Theme concentration | `src.risk.theme_concentration.build_theme_concentration_snapshot` | `t-1` correlated active-long cluster and selected-date liquidation proxy |
 
 The lower-level archived retrieval/classification infrastructure was not
 rewired into the final card. Phase 6 preserves the repository's existing
@@ -93,6 +102,12 @@ exact-date evidence replay boundary.
 - `tests/test_evidence_interpretation.py`
   - invariance, credential fallback, unsupported IDs, empty retrieval, schema,
     unsafe prose, numerical claims, and list-size tests.
+- `src/risk/theme_concentration.py`
+  - pure point-in-time correlated-cluster, concentration, liquidation, volume,
+    and liquidity-proxy calculations.
+- `tests/test_theme_concentration.py`
+  - cross-sector cluster, unchanged effective-bets, selected-date exclusion,
+    and future-row leakage tests.
 
 ## Files modified
 
@@ -109,7 +124,13 @@ exact-date evidence replay boundary.
   - freezes the Evidence Card contract and approved profile boundary.
 - `tests/test_demo_smoke_test.py`
   - validates date-driven output, profile, evidence availability, and
-    deterministic interpretation mode.
+  deterministic interpretation mode.
+- `src/monitoring/unwind_structure.py`
+  - upgrades the assessment to v2, adds three independent mechanism contracts,
+    and retains a documented v1 single-label compatibility view.
+- `tests/test_unwind_structure.py`
+  - validates independent triggers, multi-label output, optional beta context,
+    missing evidence, and the v2 schema.
 - `docs/demo_walkthrough.md`
   - current minute-by-minute script, Q&A, phrases to avoid, and failure
     fallback.
@@ -118,6 +139,21 @@ exact-date evidence replay boundary.
 
 No dependency, dataset, website, model fit, or threshold-profile expansion was
 added.
+
+## Scenario-v2 extension
+
+The v2 assessment adds:
+
+- `mechanism_scenarios`, three ordered condition-level results;
+- `active_scenarios`, every mechanism with status `triggered`;
+- `theme_concentration`, the validated `correlated_theme_proxy`;
+- a retained `scenario_classification` field documented as a lossy v1
+  compatibility view.
+
+The theme proxy uses existing prices, SPY benchmark returns, holdings, volume,
+dollar volume, and sector labels. Cluster correlation stops at `t-1`, and
+tests prove that selected-date or future returns cannot alter the cluster
+definition. It does not claim to observe ownership, leverage, or forced sales.
 
 ## QA results
 
@@ -139,8 +175,8 @@ Final automated results:
 
 ```text
 Smoke test: status=ready
-Notebook: 18 cells, 9 code cells, no errors
-Full suite: 253 passed, 4 skipped
+Notebook: 24 cells, 12 code cells, no errors
+Full suite: 292 passed, 4 skipped
 git diff --check: clean
 ```
 
