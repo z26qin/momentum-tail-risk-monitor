@@ -11,4 +11,8 @@ def test_pre_demo_smoke_test_is_ready_and_date_driven() -> None:
     assert result["primary_run_id"] != result["regression_run_id"]
     assert result["primary_state"] != result["regression_state"]
     assert result["evidence_items"] > 0
-    assert result["synthesis_mode"] == "deterministic_no_llm"
+    assert result["interpretation_use_llm"] is False
+    assert result["threshold_profile"] == "default"
+    assert result["interpretation_version"].startswith(
+        "deterministic-evidence-interpretation-"
+    )
