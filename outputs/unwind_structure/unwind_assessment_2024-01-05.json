@@ -1,0 +1,202 @@
+{
+  "as_of_date": "2024-01-05",
+  "audit_metadata": {
+    "available_rows": 5,
+    "breadth_min_observations": 24,
+    "formation_date": "2023-12-29",
+    "forward_rebound_in_live_assessment": false,
+    "fundamental_formation_date": "2024-01-05",
+    "high_volatility_recovery": false,
+    "no_composite_probability": true,
+    "scorecard_rows": 6,
+    "threshold_min_observations": 252
+  },
+  "completeness_confidence": "moderate",
+  "contradictory_evidence": [
+    "portfolio_concentration",
+    "momentum_breadth_deterioration",
+    "cross_sectional_reversal",
+    "liquidity_amplification_proxy"
+  ],
+  "missing_evidence": [
+    "fundamental_anchor"
+  ],
+  "scenario_classification": "normal_drawdown",
+  "scenario_rule": "Evidence is sufficiently complete, but no repricing, panic-recovery, or crowded-unwind rule is satisfied.",
+  "schema_version": "momentum-unwind-assessment-v1",
+  "scorecard": [
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "rebalance_diagnostics": [
+          {
+            "average_holding_rebalances": 4.4,
+            "formation_date": "2023-12-29",
+            "holding_count": 10,
+            "leg": "long",
+            "overlap_count": 8,
+            "overlap_share": 0.8,
+            "rank_persistence": 0.19047619047619052,
+            "turnover_share": 0.19999999999999996
+          },
+          {
+            "average_holding_rebalances": 2.2,
+            "formation_date": "2023-12-29",
+            "holding_count": 10,
+            "leg": "short",
+            "overlap_count": 6,
+            "overlap_share": 0.6,
+            "rank_persistence": 0.028571428571428574,
+            "turnover_share": 0.4
+          }
+        ],
+        "sector_hhi": 0.24219015644688544,
+        "top3_abs_exposure_share": 0.16395161717583098,
+        "top5_abs_contribution_share": 0.554328290811135,
+        "top5_abs_exposure_share": 0.26741735488053053,
+        "top5_exposure_loss_overlap_share": 0.4,
+        "top5_loss_contribution_share": 0.9476194126512181,
+        "top_sector_exposure_share": 0.35715579504880174
+      },
+      "current_value": 19.928674648290627,
+      "data_quality": "current_membership_and_classification_proxy",
+      "direction": "less_than_or_equal",
+      "explanation": "Gross-normalized effective bets use drifted beginning-of-day exposure; lower values indicate greater concentration.",
+      "metric": "portfolio_concentration",
+      "monitor_family": "portfolio_structure",
+      "severity": "normal",
+      "source_module": "src.risk.concentration",
+      "status": "available",
+      "threshold": 19.793627512635414,
+      "threshold_provenance": "historical_proxy_threshold",
+      "triggered": false
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "breadth_change_vs_previous": 0.23149306833517364,
+        "breadth_change_vs_prior_3_rebalance_high": -0.17943810575389518,
+        "formation_date": "2023-12-29",
+        "long_21d_participation_share": 0.8,
+        "long_entry_count": 2.0,
+        "long_exit_count": 2.0,
+        "positive_momentum_leadership_hhi": 0.009501016775233302,
+        "top10_positive_momentum_share": 0.2203803045623281
+      },
+      "current_value": 0.6424242424242425,
+      "data_quality": "current_membership_proxy",
+      "direction": "less_than_or_equal",
+      "explanation": "The share of the eligible universe with positive 12-1 momentum is compared with its strictly prior monthly history.",
+      "metric": "momentum_breadth_deterioration",
+      "monitor_family": "market_breadth",
+      "severity": "normal",
+      "source_module": "src.features.momentum_breadth",
+      "status": "available",
+      "threshold": 0.513247145159631,
+      "threshold_provenance": "historical_proxy_threshold",
+      "triggered": false
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "beta_adjusted_long_return_5d": -0.031211844066995557,
+        "co_decline_gate": 0.7,
+        "long_average_pairwise_correlation_21d": 0.4514925573998727,
+        "long_decline_share_5d": 0.9,
+        "long_pairwise_correlation_change": -0.015693695559057474,
+        "long_return_5d": -0.06884695477719793,
+        "sector_adjustment": "unavailable"
+      },
+      "current_value": 0.031211844066995557,
+      "data_quality": "current_membership_proxy",
+      "direction": "greater_than_or_equal",
+      "explanation": "An extreme five-day lagged-beta-adjusted long loss must coincide with broad active-long declines.",
+      "metric": "synchronous_winner_liquidation",
+      "monitor_family": "winner_liquidation",
+      "severity": "high",
+      "source_module": "src.monitoring.unwind_structure",
+      "status": "available",
+      "threshold": 0.018176327405081003,
+      "threshold_provenance": "historical_proxy_threshold",
+      "triggered": true
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "long_decline_share_5d": 0.9,
+        "long_minus_short_return_5d": -0.02710516001187724,
+        "long_return_5d": -0.06884695477719793,
+        "short_rise_share_5d": 0.4,
+        "short_underlying_return_5d": -0.041741794765320694
+      },
+      "current_value": 0.02710516001187724,
+      "data_quality": "current_membership_proxy",
+      "direction": "greater_than_or_equal",
+      "explanation": "Positive short-underlying-minus-long return means prior losers outperformed prior winners over five trading days.",
+      "metric": "cross_sectional_reversal",
+      "monitor_family": "cross_sectional_reversal",
+      "severity": "normal",
+      "source_module": "src.monitoring.unwind_structure",
+      "status": "available",
+      "threshold": 0.03339762184676215,
+      "threshold_provenance": "historical_proxy_threshold",
+      "triggered": false
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "liquidity_eligible_long_count": 10.0,
+        "long_median_amihud_5d": 2.23270770021847e-11,
+        "proxy_status": "available_proxy"
+      },
+      "current_value": 0.2,
+      "data_quality": "available_proxy",
+      "direction": "greater_than_or_equal",
+      "explanation": "This public-data proxy counts active long names falling while five-day volume exceeds each name's prior-only threshold.",
+      "metric": "liquidity_amplification_proxy",
+      "monitor_family": "liquidity_proxy",
+      "severity": "normal",
+      "source_module": "src.monitoring.unwind_structure",
+      "status": "available",
+      "threshold": 0.5,
+      "threshold_provenance": "demo_threshold",
+      "triggered": false
+    },
+    {
+      "as_of_date": "2024-01-05",
+      "context": {
+        "contradiction_names": [],
+        "formation_date": "2024-01-05",
+        "long_covered_count": 0,
+        "long_support_share": null,
+        "margin_support_share": null,
+        "missing_names": [],
+        "revenue_support_share": null,
+        "short_covered_count": 0,
+        "short_improving_share": null
+      },
+      "current_value": null,
+      "data_quality": "unavailable",
+      "direction": "rule_based",
+      "explanation": "Revenue acceleration, applicable operating-margin change, and optional EPS acceleration provide a lightweight sign-based anchor.",
+      "metric": "fundamental_anchor",
+      "monitor_family": "fundamental_context",
+      "severity": "unavailable",
+      "source_module": "src.monitoring.fundamental_anchor + src.data.sec_fundamentals",
+      "status": "unavailable",
+      "threshold": "coverage-gated sign-vote rule",
+      "threshold_provenance": "demo_threshold",
+      "triggered": null
+    }
+  ],
+  "supporting_evidence": [
+    "synchronous_winner_liquidation"
+  ],
+  "warnings": [
+    "Sector-adjusted residual return is unavailable; only lagged-beta adjustment is implemented.",
+    "Security history uses current-membership and current-classification proxies and is survivorship-biased.",
+    "Liquidity fields are public volume and Amihud proxies, not direct evidence of leverage or forced selling.",
+    "No exact-date Phase 5A company coverage was supplied.",
+    "No composite probability is calculated from the six rows."
+  ]
+}
