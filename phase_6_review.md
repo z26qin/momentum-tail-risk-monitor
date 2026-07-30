@@ -1,251 +1,378 @@
-# Phase 6 review — validated PM Evidence Card demo
+# Phase 6 review — final interactive PM Evidence Card
 
 ## Outcome
 
-The Phase 6 demo is ready for a deterministic, offline 20-minute presentation.
-The notebook runs end to end, the complete test suite passes, two fixed
-historical dates produce different quantitative cards, evidence is enforced at
-the point-in-time cutoff, and no language-model credential is required.
+Phase 6 is ready for a reliable, deterministic-first 20-minute PM and
+quant-researcher demonstration.
 
-No Phase 1–5 signal definition, label, validation method, trained model,
-threshold, or research conclusion was changed.
+The final notebook accepts an as-of date, optional comparison date, and named
+threshold profile; recomputes the existing quantitative pipeline; applies the
+point-in-time evidence cutoff; optionally invokes a constrained interpretation
+interface; and renders one auditable PM Evidence Card.
 
-## Final architecture
-
-```text
-Versioned local market and momentum artifacts
-                    |
-        Phase 1–4 deterministic components
-                    |
-     Risk state + four-indicator scorecard
-                    |
-   Cutoff-validated cached evidence (optional)
-                    |
-Constrained narrative-only synthesizer (optional)
-                    |
-       Validated and rendered Evidence Card
-```
-
-The quantitative layer owns every state, value, threshold, trigger, comparison
-delta, and descriptive historical frequency. The synthesis interface can write
-only narrative fields. Retrieval or synthesis failure leaves the quantitative
-card intact and produces an explicit warning.
-
-## Task 0 validation results
-
-| Check | Final result |
-|---|---|
-| Notebook runs end to end | Pass: 11 code cells, no errors |
-| Relevant and full tests pass | Pass: 231 passed, 4 skipped |
-| Deterministic fallback works | Pass with no API credentials or external synthesizer |
-| Selected date changes the result | Pass: fixed 2024 and 2020 signatures, triggers, evidence status, and run IDs differ |
-| Comparison calculations work | Pass: per-indicator deltas and concise change list recompute |
-| Text respects cutoff | Pass: validated in retrieval, integration, schema, tests, and smoke command |
-| LLM layer is optional | Pass: reliable default is `USE_LLM = False` |
-| Card renders without intervention | Pass: self-contained HTML rendering in a normal Jupyter kernel |
-
-The baseline issue list was reported before editing. There were no blockers.
-The concrete corrections were timezone-safe input dates, fail-closed retrieval
-exceptions, schema-level evidence-cutoff validation, honest LLM fallback
-labeling, versioned run metadata, and the missing demo/smoke presentation
-elements.
-
-## Files modified
-
-- `src/mvp/evidence_card.py`
-  - normalizes timezone-aware dates and rejects invalid/future dates;
-  - fails closed on retrieval exceptions or evidence after the cutoff;
-  - validates evidence timestamps again at the card schema boundary;
-  - records data and quantitative-model versions in metadata and run IDs;
-  - labels requested-but-unconfigured LLM use as deterministic fallback;
-  - simplifies the PM-facing indicator and evidence rendering.
-- `src/mvp/llm_synthesis.py`
-  - makes the deterministic PM summary shorter and state-calibrated;
-  - removes zero-change noise from the change list;
-  - avoids describing a non-triggered state as guaranteed or generically benign.
-- `src/mvp/demo_smoke_test.py`
-  - adds the read-only pre-demo command and fixed two-date regression gate.
-- `notebooks/03_pm_evidence_card_demo.ipynb`
-  - adds `DEMO_MODE`, reliable defaults, data/model metadata, two-date
-    validation, selected-date time-series context, separated evidence stances,
-    concise historical context, and a re-rendered final card.
-- `tests/test_evidence_card.py`
-  - adds integration coverage for API-free fallback, retrieval exceptions,
-    injected future evidence, run configuration metadata, and timezone-aware
-    inputs.
-- `tests/test_demo_smoke_test.py`
-  - verifies that the pre-demo gate is ready and genuinely date-driven.
-- `docs/demo_walkthrough.md`
-  - replaces the mixed handoff with the final minute-by-minute walkthrough,
-    PM questions, quant objections, and failure fallbacks.
-- `phase_6_review.md`
-  - this final review.
-
-## Tests added or strengthened
-
-The targeted Phase 6 coverage now explicitly verifies:
-
-1. future as-of dates are rejected;
-2. unknown threshold profiles are rejected;
-3. comparison dates on or after the selected date are rejected;
-4. LLM-on and LLM-off paths preserve identical quantitative fields;
-5. evidence never exceeds the cutoff, including injected invalid evidence;
-6. the card validates at its schema boundary;
-7. missing API/external-synthesizer configuration uses deterministic fallback;
-8. failed synthesis does not fail the card or notebook;
-9. missing or failed retrieval produces explicit uncertainty and warnings;
-10. identical deterministic inputs reproduce the same complete card;
-11. metadata records dates, profile, horizon, LLM request, data version, and
-    quantitative-model version;
-12. an injected interpretation cannot alter indicator values or statuses;
-13. timezone-aware input dates preserve their stated calendar date;
-14. the smoke command proves two historical dates produce different results.
-
-Final commands and results:
-
-```bash
-.venv/bin/python -m pytest -o addopts='' -q
-# 231 passed, 4 skipped
-
-.venv/bin/python -m src.mvp.demo_smoke_test
-# "status": "ready"
-
-git diff --check
-# no output
-```
-
-The four skipped tests are pre-existing optional cache/data-availability skips,
-not Phase 6 failures.
-
-## Notebook run instructions
-
-From the repository root:
-
-```bash
-.venv/bin/jupyter lab notebooks/03_pm_evidence_card_demo.ipynb
-```
-
-Open the notebook and choose **Run All**. It bootstraps repository imports when
-started from either the root or `notebooks/`. The checked-in notebook is also
-pre-executed.
-
-Reliable demo configuration:
+The reliable default is fully offline:
 
 ```python
-DEMO_MODE = True
 AS_OF_DATE = "2024-01-05"
 COMPARE_TO_DATE = "2023-12-01"
 THRESHOLD_PROFILE = "default"
 USE_LLM = False
 ```
 
-Headless deterministic card:
+No Phase 1–5 signal, label, dataset, trained model, or threshold was redesigned
+or optimized.
 
-```bash
-.venv/bin/python -m src.mvp.evidence_card \
-  --as-of-date 2024-01-05 \
-  --compare-to-date 2023-12-01 \
-  --no-llm
+## Implementation summary
+
+Phase 6 added five bounded capabilities:
+
+1. `DeterministicEvidenceInput`, a frozen validated projection of existing
+   quantitative and point-in-time evidence outputs.
+2. `build_deterministic_evidence_input(...)`, the single deterministic
+   notebook-facing adapter.
+3. `EvidenceInterpretation` and `interpret_evidence_card(...)`, a
+   provider-neutral, schema-constrained narrative layer with deterministic
+   fallback.
+4. A pre-executed interactive notebook with a ranked comparison view and final
+   PM-facing HTML Evidence Card.
+5. A read-only smoke gate and focused tests for dates, profiles, cutoff,
+   repeatability, interpretation safety, failure behavior, and notebook
+   readiness.
+
+The quantitative object remains separate from interpretation. Interpretation
+cannot write the state, values, thresholds, trigger statuses, comparison
+deltas, evidence records, dates, cutoff, or run ID.
+
+## Final end-to-end flow
+
+```text
+AS_OF_DATE + COMPARE_TO_DATE + approved THRESHOLD_PROFILE
+                            |
+            existing deterministic Phase 1–4 pipeline
+                            |
+            validated DeterministicEvidenceInput
+                            |
+       cutoff-enforced cached point-in-time evidence
+                            |
+        optional constrained EvidenceInterpretation
+                            |
+              final interactive PM Evidence Card
 ```
 
-## Smoke-test instructions
+`USE_LLM=False` is a complete product path, not a degraded quantitative path.
 
-Run immediately before the meeting:
+## Reused Phase 1–5 components
 
-```bash
-.venv/bin/python -m src.mvp.demo_smoke_test
+| Existing component | Exact entry point | Phase 6 use |
+|---|---|---|
+| Primary risk assessment | `src.risk.dm_engine.build_primary_assessment` | Overall deterministic state and descriptive state-conditional tail-loss context |
+| Four-row scorecard | `src.monitoring.scorecard.build_scorecard` | Values, prior-only thresholds, directions, trigger states, and explanations |
+| Approved threshold config | `src.monitoring.scorecard.DEFAULT_CONFIG` via `src.mvp.evidence_card.THRESHOLD_PROFILES` | The sole approved `default` profile |
+| Regime history | `src.regime.market_state.build_regime_history` | State input to the scorecard |
+| Historical state context | `src.risk.dm_engine.build_insurance_table` | Aggregate matured-label context carried in `historical_analogs` |
+| Point-in-time evidence replay | `src.evidence.research_preview.build_research_preview` | Exact-date cached retrieval with cutoff enforcement |
+| Existing narrative convention | `src.mvp.llm_synthesis.Synthesizer` / `SynthesisResult` pattern | Provider-neutral dependency-injection and fail-closed design precedent |
+| Repository I/O/date helpers | `src.utils.io` | Date normalization, versions, paths, hashes, and serialization conventions |
+| Phase 5A outputs | Acquisition-feasibility review only | Reported as unavailable warning; no Phase 5B alignment signal is fabricated |
+
+The lower-level archived retrieval/classification infrastructure was not
+rewired into the final card. Phase 6 preserves the repository's existing
+exact-date evidence replay boundary.
+
+## Files added
+
+- `docs/phase_6_implementation_plan.md`
+  - verified the existing repository and froze the smallest integration path.
+- `src/mvp/evidence_interpretation.py`
+  - eight-field interpretation schema, allow-listed provider payload,
+    versioned instructions, evidence-ID validation, safety validation, and
+    deterministic fallback.
+- `tests/test_deterministic_evidence_input.py`
+  - adapter schema, date/profile validation, cutoff, warnings, comparison, and
+    reproducibility tests.
+- `tests/test_evidence_interpretation.py`
+  - invariance, credential fallback, unsupported IDs, empty retrieval, schema,
+    unsafe prose, numerical claims, and list-size tests.
+
+## Files modified
+
+- `src/mvp/evidence_card.py`
+  - added the validated deterministic adapter while reusing the existing
+    Evidence Card integration path.
+- `notebooks/03_pm_evidence_card_demo.ipynb`
+  - now uses the deterministic adapter and constrained interpreter, has one
+    four-variable parameter cell, a ranked before/after comparison, and the
+    final consolidated PM card.
+- `src/mvp/demo_smoke_test.py`
+  - now validates the same adapter-plus-interpreter flow as the notebook.
+- `tests/test_evidence_card.py`
+  - freezes the Evidence Card contract and approved profile boundary.
+- `tests/test_demo_smoke_test.py`
+  - validates date-driven output, profile, evidence availability, and
+    deterministic interpretation mode.
+- `docs/demo_walkthrough.md`
+  - current minute-by-minute script, Q&A, phrases to avoid, and failure
+    fallback.
+- `phase_6_review.md`
+  - replaced the earlier Phase 6A handoff with this final end-to-end review.
+
+No dependency, dataset, website, model fit, or threshold-profile expansion was
+added.
+
+## QA results
+
+The final Session 6 QA pass ran on 2026-07-29.
+
+| Required check | Result |
+|---|---|
+| Date reaches deterministic pipeline | Pass: `2024-01-05`, `2020-03-24`, and `2026-05-29` produce date-specific results |
+| Comparison date handled | Pass: `2023-12-01` and `2020-02-24` produce non-null per-signal changes where supported |
+| Threshold profile recorded | Pass: `default` appears in the adapter, metadata, card, smoke output, and run configuration |
+| Retrieval respects cutoff | Pass: every evidence timestamp is at or before `data_cutoff` |
+| LLM cannot alter deterministic values | Pass: immutable input snapshots and schema boundaries are tested |
+| LLM-disabled fallback works | Pass: `USE_LLM=False` renders the complete card |
+| Unavailable data is warned | Pass: `2026-05-29` has empty evidence plus explicit uncertainty |
+| Final card renders | Pass: four HTML outputs, one inline PNG, all required sections, no execution errors or stderr |
+| Repeated deterministic runs stable | Pass: identical input returns identical schema output and run ID |
+
+Final automated results:
+
+```text
+Smoke test: status=ready
+Notebook: 18 cells, 9 code cells, no errors
+Full suite: 253 passed, 4 skipped
+git diff --check: clean
 ```
 
-This validates imports, required local data, notebook dependencies, schema
-creation, cutoff compliance, deterministic rendering, and distinct quantitative
-results for the two recommended historical dates. It does not write analytical
-artifacts.
+The four skips are existing optional cache/data-availability skips, not Phase 6
+failures.
 
-## Deterministic fallback and LLM configuration
+## Exact commands to run
 
-No API key, language-model SDK, or external synthesizer is installed or
-required. `USE_LLM = False` produces `deterministic_no_llm`.
+### Read-only pre-demo gate
 
-If `USE_LLM = True` without an injected synthesizer, the card reports
-`deterministic_fallback` and warns that no external synthesizer/API
-configuration is installed. If an injected synthesizer raises or returns an
-invalid object, its output is discarded and the same fallback is used.
+```bash
+uv run python -m src.mvp.demo_smoke_test
+```
 
-An external implementation must satisfy the existing `Synthesizer` protocol
-and return `SynthesisResult`. That result contains narrative text only; it has
-no quantitative fields. A real network client remains intentionally
-unimplemented.
+Expected output includes:
 
-## Exact recommended demo dates and expected output
+```text
+"status": "ready"
+"primary_run_id": "53c34aa57bb437fc"
+"threshold_profile": "default"
+"interpretation_use_llm": false
+```
 
-### Primary evidence case
+### Execute the notebook headlessly
 
-- As-of date: `2024-01-05`
-- Comparison date: `2023-12-01`
-- State: `bear_low_volatility`
-- Triggered indicators: none of four
-- Descriptive 20-day state-conditional tail-loss frequency: approximately 8.2%
-- Material changes: beta gap and short-loss measure decreased; portfolio
-  drawdown became slightly shallower
-- Evidence: available from the validated cache — 3 supporting, 1
-  contradicting, and 3 contextual items
-- Expected deterministic run ID for the checked-in data/config:
-  `53c34aa57bb437fc`
+```bash
+uv run jupyter-execute \
+  --inplace \
+  --timeout=120 \
+  notebooks/03_pm_evidence_card_demo.ipynb
+```
+
+### Open the notebook for the live demo
+
+```bash
+uv run --with jupyterlab jupyter lab \
+  notebooks/03_pm_evidence_card_demo.ipynb
+```
+
+### Run focused Phase 6 checks
+
+```bash
+uv run python -m pytest -q \
+  tests/test_deterministic_evidence_input.py \
+  tests/test_evidence_interpretation.py \
+  tests/test_evidence_card.py \
+  tests/test_demo_smoke_test.py
+```
+
+### Run the complete repository suite
+
+```bash
+uv run python -m pytest
+```
+
+## Required environment variables
+
+For the recommended deterministic demo:
+
+```text
+None
+```
+
+The notebook, retrieval cache, interpretation fallback, and final card run
+without network access or an API key.
+
+For a future live injected interpreter, the current credential gate recognizes:
+
+```text
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+```
+
+Credentials alone are insufficient. The notebook also requires an approved
+object implementing `EvidenceInterpreter` to be injected as
+`INJECTED_INTERPRETER`. No vendor client is included, and no live credential
+call was made during Phase 6.
+
+## Tested example dates
+
+### Primary quant-plus-evidence demo
+
+```text
+AS_OF_DATE = 2024-01-05
+COMPARE_TO_DATE = 2023-12-01
+THRESHOLD_PROFILE = default
+```
+
+Verified:
+
+- state: `bear_low_volatility`;
+- triggered signals: zero;
+- retrieved evidence: seven items;
+- evidence split: three supporting, one contradicting, three contextual;
+- cutoff: `2024-01-05T16:00:00-05:00`;
+- run ID: `53c34aa57bb437fc`.
 
 ### Elevated quantitative contrast
 
-- As-of date: `2020-03-24`
-- Comparison date: `2020-02-24`
-- State: `panic_elevated`
-- Triggered indicators: high-volatility recovery, short-minus-long beta gap,
-  and short loss in recovery
-- Descriptive 20-day state-conditional tail-loss frequency: approximately 23.8%
-- Comparison: the recovery gate turns on and short-loss magnitude rises
-  materially
-- Evidence: unavailable because there is no exact-date validated cache; the
-  card shows explicit uncertainty and retains the quantitative result
-- Expected deterministic run ID for the checked-in data/config:
-  `87c48fc913f38386`
+```text
+AS_OF_DATE = 2020-03-24
+COMPARE_TO_DATE = 2020-02-24
+THRESHOLD_PROFILE = default
+```
 
-Run IDs intentionally include the selected dates, threshold profile, horizon,
-indicator values, data version, and quantitative-model version. They will
-change if those inputs change.
+Verified:
 
-## Known limitations and mocked/incomplete functionality
+- state: `panic_elevated`;
+- triggered signals: three;
+- retrieved evidence: unavailable at this exact date;
+- run ID: `87c48fc913f38386`.
 
-- Evidence is a small exact-date validated cache replay, not live retrieval.
-- The only fully usable quant-plus-evidence date is `2024-01-05`; broader
-  evidence coverage is incomplete.
-- No real LLM call is implemented. External synthesis is an injectable,
-  constrained interface only.
-- Crowding and positioning measures are proxies, not observed institutional
-  books.
+### Missing-evidence and no-comparison case
+
+```text
+AS_OF_DATE = 2026-05-29
+COMPARE_TO_DATE = None
+THRESHOLD_PROFILE = default
+```
+
+Verified:
+
+- state: `normal`;
+- triggered signals: zero;
+- retrieved evidence: empty;
+- comparison view: explicitly unavailable;
+- missing-evidence uncertainty: visible;
+- run ID: `4fc9fd29eb452a25`.
+
+Tests also cover future-date rejection, a comparison date not strictly before
+the as-of date, and rejection of unknown threshold profiles.
+
+## Interpretation and fallback behavior
+
+The eight model-owned fields are:
+
+- `narrative_state`;
+- `narrative_changes`;
+- `supporting_evidence_ids`;
+- `contradicting_evidence_ids`;
+- `missing_or_uncertain_evidence`;
+- `pm_interpretation`;
+- `monitoring_questions`;
+- `invalidation_conditions`.
+
+Operational metadata records effective `use_llm`, prompt/version, and warnings.
+
+Fail-closed behavior:
+
+- `USE_LLM=False`: deterministic interpretation, no provider call;
+- no supported credential: deterministic interpretation plus warning;
+- credential but no interpreter: deterministic interpretation plus warning;
+- provider error or invalid schema: output discarded, deterministic
+  interpretation plus warning;
+- unsupported or stance-inconsistent evidence ID: removed and warned;
+- empty retrieval: no citations and an explicit uncertainty statement;
+- unsafe numerical, causal, certainty, or trade language: provider output is
+  rejected.
+
+An injected schema-valid test provider was exercised without a network call to
+verify the notebook's effective `USE_LLM=True` rendering. A live vendor call
+remains untested and unavailable.
+
+## Historical context status
+
+`historical_analogs` is implemented only as aggregate state-conditional output
+from `build_insurance_table`. It is not a nearest-neighbor or named-episode
+retriever.
+
+The final compact card does not present these rows as matched analogs. The demo
+uses the explicit `2020-03-24` comparison for historical contrast and explains
+that similarity does not imply the same future path.
+
+## Known limitations
+
+- Evidence is a small exact-date validated cache replay, not live or broad
+  point-in-time retrieval.
+- `2024-01-05` is the only complete date with quantitative history and a
+  validated exact-date evidence cache.
+- No concrete vendor LLM client is included; live provider behavior, latency,
+  cost, retry, and outage handling are not production-tested.
+- Schema and lexical safety checks cannot prove complete semantic grounding of
+  arbitrary prose.
+- `deterministic_score` is intentionally unavailable; no composite crash
+  probability is fabricated.
+- `default` is the only approved threshold profile.
+- Historical context is aggregate and descriptive, not a matched analog
+  forecast.
+- Crowding and positioning measures are proxies rather than observed
+  institutional holdings.
 - Historical security membership is survivorship-biased.
-- The default threshold profile is the only approved profile; governed
-  sensitivity profiles are not implemented.
-- State-conditional frequencies are descriptive, not calibrated forecasts or
-  trading instructions.
-- Text evidence is contextual and does not establish causality.
-- The optional semiconductor/AI-infrastructure case study was not completed.
-  The existing data did not support adding a defensible point-in-time sector
-  case without expanding scope or infrastructure.
+- Evidence does not establish causality.
+- Phase 5B fundamental alignment remains unavailable and unapproved.
 
-## Remaining technical debt
+## Mocked or unavailable functionality
 
-1. Build a broader archived point-in-time corpus with documented coverage and
-   contradiction sampling.
-2. Replace current-membership historical constituents with a point-in-time
-   universe.
-3. Add governed threshold sensitivity profiles only after research approval.
-4. Implement an external synthesizer client only with explicit model/version,
-   credential, timeout, logging, and evaluation policy.
-5. Add a sector case only after defining the sector universe and separating
-   thematic correction from canonical cross-sectional momentum.
+- The live LLM provider is unavailable. Tests use an injected structured stub
+  and test-only credential marker; no network model output is stored or
+  presented as live.
+- Evidence retrieval is a deterministic local cache replay, not autonomous web
+  search.
+- A previously saved LLM example is not required for the demo and was not
+  fabricated. If one is ever used, it must be labeled with date, run ID,
+  evidence IDs, prompt/model version, and non-live status.
+- True historical analog retrieval is unavailable.
+- Additional threshold profiles are unavailable pending research approval.
 
-## Recommended next phase after the meeting
+## Semiconductor case-study status
 
-Prioritize evidence and provenance hardening: expand the archived
-point-in-time corpus, measure retrieval coverage and selection bias, and add a
-point-in-time universe audit. Those changes improve defensibility more than a
-new interface or a more elaborate LLM layer. Keep the current deterministic
-Evidence Card and smoke gate as the acceptance harness for that work.
+The semiconductor case study remains optional and was not started.
+
+A thematic semiconductor correction is not automatically a canonical
+cross-sectional UMD momentum crash. Adding that case would require an approved
+sector definition, point-in-time evidence, and a separate validation question.
+It is not required for the core demo and should not be improvised during the
+interview.
+
+## Recommended post-interview work
+
+Prioritize defensibility rather than interface expansion:
+
+1. build and evaluate a broader archived point-in-time evidence corpus;
+2. quantify retrieval recall, precision, stance balance, and contradiction
+   capture on a blinded labeled set;
+3. replace current-membership historical constituents with a point-in-time
+   universe;
+4. define governance for approved threshold profiles and sensitivity review;
+5. select and evaluate a named LLM provider only with secret management,
+   timeouts, retries, logging, schema monitoring, grounding evaluation, and
+   cost controls;
+6. preserve the smoke gate, deterministic adapter, and notebook regression
+   cases as the acceptance harness.
+
+The optional semiconductor case should remain deferred until the core evidence
+and provenance work is accepted.

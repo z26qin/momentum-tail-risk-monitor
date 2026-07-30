@@ -16,10 +16,10 @@ import pandas as pd
 
 from src.mvp.evidence_card import (
     DATA_VERSION_FILES,
-    EvidenceCard,
-    build_evidence_card,
-    render_evidence_card_html,
+    DeterministicEvidenceInput,
+    build_deterministic_evidence_input,
 )
+from src.mvp.evidence_interpretation import interpret_evidence_card
 from src.utils.io import DEFAULT_PROCESSED_DIR, REPO_ROOT
 
 
@@ -56,7 +56,7 @@ def _require_notebook_dependencies() -> list[str]:
     return list(NOTEBOOK_DEPENDENCIES)
 
 
-def _quant_signature(card: EvidenceCard) -> tuple[object, ...]:
+def _quant_signature(card: DeterministicEvidenceInput) -> tuple[object, ...]:
     signals = card.triggered_quant_signals + card.non_triggered_relevant_signals
     return (
         card.overall_risk_state,
@@ -69,33 +69,47 @@ def run_smoke_test() -> dict[str, object]:
 
     inputs = _require_local_inputs()
     dependencies = _require_notebook_dependencies()
-    primary = build_evidence_card(
+    primary = build_deterministic_evidence_input(
         as_of_date=pd.Timestamp(DEMO_AS_OF_DATE),
         compare_to_date=pd.Timestamp(DEMO_COMPARE_TO_DATE),
         threshold_profile=DEMO_THRESHOLD_PROFILE,
+    )
+    primary_interpretation = interpret_evidence_card(
+        primary,
         use_llm=DEMO_USE_LLM,
     )
-    regression = build_evidence_card(
+    regression = build_deterministic_evidence_input(
         as_of_date=pd.Timestamp(REGRESSION_AS_OF_DATE),
         compare_to_date=pd.Timestamp(REGRESSION_COMPARE_TO_DATE),
         threshold_profile=DEMO_THRESHOLD_PROFILE,
+    )
+    regression_interpretation = interpret_evidence_card(
+        regression,
         use_llm=False,
     )
-    if not isinstance(primary, EvidenceCard):
-        raise TypeError("demo result did not validate as an EvidenceCard")
+    if not isinstance(primary, DeterministicEvidenceInput):
+        raise TypeError(
+            "demo result did not validate as a DeterministicEvidenceInput"
+        )
     if _quant_signature(primary) == _quant_signature(regression):
         raise AssertionError("fixed historical dates produced identical quant results")
-    evidence = (
-        primary.supporting_evidence
-        + primary.contradicting_evidence
-        + primary.contextual_evidence
-    )
+    if (
+        primary_interpretation.narrative_state
+        == regression_interpretation.narrative_state
+    ):
+        raise AssertionError("fixed historical dates produced identical interpretations")
+    evidence = primary.retrieved_evidence
     cutoff = datetime.fromisoformat(primary.data_cutoff)
     if any(datetime.fromisoformat(item.timestamp) > cutoff for item in evidence):
         raise AssertionError("retrieved evidence exceeds the point-in-time cutoff")
-    rendered = render_evidence_card_html(primary)
-    if "PM Evidence Card" not in rendered:
-        raise AssertionError("Evidence Card rendering failed")
+    notebook_source = NOTEBOOK_PATH.read_text(encoding="utf-8")
+    for marker in (
+        "build_deterministic_evidence_input",
+        "interpret_evidence_card",
+        "Final Interactive Evidence Card",
+    ):
+        if marker not in notebook_source:
+            raise AssertionError(f"final notebook is missing {marker!r}")
     return {
         "status": "ready",
         "demo_mode": DEMO_MODE,
@@ -107,9 +121,13 @@ def run_smoke_test() -> dict[str, object]:
         "primary_run_id": primary.run_id,
         "regression_run_id": regression.run_id,
         "evidence_items": len(evidence),
-        "data_version": primary.data_version,
-        "quant_model_version": primary.quant_model_version,
-        "synthesis_mode": primary.synthesis_mode,
+        "data_version": primary.audit_metadata["data_version"],
+        "quant_model_version": primary.audit_metadata["quant_model_version"],
+        "interpretation_use_llm": primary_interpretation.use_llm,
+        "interpretation_version": (
+            primary_interpretation.model_or_prompt_version
+        ),
+        "threshold_profile": primary.threshold_profile,
         "validated_inputs": inputs,
         "notebook_dependencies": dependencies,
     }
