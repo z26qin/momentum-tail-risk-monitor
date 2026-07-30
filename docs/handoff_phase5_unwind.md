@@ -1,6 +1,6 @@
 # Phase 5 unwind monitor handoff
 
-Date: 2026-07-29
+Date: 2026-07-30
 
 Status: implementation and notebook integration complete
 
@@ -71,6 +71,7 @@ Focused:
 ```bash
 .venv/bin/pytest -q \
   tests/test_concentration.py \
+  tests/test_theme_concentration.py \
   tests/test_momentum_breadth.py \
   tests/test_fundamental_anchor.py \
   tests/test_unwind_structure.py \
@@ -86,8 +87,8 @@ Full:
 Latest results:
 
 ```text
-focused: 32 passed
-full: 284 passed, 4 skipped
+focused: 40 passed
+full: 292 passed, 4 skipped
 notebook: executed successfully, 0 error outputs
 ```
 
@@ -96,6 +97,7 @@ notebook: executed successfully, 0 error outputs
 New production modules:
 
 - `src/risk/concentration.py`;
+- `src/risk/theme_concentration.py`;
 - `src/features/momentum_breadth.py`;
 - `src/monitoring/fundamental_anchor.py`;
 - `src/monitoring/unwind_structure.py`.
@@ -103,6 +105,7 @@ New production modules:
 New tests:
 
 - `tests/test_concentration.py`;
+- `tests/test_theme_concentration.py`;
 - `tests/test_momentum_breadth.py`;
 - `tests/test_fundamental_anchor.py`;
 - `tests/test_unwind_structure.py`.
@@ -134,7 +137,12 @@ For 2024-01-05:
 
 ```text
 existing Phase 1–4 state: bear_low_volatility
-Phase 5 scenario: normal_drawdown
+Phase 5 schema: momentum-unwind-assessment-v2
+bear_market_recovery_crash: watch
+short_book_reversal_crash: not_confirmed
+crowded_theme_unwind: not_confirmed
+qualifying correlated-theme cluster: none
+legacy Phase 5 scenario: normal_drawdown
 Phase 5 completeness: moderate
 triggered Phase 5 row: synchronous_winner_liquidation
 missing Phase 5 row: fundamental_anchor
@@ -148,10 +156,22 @@ the existing high-volatility-recovery state:
 - recovery from trough;
 - 21-day realized volatility.
 
+Additional deterministic date checks:
+
+```text
+2020-03-24 active: bear_market_recovery_crash
+2026-05-29 active: crowded_theme_unwind
+2026-05-29 t-1 cluster: CIEN, COHR, LITE
+```
+
 ## Operational notes
 
 - `build_unwind_assessment` rebuilds deterministic histories in memory and
   takes approximately 15 seconds on the current local artifacts.
+- Theme-cluster membership is fixed with returns through `t-1`; selected-date
+  and future returns cannot change the cluster definition.
+- `mechanism_scenarios` is the authoritative v2 multi-label contract.
+  `scenario_classification` is retained only for v1 compatibility.
 - The fundamental row fails closed. Missing exact-date coverage is not
   converted to a non-trigger.
 - `--parse-fundamentals` is deliberately opt-in because parsing the complete
@@ -165,7 +185,9 @@ the existing high-volatility-recovery state:
 
 ## Deferred
 
-- Recent semiconductor/AI case study;
+- observed common-ownership, leverage, financing, and order-flow data;
+- point-in-time industry classifications;
+- predictive validation of the descriptive mechanism rules;
 - point-in-time historical membership and classifications;
 - portable historical SEC fundamental panel;
 - versioned LLM input containing Phase 5 facts;

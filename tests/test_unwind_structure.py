@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,8 @@ from src.monitoring.unwind_structure import (
     UNWIND_SCHEMA_VERSION,
     UNWIND_SCORECARD_METRICS,
     UnwindAssessment,
+    MechanismScenario,
+    ScenarioCondition,
     UnwindScorecardRow,
     UnwindMonitorConfig,
     average_pairwise_correlation,
@@ -19,11 +22,16 @@ from src.monitoring.unwind_structure import (
     build_leg_unwind_history,
     build_unwind_fingerprint_history,
     build_unwind_fingerprint_snapshot,
+    classify_momentum_crash_scenarios,
     classify_unwind_scenario,
     evaluate_historical_rebound,
     prior_only_quantile,
 )
 from src.risk.concentration import build_constituent_return_history
+from src.risk.theme_concentration import (
+    THEME_PROXY_VERSION,
+    ThemeConcentrationSnapshot,
+)
 
 
 def _risk_history(periods: int = 20) -> pd.DataFrame:
@@ -395,6 +403,60 @@ def _scenario_rows(
     return tuple(rows)
 
 
+def _theme_snapshot(
+    *,
+    trigger: bool | None = False,
+    status: str = "available",
+) -> ThemeConcentrationSnapshot:
+    available = status == "available"
+    active_trigger = trigger is True
+    return ThemeConcentrationSnapshot(
+        schema_version=THEME_PROXY_VERSION,
+        as_of_date="2024-01-05",
+        formation_date="2023-12-29",
+        cluster_definition_cutoff="2024-01-04",
+        status=status,
+        proxy_label="correlated_theme_proxy",
+        active_long_symbols=("A", "B", "C", "D"),
+        cluster_symbols=("A", "B", "C") if available else (),
+        cluster_size=3 if available else 0,
+        cluster_exposure_share=(
+            0.75 if active_trigger else 0.25 if available else None
+        ),
+        cluster_average_residual_correlation=0.9 if available else None,
+        correlation_threshold=0.7 if available else None,
+        sector_count=3 if available else None,
+        sector_entropy=1.0 if available else None,
+        holding_persistence_share=0.75 if available else None,
+        cluster_residual_loss_5d=(
+            0.10 if active_trigger else 0.01 if available else None
+        ),
+        residual_loss_threshold=0.05 if available else None,
+        residual_loss_prior_observations=100 if available else 0,
+        cluster_decline_share_5d=(
+            1.0 if active_trigger else 0.3 if available else None
+        ),
+        cluster_loss_contribution_share_5d=(
+            0.8 if active_trigger else 0.2 if available else None
+        ),
+        cluster_abnormal_volume_share_5d=(
+            0.8 if active_trigger else 0.2 if available else None
+        ),
+        cluster_median_amihud_5d=1e-8 if available else None,
+        trigger=trigger if available else None,
+        warnings=(),
+        audit_metadata={
+            "minimum_cluster_size": 3,
+            "cluster_exposure_gate": 0.30,
+            "decline_share_gate": 0.70,
+            "loss_contribution_gate": 0.50,
+            "abnormal_volume_share_gate": 0.50,
+            "cluster_uses_as_of_return": False,
+            "future_rows_used": False,
+        },
+    )
+
+
 def test_scenario_classification_rule_priority() -> None:
     mixed, _, confidence = classify_unwind_scenario(
         _scenario_rows(
@@ -453,6 +515,121 @@ def test_scenario_is_insufficient_when_core_rows_and_coverage_are_missing() -> N
     assert confidence == "insufficient"
 
 
+def _scenario_rows_with_short_rise(
+    triggered: set[str],
+    short_rise_share: float,
+) -> tuple[UnwindScorecardRow, ...]:
+    return tuple(
+        replace(
+            row,
+            context={"short_rise_share_5d": short_rise_share},
+        )
+        if row.metric == "cross_sectional_reversal"
+        else row
+        for row in _scenario_rows(triggered)
+    )
+
+
+def _regime_context(
+    *,
+    severe: bool = False,
+    recovery: bool = False,
+    high_volatility: bool = False,
+) -> dict[str, object]:
+    return {
+        "recent_severe_drawdown": severe,
+        "recent_min_drawdown_126d": -0.30 if severe else -0.10,
+        "recovery_from_trough_126d": 0.10 if recovery else 0.01,
+        "trough_age_trading_days": 10.0,
+        "high_volatility": high_volatility,
+        "realized_volatility_21d": 0.40 if high_volatility else 0.10,
+        "realized_volatility_threshold_80pct": 0.25,
+    }
+
+
+def test_v2_mechanisms_trigger_independently() -> None:
+    bear = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(set(), 0.2),
+        regime_context=_regime_context(
+            severe=True,
+            recovery=True,
+            high_volatility=True,
+        ),
+        signed_short_beta=-0.8,
+        signed_short_beta_threshold=-1.0,
+        theme_snapshot=_theme_snapshot(trigger=False),
+    )
+    assert [item.status for item in bear] == [
+        "triggered",
+        "not_confirmed",
+        "not_confirmed",
+    ]
+
+    short = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(
+            {"cross_sectional_reversal"},
+            0.8,
+        ),
+        regime_context=_regime_context(),
+        signed_short_beta=-1.2,
+        signed_short_beta_threshold=-1.0,
+        theme_snapshot=_theme_snapshot(trigger=False),
+    )
+    assert [item.status for item in short] == [
+        "not_confirmed",
+        "triggered",
+        "not_confirmed",
+    ]
+
+    theme = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(set(), 0.2),
+        regime_context=_regime_context(),
+        signed_short_beta=-0.8,
+        signed_short_beta_threshold=-1.0,
+        theme_snapshot=_theme_snapshot(trigger=True),
+    )
+    assert [item.status for item in theme] == [
+        "not_confirmed",
+        "not_confirmed",
+        "triggered",
+    ]
+
+
+def test_v2_mechanisms_are_multi_label_and_short_beta_is_context_only() -> None:
+    scenarios = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(
+            {"cross_sectional_reversal"},
+            0.8,
+        ),
+        regime_context=_regime_context(
+            severe=True,
+            recovery=True,
+            high_volatility=True,
+        ),
+        signed_short_beta=None,
+        signed_short_beta_threshold=None,
+        theme_snapshot=_theme_snapshot(trigger=True),
+    )
+    assert all(item.status == "triggered" for item in scenarios)
+    short_beta = scenarios[1].conditions[-1]
+    assert short_beta.required is False
+    assert short_beta.met is None
+
+
+def test_v2_missing_required_evidence_is_unavailable_not_false() -> None:
+    scenarios = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(set(), 0.2),
+        regime_context={},
+        signed_short_beta=None,
+        signed_short_beta_threshold=None,
+        theme_snapshot=_theme_snapshot(status="insufficient_history"),
+    )
+    assert scenarios[0].status == "unavailable"
+    assert scenarios[2].status == "unavailable"
+    assert scenarios[0].missing_evidence
+    assert scenarios[2].missing_evidence
+
+
 def test_forward_rebound_is_historical_only_and_uses_future_rows() -> None:
     returns = pd.DataFrame(
         {
@@ -484,10 +661,23 @@ def test_forward_rebound_is_historical_only_and_uses_future_rows() -> None:
 
 def test_live_assessment_schema_is_six_rows_and_excludes_forward_returns() -> None:
     rows = _scenario_rows({"synchronous_winner_liquidation"})
+    mechanisms = classify_momentum_crash_scenarios(
+        _scenario_rows_with_short_rise(
+            {"cross_sectional_reversal"},
+            0.8,
+        ),
+        regime_context=_regime_context(),
+        signed_short_beta=-1.2,
+        signed_short_beta_threshold=-1.0,
+        theme_snapshot=_theme_snapshot(trigger=False),
+    )
     assessment = UnwindAssessment(
         schema_version=UNWIND_SCHEMA_VERSION,
         as_of_date="2024-01-05",
         scorecard=rows,
+        mechanism_scenarios=mechanisms,
+        active_scenarios=("short_book_reversal_crash",),
+        theme_concentration=_theme_snapshot(trigger=False),
         scenario_classification="normal_drawdown",
         scenario_rule="test rule",
         completeness_confidence="high",
@@ -507,6 +697,9 @@ def test_live_assessment_schema_is_six_rows_and_excludes_forward_returns() -> No
             schema_version=UNWIND_SCHEMA_VERSION,
             as_of_date="2024-01-05",
             scorecard=tuple(reversed(rows)),
+            mechanism_scenarios=mechanisms,
+            active_scenarios=("short_book_reversal_crash",),
+            theme_concentration=_theme_snapshot(trigger=False),
             scenario_classification="normal_drawdown",
             scenario_rule="test rule",
             completeness_confidence="high",
