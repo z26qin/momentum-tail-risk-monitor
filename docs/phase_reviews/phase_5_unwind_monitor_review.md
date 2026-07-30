@@ -199,24 +199,53 @@ Threshold provenance is one of:
 
 All calculated quantiles exclude the selected date and all future dates.
 
-## Scenario rules
+## Scenario v2 rules
 
-`classify_unwind_scenario` applies auditable priority rules:
+`classify_momentum_crash_scenarios` evaluates three independent, potentially
+simultaneous mechanisms. It does not force them through a priority tree:
 
-1. `insufficient_evidence` when fewer than four rows are available or both
-   synchronous liquidation and reversal are unavailable;
-2. `mixed_repricing_and_unwind` when fundamentals deteriorate and at least two
-   unwind mechanisms trigger;
-3. `crowded_momentum_unwind` when concentration, synchronous liquidation, and
-   reversal trigger with breadth or liquidity confirmation;
-4. `panic_recovery_momentum_crash` when the existing
-   high-volatility-recovery state and reversal both trigger;
-5. `fundamental_repricing` when fundamentals and breadth deteriorate with no
-   more than one unwind mechanism;
-6. `normal_drawdown` otherwise.
+1. `bear_market_recovery_crash` requires a recent severe broad-market
+   drawdown, a rapid recovery from the trough, and high realized volatility.
+   Drawdown, recovery, and volatility remain three separate displayed
+   conditions.
+2. `short_book_reversal_crash` requires the prior-only extreme
+   short-underlying-minus-long return and at least 70% of the active short
+   underlyings to rise over five trading days. Signed short beta is retained as
+   optional context, not a hard gate.
+3. `crowded_theme_unwind` requires a correlated active-long cluster defined
+   through `t-1`, extreme cluster residual loss, at least 70% cluster decline
+   breadth, and either at least 50% of active-long losses or abnormal volume
+   concentrated in the cluster.
 
-The assessment also lists supporting, contradictory, and missing evidence.
-Confidence describes evidence completeness only; it is not a probability.
+Each returns `triggered`, `watch`, `not_confirmed`, or `unavailable`, with
+condition-level supporting, contradictory, and missing evidence. Multiple
+mechanisms may trigger on one date. No scenario is a probability.
+
+The six scorecard rows are unchanged. `classify_unwind_scenario` and
+`scenario_classification` remain as a deliberately lossy v1 compatibility
+view; v2 consumers use `mechanism_scenarios` and `active_scenarios`.
+
+## Correlated-theme proxy
+
+`src.risk.theme_concentration.build_theme_concentration_snapshot` uses only
+existing repository artifacts:
+
+- the active Phase 2 long book;
+- split- and dividend-adjusted security prices;
+- the existing SPY benchmark return;
+- public volume and dollar volume;
+- current sector classifications.
+
+The cluster uses 63 trading days of benchmark-demeaned returns ending at
+`t-1`. The correlation cutoff is the greater of 0.50 and the pre-event
+cross-sectional 75th percentile. A deterministic all-pairs clique prevents
+weak chain links from merging unrelated names. Event loss, decline breadth,
+loss contribution, abnormal volume, and Amihud are measured through `t`.
+
+The output is explicitly labeled `correlated_theme_proxy`. It is not observed
+common ownership, leverage, financing pressure, order flow, or forced selling.
+The existing universe has sector but no industry classification, so industry
+concentration remains unavailable rather than fabricated.
 
 The existing drawdown, recovery-from-trough, and realized-volatility
 components remain visible individually in the notebook even though they
@@ -250,7 +279,9 @@ The two processed histories are deterministic derivatives of existing Phase
 `build_unwind_assessment` using the same `AS_OF_DATE` as the existing Evidence
 Card. It renders:
 
-- scenario classification and completeness;
+- the three independent v2 mechanism states and condition evidence;
+- correlated-theme cluster symbols and the `t-1` definition cutoff;
+- the legacy single-label compatibility view and completeness;
 - the six-row scorecard;
 - supporting, contradictory, and missing evidence;
 - public-data limitations.
@@ -281,19 +312,29 @@ Observed Phase 5 result:
 | Liquidity amplification proxy | 20.00% | 50.00% | not triggered |
 | Fundamental anchor | unavailable | coverage-gated rule | unavailable |
 
-The rule-based result is `normal_drawdown` with `moderate` evidence
-completeness. This is not a statement that the date was safe. One unwind
-mechanism triggered, while the broader crowded-unwind confirmation rule did
-not.
+The v2 mechanism results are:
+
+- `bear_market_recovery_crash`: `watch` because recovery is present while
+  severe recent drawdown and high volatility are not;
+- `short_book_reversal_crash`: `not_confirmed`;
+- `crowded_theme_unwind`: `not_confirmed`, with no qualifying pre-event
+  all-pairs cluster.
+
+The retained v1 compatibility result is `normal_drawdown` with `moderate`
+evidence completeness. This is not a statement that the date was safe. The
+separate synchronous-winner-liquidation input is triggered, while none of the
+three complete crash mechanisms is confirmed.
+
+Two additional date checks confirm that the mechanisms are not aliases:
+
+- `2020-03-24` triggers only `bear_market_recovery_crash`;
+- `2026-05-29` triggers only `crowded_theme_unwind`, using the `CIEN`, `COHR`,
+  and `LITE` cluster defined through `2026-05-28`.
 
 ## Verification
 
-```text
-focused Phase 5 + smoke suite: 32 passed
-full repository suite: 284 passed, 4 skipped
-notebook error outputs: 0
-git diff --check: passed
-```
+Final QA counts are recorded in `docs/handoff_phase5_unwind.md` after the full
+suite and notebook execution.
 
 No dependency, Phase 1–4 business rule, Phase 4 scorecard schema, or Phase 6
 version-1 schema was changed.
@@ -310,6 +351,9 @@ version-1 schema was changed.
   parsing all 497 cached Company Facts payloads is intentionally outside the
   live notebook path.
 - Historical rebound uses future observations and is never a live feature.
+- Correlated-theme history is a behavior proxy and cannot establish crowded
+  ownership or deleveraging.
+- Industry classification is absent from existing data.
 - No semiconductor case study, new dataset, model retraining, threshold
   optimization, predictive probability, website, or LLM-controlled score was
   added.

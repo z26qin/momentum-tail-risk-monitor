@@ -21,6 +21,8 @@ from src.mvp.evidence_card import (
 )
 from src.mvp.evidence_interpretation import interpret_evidence_card
 from src.monitoring.unwind_structure import (
+    MECHANISM_SCENARIOS,
+    UNWIND_SCHEMA_VERSION,
     UNWIND_SCORECARD_METRICS,
     build_unwind_assessment,
 )
@@ -100,6 +102,14 @@ def run_smoke_test() -> dict[str, object]:
         )
     if tuple(row.metric for row in unwind.scorecard) != UNWIND_SCORECARD_METRICS:
         raise AssertionError("unwind assessment does not contain six ordered rows")
+    if unwind.schema_version != UNWIND_SCHEMA_VERSION:
+        raise AssertionError("unwind assessment is not using the v2 contract")
+    if tuple(item.scenario for item in unwind.mechanism_scenarios) != (
+        MECHANISM_SCENARIOS
+    ):
+        raise AssertionError("unwind assessment does not contain three mechanisms")
+    if unwind.theme_concentration.cluster_definition_cutoff >= unwind.as_of_date:
+        raise AssertionError("theme cluster definition does not stop before as-of")
     if unwind.as_of_date != primary.as_of_date:
         raise AssertionError("unwind assessment date differs from Evidence Card")
     if _quant_signature(primary) == _quant_signature(regression):
@@ -118,7 +128,9 @@ def run_smoke_test() -> dict[str, object]:
         "build_deterministic_evidence_input",
         "interpret_evidence_card",
         "build_unwind_assessment",
-        "Momentum Unwind Structure",
+        "Momentum Crash Mechanisms",
+        "mechanism_scenarios",
+        "correlated-theme proxy",
         "Final Interactive Evidence Card",
     ):
         if marker not in notebook_source:
@@ -142,6 +154,15 @@ def run_smoke_test() -> dict[str, object]:
         ),
         "threshold_profile": primary.threshold_profile,
         "unwind_scenario": unwind.scenario_classification,
+        "unwind_schema_version": unwind.schema_version,
+        "mechanism_statuses": {
+            item.scenario: item.status for item in unwind.mechanism_scenarios
+        },
+        "active_mechanisms": list(unwind.active_scenarios),
+        "theme_cluster": list(unwind.theme_concentration.cluster_symbols),
+        "theme_definition_cutoff": (
+            unwind.theme_concentration.cluster_definition_cutoff
+        ),
         "unwind_completeness": unwind.completeness_confidence,
         "unwind_scorecard_rows": len(unwind.scorecard),
         "validated_inputs": inputs,
