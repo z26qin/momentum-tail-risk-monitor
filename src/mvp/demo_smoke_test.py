@@ -124,6 +124,8 @@ def run_smoke_test() -> dict[str, object]:
         "Momentum crash mechanisms",
         "Crowding monitor",
         "Future_To_DO.md",
+        "Research Validation",
+        "architecture_to_value.md",
         "full_run_fingerprint",
         "correlated-theme unwind",
         "Final MVP Demo",

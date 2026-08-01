@@ -54,6 +54,12 @@ This document lists what the MVP deliberately does **not** claim.
   validated as predictive signals.
 - The correlated-theme calculation is a return-correlation proxy; it does not
   observe common ownership, leverage, financing, or forced selling.
+- `outputs/research_validation/episode_fingerprints.*` are interpretability
+  checks only. Research priors never enter computation and must not be used to
+  retune thresholds after the table is seen.
+- There is not yet a persisted historical mechanism/scorecard state series, so
+  a descriptive PM-book forward-outcome table is deferred (see
+  `pm_book_outcomes.md` and `Future_To_DO.md`).
 
 ## Interpretation
 

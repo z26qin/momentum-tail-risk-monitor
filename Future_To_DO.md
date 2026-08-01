@@ -87,7 +87,10 @@ These remain valuable independent of the crowding stack:
    survivorship bias; make sector HHI historically honest.
 2. **Out-of-sample validation** of the three mechanism rules
    (`bear_market_recovery_crash`, `short_book_reversal_crash`,
-   `crowded_theme_unwind`).
+   `crowded_theme_unwind`). Episode fingerprints already exist under
+   `outputs/research_validation/`; the missing piece is a persisted
+   historical mechanism/scorecard state series so descriptive 5d/20d
+   PM-book forward outcomes can be summarized without a new backtest engine.
 3. **Production-grade retrieval** beyond offline exact-date preview
    (institutional news / filings with hard cutoffs).
 4. **Daily orchestration** — scheduled as-of runs, audit retention,
