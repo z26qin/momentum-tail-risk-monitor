@@ -14,12 +14,24 @@
   <img src="https://img.shields.io/badge/score-deterministic%20%7C%20null-lightgrey?style=for-the-badge" alt="No aggregate score">
 </p>
 
-# Momentum Crash
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║  MOMENTUM CRASH · tail-risk monitor for quant PMs                ║
+║  ──────────────────────────────────────────────────────────────  ║
+║  object_0 : PM momentum book     (S&P 12-1 L10/S10 default)      ║
+║  object_1 : UMD / DM benchmark   (literature context only)       ║
+║  invariant: layers never merge · deterministic_score = null      ║
+╚══════════════════════════════════════════════════════════════════╝
+```
 
 **A decision-support monitor for quant PMs:** is *my* momentum book becoming fragile, how does that compare with published UMD / Daniel–Moskowitz market context, and what timestamped evidence supports or challenges the reading?
 
-Not a trading system. Not a crash probability. Not investment advice.
-Roughly a 20-hour research MVP — descriptive, deterministic, and auditable.
+```text
+NOT a trading system.
+NOT a crash probability.
+NOT investment advice.
+≈ 20h research MVP — descriptive · deterministic · auditable.
+```
 
 ---
 
@@ -30,9 +42,13 @@ Roughly a 20-hour research MVP — descriptive, deterministic, and auditable.
 | **UMD / DM benchmark** | What does the published momentum-factor backdrop look like? | `normal` / `bear_low_volatility` / `panic_elevated` + state-conditioned UMD tail-loss context |
 | **PM book scorecard** | Is *my* 12-1 long/short book showing known stress channels? | 4 deterministic rows with prior-only thresholds |
 | **Unwind monitor** | Which crash *mechanism* is lighting up? | 6-row structure + 3 independent scenarios |
+| **Crowding monitor** | Is the book *structurally* tight / theme-crowded? | T0 proxies (concentration, breadth, theme unwind) + optional T1 FINRA/GDELT side notes |
 | **Evidence card** | What timestamped macro/news context fits this date? | Exact-date replay (optional LLM narrative; cannot change numbers) |
 
-These layers are **never merged**. `deterministic_score` is intentionally `null`.
+```text
+merge(layers) → FORBIDDEN
+deterministic_score → null   # by design, not a bug
+```
 
 ---
 
@@ -46,51 +62,61 @@ Most dashboards either:
 
 This MVP keeps the objects separate and reviewable — so a PM can challenge the reading, not just accept a label.
 
+```text
+# failure modes we refuse
+opaque_score(book)     # no
+umd_state == my_book   # no
+llm.write(triggers)    # no
+```
+
 ---
 
 ## System design
 
 ```text
-                         MVPConfig
-                    as_of · compare_to · horizon · LLM
-                                  |
-                                  v
-                         run_mvp()   <-- single entry
-                                  |
-        +-------------------------+-------------------------+
-        |                         |                         |
-        v                         v                         v
- +--------------+      +------------------+      +-------------------+
- | UMD / DM     |      | PM momentum book |      | Unwind +          |
- | comparison   |      | (S&P 10/10 def.) |      | 3 mechanisms      |
- |              |      |                  |      |                   |
- | market state |      | 4-row scorecard  |      | concentration,    |
- | panic / bear |      | leg risk decomp  |      | breadth, reversal |
- | UMD tail freq|      |                  |      | theme unwind, ... |
- +------+-------+      +--------+---------+      +---------+---------+
-        |                       |                          |
-        +-----------------------+--------------------------+
-                                |
-                                v
-                  Deterministic Evidence Card
-                                |
-               +----------------+----------------+
-               |                                 |
-               v                                 v
-     exact-date evidence               optional constrained
-     replay (default)                  LLM narrative
-               |                                 |
-               +----------------+----------------+
-                                |
-                                v
-                 charts · JSON · HTML · Markdown
+                         ┌──────────── MVPConfig ────────────┐
+                         │ as_of · compare_to · horizon · LLM │
+                         └────────────────┬──────────────────┘
+                                          │
+                                          ▼
+                                   run_mvp()  ◄── single entry
+                                          │
+            ┌─────────────────────────────┼─────────────────────────────┐
+            │                             │                             │
+            ▼                             ▼                             ▼
+   ┌────────────────┐          ┌──────────────────┐          ┌───────────────────┐
+   │ UMD / DM       │          │ PM momentum book │          │ Unwind +          │
+   │ comparison     │          │ (S&P 10/10 def.) │          │ 3 mechanisms      │
+   │────────────────│          │──────────────────│          │───────────────────│
+   │ market state   │          │ 4-row scorecard  │          │ concentration     │
+   │ panic / bear   │          │ leg risk decomp  │          │ breadth, reversal │
+   │ UMD tail freq  │          │                  │          │ theme unwind, …   │
+   └───────┬────────┘          └────────┬─────────┘          └─────────┬─────────┘
+           │                            │                              │
+           │                            │         ┌────────────────────┤
+           │                            │         │ Crowding panel     │
+           │                            │         │ T0 proxies + T1    │
+           │                            │         │ FINRA/GDELT notes  │
+           │                            │         └─────────┬──────────┘
+           └────────────────────────────┴───────────────────┘
+                                          │
+                                          ▼
+                          ┌── Deterministic Evidence Card ──┐
+                          └───────────────┬─────────────────┘
+                     ┌────────────────────┴────────────────────┐
+                     ▼                                         ▼
+          exact-date evidence                       optional constrained
+          replay (default)                          LLM narrative
+                     └────────────────────┬────────────────────┘
+                                          ▼
+                         charts · JSON · HTML · Markdown
 ```
 
 ### Two objects, never blended
 
 | Object | Role | Modules |
 |---|---|---|
-| **PM momentum portfolio** | Primary monitored book. Default: equal-weight S&P 500 12-1 **long-10 / short-10**. Framework is built so names/weights/universe can be swapped later. | `portfolio/`, `monitoring/scorecard.py`, `monitoring/unwind_structure.py`, `risk/leg_decomposition.py` |
+| **PM momentum portfolio** | Primary monitored book. Default: equal-weight S&P 500 12-1 **long-10 / short-10**. Framework is built so names/weights/universe can be swapped later. Crowding proxies attach to this book. | `portfolio/`, `monitoring/scorecard.py`, `monitoring/unwind_structure.py`, `risk/leg_decomposition.py`, `mvp/crowding_context.py` |
 | **UMD comparison benchmark** | Literature backdrop only. Ken French UMD + Daniel–Moskowitz-inspired state. Answers “what does the published factor look like?”, **not** “how stressed is my book?”. | `risk/dm_engine.py`, `regime/market_state.py` |
 
 ### Monitoring panels (the actual PM surface)
@@ -106,16 +132,27 @@ This MVP keeps the objects separate and reviewable — so a PM can challenge the
 2. `short_book_reversal_crash` — extreme short-minus-long reversal + broad loser rally
 3. `crowded_theme_unwind` — correlated long cluster (`t-1`) + extreme broad selloff
 
+**Crowding monitor** (book-structure proxies; no aggregate crowding score):
+- T0 spine from unwind: portfolio concentration (effective bets / HHI), momentum breadth, correlated-theme unwind
+- T1 side notes only: FINRA loser-leg short-interest z + GDELT crowding attention z (`confirm` / `contradict` / `neutral`)
+- Proxies, not ownership / leverage / financing; side notes never change triggers
+
 ### Evidence stack (cannot rewrite risk state)
 
 ```text
-deterministic scorecard / unwind   ← source of truth
-        ↓
-exact-date research preview        ← default demo path (offline cache)
-        ↓
-optional LLM interpretation        ← narrative only, evidence-ID constrained
-        ↓
-optional GDELT + DeepSeek RAG      ← trigger-gated explanation layer (research)
+[truth]  scorecard / unwind / crowding proxies
+            │
+            ▼
+[cache]  exact-date research preview          # offline, fail-closed
+            │
+            ▼
+[llm?]   constrained interpretation           # narrative only; ID-bound
+            │
+            ▼
+[rag?]   GDELT + DeepSeek                     # trigger-gated; research path
+
+# privilege model
+evidence ⊬ rewrite(metric | threshold | trigger | risk_state)
 ```
 
 Point-in-time rules of thumb:
@@ -132,7 +169,7 @@ Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --locked --all-groups
-uv run python -m src.mvp.demo_smoke_test    # expect "status": "ready"
+uv run python -m src.mvp.demo_smoke_test    # → {"status": "ready"}
 uv run python -m pytest -q                  # ~175 tests
 ```
 
@@ -156,6 +193,7 @@ CONFIG = MVPConfig(
     use_llm=False,          # reliable offline path; full card still renders
 )
 result = run_mvp(CONFIG)
+# result.unwind · result.deterministic_input · crowding via presentation
 ```
 
 ### Contrast dates worth reviewing
@@ -181,41 +219,48 @@ result = run_mvp(CONFIG)
 From [`outputs/example_risk_output/pm_risk_assessment_2024-01-05.md`](outputs/example_risk_output/pm_risk_assessment_2024-01-05.md):
 
 ```text
+$ run_mvp --as-of 2024-01-05
+────────────────────────────────────────────────────────
 UMD comparison benchmark:     bear_low_volatility
 PM scorecard triggers:        0
 Active mechanism scenarios:   none
+Crowding (T0):                concentration / breadth normal; theme not_confirmed
+Crowding (T1 side notes):     FINRA neutral · GDELT narrative neutral
 Evidence quality:             available
-
+────────────────────────────────────────────────────────
 short_minus_long_beta_gap     not_triggered
 portfolio_drawdown            not_triggered
 short_loss_in_recovery        not_triggered
-
+────────────────────────────────────────────────────────
 Fingerprint: 750f22225b7d9592
+deterministic_score: null
 ```
 
-A PM reading this should conclude: *backdrop is soft-bear / low-vol; the customized book is not firing stress channels on this date* — not “crash probability = X%”.
+A PM reading this should conclude: *backdrop is soft-bear / low-vol; the customized book is not firing stress or crowding channels on this date* — not “crash probability = X%”.
 
 ---
 
 ## Repository map
 
 ```text
-README.md
-docs/
-  methodology.md          # formulas, assumptions, decision boundary
-  limitations.md          # what we deliberately do not claim
-  demo_walkthrough.md     # 15–20 min reviewer path
-notebooks/
-  final_mvp_demo.ipynb    # single presentation notebook
-src/
-  mvp/                    # config · pipeline · evidence card · presentation
-  monitoring/             # scorecard · unwind · contracts
-  portfolio/ regime/ risk/ features/
-  evidence/               # corpus · exact-date preview · optional GDELT/DeepSeek
-  data/ utils/
-tests/                    # smoke / integration / contract tests
-data/processed/           # committed reproducibility inputs
-outputs/example_risk_output/
+momentum_crash/
+├── README.md
+├── Future_To_DO.md           # PM imagination space (T2–T4+)
+├── docs/
+│   ├── methodology.md        # formulas, assumptions, decision boundary
+│   ├── limitations.md        # what we deliberately do not claim
+│   └── demo_walkthrough.md   # 15–20 min reviewer path
+├── notebooks/
+│   └── final_mvp_demo.ipynb  # single presentation notebook
+├── src/
+│   ├── mvp/                  # config · pipeline · card · crowding · present
+│   ├── monitoring/           # scorecard · unwind · contracts
+│   ├── portfolio/ regime/ risk/ features/
+│   ├── evidence/             # corpus · preview · optional GDELT/DeepSeek
+│   └── data/ utils/
+├── tests/                    # smoke / integration / contract tests
+├── data/processed/           # committed reproducibility inputs
+└── outputs/example_risk_output/
 ```
 
 Superseded phase docs / research modules live in Git history (`pre-mvp-consolidation` tag).
@@ -237,6 +282,7 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 - Evidence is **exact-date cached replay**, not institutional live retrieval.
 - Mechanism scenarios are **descriptive rules** without OOS predictive validation.
 - No leverage, financing, forced-selling, or order-flow observation.
+- Crowding is **book-structure proxy** (+ optional FINRA/GDELT side notes), not observed ownership or street positioning.
 - Optional LLM / RAG layers organize narrative only — they cannot change values, thresholds, triggers, or risk state.
 
 Full list: [docs/limitations.md](docs/limitations.md).
@@ -245,8 +291,12 @@ Full list: [docs/limitations.md](docs/limitations.md).
 
 ## Future work
 
+See **[Future_To_DO.md](Future_To_DO.md)** for the PM-facing roadmap (T2 holdings
+plug-in, T3 observed crowding, T4 leverage / financing / flow, and broader
+production imagination). Short list:
+
 - Point-in-time membership and industry history
 - Plug-in interface for a PM’s own holdings / weights
-- Observed holdings / leverage / flow data
+- Observed holdings / leverage / flow / street crowding
 - Out-of-sample validation of the three mechanism rules
 - Production-grade retrieval beyond offline preview

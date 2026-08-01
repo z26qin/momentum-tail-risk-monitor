@@ -30,6 +30,10 @@ This document lists what the MVP deliberately does **not** claim.
   economic interpretation.
 - Industry classification is unavailable and reported as missing rather than
   invented.
+- Crowding monitoring uses book-structure proxies (concentration, breadth,
+  correlated-theme unwind) plus optional FINRA / GDELT side notes. It does not
+  observe ownership, leverage, financing, or forced selling. See
+  `Future_To_DO.md` for T2–T4 production imagination.
 - SEC fundamental coverage for the unwind anchor remains degraded / often
   unavailable under the approved feasibility audit.
 

@@ -15,6 +15,10 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 from src.monitoring.unwind_structure import UnwindAssessment
+from src.mvp.crowding_context import (
+    build_narrative_snapshot,
+    build_positioning_snapshot,
+)
 from src.mvp.evidence_card import (
     DeterministicEvidenceInput,
     QuantSignal,
@@ -127,6 +131,161 @@ def build_macro_component_html(
         "scorecard rows.</small></div>"
     )
     return wrapped, current_market_drawdown, composite_triggered
+
+
+def _crowding_state_label(triggered: bool | None, severity: str) -> str:
+    if triggered is None:
+        return "unavailable"
+    if triggered:
+        return f"triggered · {severity}"
+    return f"not triggered · {severity}"
+
+
+def _fmt_share(value: object) -> str:
+    if value is None or pd.isna(value):
+        return "—"
+    return f"{float(value):.1%}"
+
+
+def _fmt_z(value: float | None) -> str:
+    if value is None or pd.isna(value):
+        return "—"
+    return f"{value:+.2f}"
+
+
+def build_crowding_panel_html(
+    unwind: UnwindAssessment,
+    *,
+    processed_dir: Path | None = None,
+    include_context_overlays: bool = True,
+) -> str:
+    """Render T0 crowding proxies from unwind, plus optional T1 side notes."""
+
+    by_metric = {row.metric: row for row in unwind.scorecard}
+    concentration = by_metric["portfolio_concentration"]
+    breadth = by_metric["momentum_breadth_deterioration"]
+    liquidity = by_metric["liquidity_amplification_proxy"]
+    theme = unwind.theme_concentration
+    crowded = next(
+        item
+        for item in unwind.mechanism_scenarios
+        if item.scenario == "crowded_theme_unwind"
+    )
+
+    concentration_ctx = concentration.context
+    breadth_ctx = breadth.context
+    proxy_rows = [
+        {
+            "Channel": "Portfolio concentration",
+            "Reading": _crowding_state_label(
+                concentration.triggered, concentration.severity
+            ),
+            "Key levels": (
+                f"effective bets={_fmt(concentration.current_value)} · "
+                f"sector HHI={_fmt(concentration_ctx.get('sector_hhi'))} · "
+                f"top5 exposure={_fmt_share(concentration_ctx.get('top5_abs_exposure_share'))}"
+            ),
+        },
+        {
+            "Channel": "Momentum breadth",
+            "Reading": _crowding_state_label(breadth.triggered, breadth.severity),
+            "Key levels": (
+                f"positive 12-1 share={_fmt_share(breadth.current_value)} · "
+                f"leadership HHI="
+                f"{_fmt(breadth_ctx.get('positive_momentum_leadership_hhi'))} · "
+                f"Δ vs prior="
+                f"{_fmt(breadth_ctx.get('breadth_change_vs_previous'), signed=True)}"
+            ),
+        },
+        {
+            "Channel": "Liquidity amplification proxy",
+            "Reading": _crowding_state_label(
+                liquidity.triggered, liquidity.severity
+            ),
+            "Key levels": (
+                f"downside abnormal volume share="
+                f"{_fmt_share(liquidity.current_value)} · "
+                f"Amihud={_fmt(liquidity.context.get('long_median_amihud_5d'))}"
+            ),
+        },
+        {
+            "Channel": "Correlated-theme unwind",
+            "Reading": crowded.status.replace("_", " "),
+            "Key levels": (
+                f"proxy={theme.proxy_label.replace('_', ' ')} · "
+                f"cluster={', '.join(theme.cluster_symbols) or 'none'} · "
+                f"exposure={_fmt_share(theme.cluster_exposure_share)} · "
+                f"cutoff={theme.cluster_definition_cutoff or '—'}"
+            ),
+        },
+    ]
+    proxy_html = pd.DataFrame(proxy_rows).to_html(
+        index=False, border=0, escape=True
+    )
+
+    context_elevated = (
+        crowded.status == "triggered"
+        or concentration.triggered is True
+        or breadth.triggered is True
+    )
+    overlay_html = ""
+    if include_context_overlays:
+        positioning = build_positioning_snapshot(
+            as_of_date=unwind.as_of_date,
+            context_elevated=context_elevated,
+            processed_dir=processed_dir,
+        )
+        narrative = build_narrative_snapshot(
+            as_of_date=unwind.as_of_date,
+            context_elevated=context_elevated,
+            processed_dir=processed_dir,
+        )
+        overlay_rows = [
+            {
+                "Side note": "FINRA positioning (loser-leg)",
+                "Read": positioning.read,
+                "Observation": positioning.observation_date or "—",
+                "Levels": (
+                    f"SI z={_fmt_z(positioning.short_interest_ratio_z)} · "
+                    f"utilisation z="
+                    f"{_fmt_z(positioning.short_interest_utilisation_z)} · "
+                    f"short-vol z={_fmt_z(positioning.short_volume_share_z)}"
+                ),
+            },
+            {
+                "Side note": "GDELT narrative crowding",
+                "Read": narrative.read,
+                "Observation": narrative.observation_date or "—",
+                "Levels": (
+                    f"crowding vol z={_fmt_z(narrative.crowding_volume_z)} · "
+                    f"panic vol z={_fmt_z(narrative.panic_volume_z)} · "
+                    f"risk-off vol z={_fmt_z(narrative.riskoff_volume_z)}"
+                ),
+            },
+        ]
+        overlay_table = pd.DataFrame(overlay_rows).to_html(
+            index=False, border=0, escape=True
+        )
+        overlay_html = (
+            "<h4>T1 context side notes</h4>"
+            f"{overlay_table}"
+            "<small>Side notes are fail-closed public-data overlays. They do "
+            "not enter mechanism rules or change any deterministic trigger."
+            "</small>"
+        )
+
+    return f"""
+<div style='border:1px solid #d0d7de;border-radius:8px;padding:10px 12px'>
+  <strong>Crowding monitor · book-structure proxies</strong>
+  <small style='display:block;margin:4px 0 8px'>
+    Not observed ownership, leverage, financing, or forced selling.
+    Spine: portfolio concentration · momentum breadth · correlated-theme unwind.
+  </small>
+  {proxy_html}
+  {overlay_html}
+  <small>No aggregate crowding score is defined; channels remain separate.</small>
+</div>
+"""
 
 
 def build_unwind_summary_html(unwind: UnwindAssessment) -> str:
@@ -389,6 +548,9 @@ def render_pm_card_html(result: MVPRunResult) -> str:
         card, processed_dir=result.config.processed_dir
     )
     unwind_summary_html = build_unwind_summary_html(unwind)
+    crowding_panel_html = build_crowding_panel_html(
+        unwind, processed_dir=result.config.processed_dir
+    )
     comparison_html = build_comparison_html(card)
     evidence_by_id = {item.evidence_id: item for item in card.retrieved_evidence}
     contextual_evidence = [
@@ -459,6 +621,9 @@ def render_pm_card_html(result: MVPRunResult) -> str:
 
   <h3>Momentum Crash Mechanisms <span class="eyebrow">DETERMINISTIC · MULTI-LABEL V2 + RETAINED SIX-ROW INPUTS</span></h3>
   {unwind_summary_html}
+
+  <h3>Crowding Monitor <span class="eyebrow">T0 PROXIES · OPTIONAL T1 SIDE NOTES · NO AGGREGATE SCORE</span></h3>
+  {crowding_panel_html}
 
   <h3>What Changed <span class="eyebrow">DETERMINISTIC · {escape(card.comparison_date or 'NO COMPARISON')}</span></h3>
   {comparison_html}
@@ -539,6 +704,13 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             "",
             f"- **Unwind completeness:** {unwind.completeness_confidence}",
             f"- **Legacy scenario label:** {unwind.scenario_classification}",
+            "",
+            "## Crowding monitor (book-structure proxies)",
+            "",
+            "- Channels: portfolio concentration, momentum breadth, "
+            "correlated-theme unwind; optional FINRA / GDELT side notes.",
+            "- *Proxy only — not observed ownership, leverage, or flow. "
+            "No aggregate crowding score.*",
             "",
             "## Text evidence (timestamped replay)",
             "",
