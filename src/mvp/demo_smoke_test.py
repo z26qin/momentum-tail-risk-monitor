@@ -120,9 +120,12 @@ def run_smoke_test() -> dict[str, object]:
         "MVPConfig",
         "run_mvp",
         "build_unwind_summary_html",
+        "build_crowding_panel_html",
         "Momentum crash mechanisms",
+        "Crowding monitor",
+        "Future_To_DO.md",
         "full_run_fingerprint",
-        "correlated-theme concentration",
+        "correlated-theme unwind",
         "Final MVP Demo",
     ):
         if marker not in notebook_source:
