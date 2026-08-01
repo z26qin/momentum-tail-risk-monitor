@@ -8,6 +8,8 @@ build/
 dist/
 .DS_Store
 .ipynb_checkpoints/
+.env
+.env.*
 
 # Alternative-data raw caches.
 # These are cached to disk so later sessions make zero network calls, but they
