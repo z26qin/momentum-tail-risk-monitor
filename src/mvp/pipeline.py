@@ -1,8 +1,9 @@
 """Single orchestration boundary for the momentum tail-risk MVP.
 
 This module composes existing deterministic calculations without reimplementing
-them. It does not merge UMD macro context with the named S&P 500 proxy
-scorecard into one aggregate risk score.
+them. UMD / Daniel–Moskowitz inputs are a comparison benchmark; the S&P 500
+12-1 long-10 / short-10 book is the default customizable PM portfolio. The two
+are never merged into one aggregate risk score.
 """
 
 from __future__ import annotations
