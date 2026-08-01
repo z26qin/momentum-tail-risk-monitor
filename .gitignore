@@ -11,6 +11,9 @@ dist/
 .env
 .env.*
 
+# Optional DeepSeek explanation cache (regenerable).
+outputs/gdelt_evidence_cache/
+
 # Alternative-data raw caches.
 # These are cached to disk so later sessions make zero network calls, but they
 # are too large for the git tree. Provenance is preserved in the committed
