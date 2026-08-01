@@ -1,5 +1,0 @@
-{
-  "daily_short_volume": [],
-  "note": "Unmatched universe symbols are listed rather than dropped silently. A symbol may be unmatched because it listed after the sample start, changed ticker, or uses a share-class convention the normaliser does not cover.",
-  "short_interest": []
-}
