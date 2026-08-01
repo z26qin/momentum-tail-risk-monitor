@@ -44,6 +44,7 @@ NOT investment advice.
 | **Unwind monitor** | Which crash *mechanism* is lighting up? | 6-row structure + 3 independent scenarios |
 | **Crowding monitor** | Is the book *structurally* tight / theme-crowded? | T0 proxies (concentration, breadth, theme unwind) + optional T1 FINRA/GDELT side notes |
 | **Evidence card** | What timestamped macro/news context fits this date? | Exact-date replay (optional LLM narrative; cannot change numbers) |
+| **Research validation** | Do mechanisms leave distinct historical fingerprints? | Episode table + AI worksheet (interpretability only; not a backtest) |
 
 ```text
 merge(layers) → FORBIDDEN
@@ -110,6 +111,12 @@ llm.write(triggers)    # no
                      └────────────────────┬────────────────────┘
                                           ▼
                          charts · JSON · HTML · Markdown
+                                          │
+                                          ▼
+                    ┌── research_validation (offline) ──┐
+                    │ episode fingerprints · AI arms    │
+                    │ reuse run_mvp · no new thresholds │
+                    └───────────────────────────────────┘
 ```
 
 ### Two objects, never blended
@@ -136,6 +143,12 @@ llm.write(triggers)    # no
 - T0 spine from unwind: portfolio concentration (effective bets / HHI), momentum breadth, correlated-theme unwind
 - T1 side notes only: FINRA loser-leg short-interest z + GDELT crowding attention z (`confirm` / `contradict` / `neutral`)
 - Proxies, not ownership / leverage / financing; side notes never change triggers
+
+**Research validation** (thin offline layer; reuses `run_mvp`):
+- Episode fingerprints on known dates — interpretability check that mechanisms differ (`aligned` / `partially_aligned` / `not_aligned`)
+- AI value worksheet — quant-only vs `DeterministicSynthesizer` vs optional LLM (`not_run` without credentials; never fabricates)
+- PM-book forward-outcome table **skipped** until historical mechanism/scorecard states are persisted
+- Map: [`docs/architecture_to_value.md`](docs/architecture_to_value.md) · regen: `uv run python -m src.research_validation`
 
 ### Evidence stack (cannot rewrite risk state)
 
@@ -170,7 +183,8 @@ Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 ```bash
 uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test    # → {"status": "ready"}
-uv run python -m pytest -q                  # ~175 tests
+uv run python -m src.research_validation    # → outputs/research_validation/*
+uv run python -m pytest -q                  # contract + smoke tests
 ```
 
 Open the single demo notebook:
@@ -200,9 +214,12 @@ result = run_mvp(CONFIG)
 
 | Date | Why look |
 |---|---|
-| `2020-03-24` | `bear_market_recovery_crash` triggers |
+| `2020-03-24` | `bear_market_recovery_crash` triggers (fingerprint: aligned) |
+| `2020-11-02` | style-rotation prior; short reversal on **watch** (partially_aligned) |
 | `2024-01-05` | default demo — recovery on watch, no confirmed theme unwind |
-| `2026-05-29` | `crowded_theme_unwind` on a pre-event correlated cluster |
+| `2026-05-29` | `crowded_theme_unwind` on a pre-event correlated cluster (aligned) |
+
+Full fingerprint table: [`outputs/research_validation/episode_fingerprints.md`](outputs/research_validation/episode_fingerprints.md).
 
 ### Optional env vars
 
@@ -238,6 +255,19 @@ deterministic_score: null
 
 A PM reading this should conclude: *backdrop is soft-bear / low-vol; the customized book is not firing stress or crowding channels on this date* — not “crash probability = X%”.
 
+Research-validation side panel (same date as negative control):
+
+```text
+$ python -m src.research_validation
+────────────────────────────────────────────────────────
+episode fingerprints     → outputs/research_validation/episode_fingerprints.md
+ai value worksheet       → ai_value_review.csv  (LLM arm: not_run w/o keys)
+pm-book forward outcomes → skipped (no historical mechanism series yet)
+architecture → value     → docs/architecture_to_value.md
+────────────────────────────────────────────────────────
+# priors never enter computation · no threshold retune after the table
+```
+
 ---
 
 ## Repository map
@@ -245,22 +275,26 @@ A PM reading this should conclude: *backdrop is soft-bear / low-vol; the customi
 ```text
 momentum_crash/
 ├── README.md
-├── Future_To_DO.md           # PM imagination space (T2–T4+)
+├── Future_To_DO.md              # PM imagination space (T2–T4+)
 ├── docs/
-│   ├── methodology.md        # formulas, assumptions, decision boundary
-│   ├── limitations.md        # what we deliberately do not claim
-│   └── demo_walkthrough.md   # 15–20 min reviewer path
+│   ├── methodology.md           # formulas, assumptions, decision boundary
+│   ├── limitations.md           # what we deliberately do not claim
+│   ├── demo_walkthrough.md      # 15–20 min reviewer path
+│   └── architecture_to_value.md # component → PM question → evidence
 ├── notebooks/
-│   └── final_mvp_demo.ipynb  # single presentation notebook
+│   └── final_mvp_demo.ipynb     # single presentation notebook
 ├── src/
-│   ├── mvp/                  # config · pipeline · card · crowding · present
-│   ├── monitoring/           # scorecard · unwind · contracts
+│   ├── mvp/                     # config · pipeline · card · crowding · present
+│   ├── research_validation.py   # episode fingerprints · AI arms · writers
+│   ├── monitoring/              # scorecard · unwind · contracts
 │   ├── portfolio/ regime/ risk/ features/
-│   ├── evidence/             # corpus · preview · optional GDELT/DeepSeek
+│   ├── evidence/                # corpus · preview · optional GDELT/DeepSeek
 │   └── data/ utils/
-├── tests/                    # smoke / integration / contract tests
-├── data/processed/           # committed reproducibility inputs
-└── outputs/example_risk_output/
+├── tests/                       # smoke / integration / contract tests
+├── data/processed/              # committed reproducibility inputs
+└── outputs/
+    ├── example_risk_output/     # PM card snapshot
+    └── research_validation/     # fingerprints · AI worksheet · skip note
 ```
 
 Superseded phase docs / research modules live in Git history (`pre-mvp-consolidation` tag).
@@ -272,6 +306,7 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 1. [Methodology](docs/methodology.md) — portfolio construction, scorecard, unwind rules
 2. [Limitations](docs/limitations.md) — full honesty list
 3. [Demo walkthrough](docs/demo_walkthrough.md) — 15–20 minute PM review script
+4. [Architecture to value](docs/architecture_to_value.md) — component → PM question → current evidence
 
 ---
 
@@ -281,9 +316,11 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 - UMD header state ≠ score for the PM book. Do not blend the two layers.
 - Evidence is **exact-date cached replay**, not institutional live retrieval.
 - Mechanism scenarios are **descriptive rules** without OOS predictive validation.
+- Episode fingerprints are **interpretability checks**, not predictive backtests; priors never retune thresholds.
+- No persisted historical mechanism/scorecard state series yet → descriptive PM-book forward-outcome table is deferred.
 - No leverage, financing, forced-selling, or order-flow observation.
 - Crowding is **book-structure proxy** (+ optional FINRA/GDELT side notes), not observed ownership or street positioning.
-- Optional LLM / RAG layers organize narrative only — they cannot change values, thresholds, triggers, or risk state.
+- Optional LLM / RAG layers organize narrative only — they cannot change values, thresholds, triggers, or risk state. Incremental LLM analyst value remains unscored until reviewed runs.
 
 Full list: [docs/limitations.md](docs/limitations.md).
 
@@ -298,5 +335,7 @@ production imagination). Short list:
 - Point-in-time membership and industry history
 - Plug-in interface for a PM’s own holdings / weights
 - Observed holdings / leverage / flow / street crowding
+- Persist mechanism/scorecard history → descriptive 5d/20d PM-book forward outcomes
 - Out-of-sample validation of the three mechanism rules
 - Production-grade retrieval beyond offline preview
+- Human-reviewed LLM arm scores in `ai_value_review.csv`
