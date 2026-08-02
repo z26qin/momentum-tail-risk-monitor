@@ -14,6 +14,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
+from src.monitoring.unwind_monitor import MechanicalUnwindAssessment
 from src.monitoring.unwind_structure import UnwindAssessment
 from src.mvp.crowding_context import (
     build_narrative_snapshot,
@@ -288,6 +289,78 @@ def build_crowding_panel_html(
 """
 
 
+def build_mechanical_unwind_panel_html(
+    mechanical: MechanicalUnwindAssessment,
+) -> str:
+    """Render the Liquidity / Mechanical Unwind supplemental panel."""
+
+    def _pct(value: float | None) -> str:
+        if value is None or pd.isna(value):
+            return "—"
+        return f"{value:.0%}"
+
+    def _num(value: float | None) -> str:
+        if value is None or pd.isna(value):
+            return "—"
+        return f"{value:.4f}"
+
+    absorption = mechanical.liquidity_absorption_failure
+    absorption_reading = (
+        "—"
+        if absorption is None
+        else ("failure" if absorption else "absorbing / reversing")
+    )
+    rows = [
+        {
+            "Signal": "Factor footprint",
+            "Current Reading": _num(mechanical.factor_footprint_r2),
+            "Historical Percentile": _pct(mechanical.factor_footprint_percentile),
+            "Interpretation": (
+                f"cross-sectional R² · controls={mechanical.control_spec}"
+            ),
+        },
+        {
+            "Signal": "Momentum-aligned turnover",
+            "Current Reading": _num(mechanical.extreme_turnover_ratio),
+            "Historical Percentile": _pct(mechanical.extreme_turnover_percentile),
+            "Interpretation": "extreme (L10∪S10) abnormal volume / universe",
+        },
+        {
+            "Signal": "Market absorption",
+            "Current Reading": absorption_reading,
+            "Historical Percentile": _pct(mechanical.absorption_percentile),
+            "Interpretation": (
+                f"continuation={_num(mechanical.continuation_pressure)} · "
+                f"reversal={_num(mechanical.short_horizon_reversal)}"
+            ),
+        },
+        {
+            "Signal": "Unwind state",
+            "Current Reading": mechanical.unwind_state.replace("_", " "),
+            "Historical Percentile": "—",
+            "Interpretation": mechanical.interpretation,
+        },
+    ]
+    table_html = pd.DataFrame(rows).to_html(index=False, border=0, escape=True)
+    warning_html = "".join(
+        f"<li>{escape(item)}</li>" for item in mechanical.warnings
+    ) or "<li>None.</li>"
+    return f"""
+<div style='border:1px solid #d0d7de;border-radius:8px;padding:10px 12px'>
+  <strong>Liquidity / Mechanical Unwind</strong>
+  <small style='display:block;margin:4px 0 8px'>
+    Factor-aligned trading footprint proxy (Khandani–Lo inspired). Not observed
+    hedge-fund positions, leverage, or forced liquidation. Separate from macro
+    regime and the four-row PM scorecard.
+  </small>
+  {table_html}
+  <details style='margin-top:8px'><summary><small>Proxy limitations</small></summary>
+    <ul style='font-size:12px'>{warning_html}</ul>
+  </details>
+</div>
+"""
+
+
 def build_unwind_summary_html(unwind: UnwindAssessment) -> str:
     """Render the mechanism and six-row unwind monitor summary."""
 
@@ -543,6 +616,7 @@ def render_pm_card_html(result: MVPRunResult) -> str:
     card = result.deterministic_input
     interpretation = result.interpretation
     unwind = result.unwind
+    mechanical = result.mechanical_unwind
     evidence_quality = card.audit_metadata.get("evidence_quality", "unavailable")
     macro_component_html, _, _ = build_macro_component_html(
         card, processed_dir=result.config.processed_dir
@@ -551,6 +625,7 @@ def render_pm_card_html(result: MVPRunResult) -> str:
     crowding_panel_html = build_crowding_panel_html(
         unwind, processed_dir=result.config.processed_dir
     )
+    mechanical_panel_html = build_mechanical_unwind_panel_html(mechanical)
     comparison_html = build_comparison_html(card)
     evidence_by_id = {item.evidence_id: item for item in card.retrieved_evidence}
     contextual_evidence = [
@@ -624,6 +699,9 @@ def render_pm_card_html(result: MVPRunResult) -> str:
 
   <h3>Crowding Monitor <span class="eyebrow">T0 PROXIES · OPTIONAL T1 SIDE NOTES · NO AGGREGATE SCORE</span></h3>
   {crowding_panel_html}
+
+  <h3>Liquidity / Mechanical Unwind <span class="eyebrow">FACTOR FOOTPRINT · ALIGNED TURNOVER · ABSORPTION PROXY</span></h3>
+  {mechanical_panel_html}
 
   <h3>What Changed <span class="eyebrow">DETERMINISTIC · {escape(card.comparison_date or 'NO COMPARISON')}</span></h3>
   {comparison_html}
@@ -711,6 +789,17 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             "correlated-theme unwind; optional FINRA / GDELT side notes.",
             "- *Proxy only — not observed ownership, leverage, or flow. "
             "No aggregate crowding score.*",
+            "",
+            "## Liquidity / Mechanical Unwind",
+            "",
+            f"- **State:** {result.mechanical_unwind.unwind_state}",
+            f"- **Factor footprint R²:** {result.mechanical_unwind.factor_footprint_r2}",
+            "- **Momentum-aligned turnover ratio:** "
+            f"{result.mechanical_unwind.extreme_turnover_ratio}",
+            "- **Absorption failure:** "
+            f"{result.mechanical_unwind.liquidity_absorption_failure}",
+            "- *Detects factor-aligned trading footprints, not actual "
+            "hedge-fund liquidations.*",
             "",
             "## Text evidence (timestamped replay)",
             "",

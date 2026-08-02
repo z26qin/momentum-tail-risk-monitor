@@ -13,6 +13,10 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from src.monitoring.unwind_monitor import (
+    MechanicalUnwindAssessment,
+    build_mechanical_unwind_assessment,
+)
 from src.monitoring.unwind_structure import UnwindAssessment, build_unwind_assessment
 from src.mvp.config import MVPConfig
 from src.mvp.evidence_card import (
@@ -25,7 +29,7 @@ from src.mvp.evidence_interpretation import (
     interpret_evidence_card,
 )
 
-MVP_RUN_SCHEMA_VERSION = "mvp-run-v1"
+MVP_RUN_SCHEMA_VERSION = "mvp-run-v2"
 
 
 @dataclass(frozen=True)
@@ -37,6 +41,7 @@ class MVPRunResult:
     deterministic_input: DeterministicEvidenceInput
     interpretation: EvidenceInterpretation
     unwind: UnwindAssessment
+    mechanical_unwind: MechanicalUnwindAssessment
     full_run_fingerprint: str
     display_labels: dict[str, str]
 
@@ -47,6 +52,8 @@ class MVPRunResult:
             raise ValueError("deterministic input date must match config")
         if self.unwind.as_of_date != self.config.as_of_date:
             raise ValueError("unwind assessment date must match config")
+        if self.mechanical_unwind.as_of_date != self.config.as_of_date:
+            raise ValueError("mechanical unwind date must match config")
 
     @property
     def card(self) -> DeterministicEvidenceInput:
@@ -59,6 +66,7 @@ class MVPRunResult:
             "deterministic_input": self.deterministic_input.to_dict(),
             "interpretation": self.interpretation.to_dict(),
             "unwind": self.unwind.to_dict(),
+            "mechanical_unwind": self.mechanical_unwind.to_dict(),
             "full_run_fingerprint": self.full_run_fingerprint,
             "display_labels": dict(self.display_labels),
         }
@@ -70,6 +78,7 @@ def _full_run_fingerprint(
     deterministic_input: DeterministicEvidenceInput,
     interpretation: EvidenceInterpretation,
     unwind: UnwindAssessment,
+    mechanical_unwind: MechanicalUnwindAssessment,
 ) -> str:
     seed = {
         "config": config.to_dict(),
@@ -91,6 +100,15 @@ def _full_run_fingerprint(
                 {"scenario": item.scenario, "status": item.status}
                 for item in unwind.mechanism_scenarios
             ],
+        },
+        "mechanical_unwind": {
+            "schema_version": mechanical_unwind.schema_version,
+            "unwind_state": mechanical_unwind.unwind_state,
+            "factor_footprint_r2": mechanical_unwind.factor_footprint_r2,
+            "extreme_turnover_ratio": mechanical_unwind.extreme_turnover_ratio,
+            "liquidity_absorption_failure": (
+                mechanical_unwind.liquidity_absorption_failure
+            ),
         },
     }
     payload = json.dumps(seed, sort_keys=True, allow_nan=False)
@@ -123,11 +141,17 @@ def run_mvp(
         config=config.unwind_config,
         theme_config=config.theme_config,
     )
+    mechanical_unwind = build_mechanical_unwind_assessment(
+        as_of_date=config.as_of_timestamp,
+        processed_dir=config.processed_dir,
+        config=config.mechanical_unwind_config,
+    )
     fingerprint = _full_run_fingerprint(
         config=config,
         deterministic_input=deterministic_input,
         interpretation=interpretation,
         unwind=unwind,
+        mechanical_unwind=mechanical_unwind,
     )
     display_labels = {
         "header_state_label": (
@@ -145,6 +169,10 @@ def run_mvp(
             "UMD comparison: state-conditioned tail-loss frequency "
             "(matured labels)"
         ),
+        "mechanical_unwind_label": (
+            "Liquidity / mechanical unwind "
+            "(factor footprint · aligned turnover · absorption proxy)"
+        ),
     }
     return MVPRunResult(
         schema_version=MVP_RUN_SCHEMA_VERSION,
@@ -152,6 +180,7 @@ def run_mvp(
         deterministic_input=deterministic_input,
         interpretation=interpretation,
         unwind=unwind,
+        mechanical_unwind=mechanical_unwind,
         full_run_fingerprint=fingerprint,
         display_labels=display_labels,
     )

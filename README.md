@@ -43,6 +43,7 @@ NOT investment advice.
 | **PM book scorecard** | Is *my* 12-1 long/short book showing known stress channels? | 4 deterministic rows with prior-only thresholds |
 | **Unwind monitor** | Which crash *mechanism* is lighting up? | 6-row structure + 3 independent scenarios |
 | **Crowding monitor** | Is the book *structurally* tight / theme-crowded? | T0 proxies (concentration, breadth, theme unwind) + optional T1 FINRA/GDELT side notes |
+| **Mechanical unwind** | Is there a factor-aligned / absorption-stress footprint? | Factor R², extreme turnover ratio, absorption proxy, rule-based state |
 | **Evidence card** | What timestamped macro/news context fits this date? | Exact-date replay (optional LLM narrative; cannot change numbers) |
 | **Research validation** | Do mechanisms leave distinct historical fingerprints? | Episode table + AI worksheet (interpretability only; not a backtest) |
 
