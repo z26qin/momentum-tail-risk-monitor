@@ -14,6 +14,10 @@ from pathlib import Path
 import pandas as pd
 
 from src.monitoring.scorecard import DEFAULT_CONFIG, ScorecardConfig
+from src.monitoring.unwind_monitor import (
+    DEFAULT_MECHANICAL_UNWIND_CONFIG,
+    MechanicalUnwindConfig,
+)
 from src.monitoring.unwind_structure import DEFAULT_UNWIND_CONFIG, UnwindMonitorConfig
 from src.risk.theme_concentration import DEFAULT_THEME_CONFIG, ThemeConcentrationConfig
 from src.utils.io import DEFAULT_OUTPUT_DIR, DEFAULT_PROCESSED_DIR, REPO_ROOT
@@ -74,6 +78,10 @@ class MVPConfig:
         return DEFAULT_UNWIND_CONFIG
 
     @property
+    def mechanical_unwind_config(self) -> MechanicalUnwindConfig:
+        return DEFAULT_MECHANICAL_UNWIND_CONFIG
+
+    @property
     def theme_config(self) -> ThemeConcentrationConfig:
         return DEFAULT_THEME_CONFIG
 
@@ -88,6 +96,9 @@ class MVPConfig:
             "output_dir": str(self.output_dir.relative_to(REPO_ROOT)),
             "scorecard_config": dataclasses.asdict(self.scorecard_config),
             "unwind_config": dataclasses.asdict(self.unwind_config),
+            "mechanical_unwind_config": dataclasses.asdict(
+                self.mechanical_unwind_config
+            ),
             "theme_config": dataclasses.asdict(self.theme_config),
         }
 

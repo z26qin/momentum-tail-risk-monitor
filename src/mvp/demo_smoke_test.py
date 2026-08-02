@@ -89,6 +89,7 @@ def run_smoke_test() -> dict[str, object]:
     card = primary.deterministic_input
     interpretation = primary.interpretation
     unwind = primary.unwind
+    mechanical = primary.mechanical_unwind
     if not isinstance(card, DeterministicEvidenceInput):
         raise TypeError(
             "demo result did not validate as a DeterministicEvidenceInput"
@@ -105,6 +106,15 @@ def run_smoke_test() -> dict[str, object]:
         raise AssertionError("theme cluster definition does not stop before as-of")
     if unwind.as_of_date != card.as_of_date:
         raise AssertionError("unwind assessment date differs from Evidence Card")
+    if mechanical.as_of_date != card.as_of_date:
+        raise AssertionError("mechanical unwind date differs from Evidence Card")
+    if mechanical.unwind_state not in {
+        "NORMAL",
+        "FRAGILITY_BUILDING",
+        "ACTIVE_UNWIND",
+        "STABILIZING_REVERSAL",
+    }:
+        raise AssertionError("mechanical unwind state is not recognized")
     if _quant_signature(card) == _quant_signature(regression.deterministic_input):
         raise AssertionError("fixed historical dates produced identical quant results")
     if interpretation.narrative_state == regression.interpretation.narrative_state:
@@ -121,8 +131,10 @@ def run_smoke_test() -> dict[str, object]:
         "run_mvp",
         "build_unwind_summary_html",
         "build_crowding_panel_html",
+        "build_mechanical_unwind_panel_html",
         "Momentum crash mechanisms",
         "Crowding monitor",
+        "Mechanical Unwind and Market Absorption",
         "Future_To_DO.md",
         "Research Validation",
         "architecture_to_value.md",
@@ -162,6 +174,8 @@ def run_smoke_test() -> dict[str, object]:
         ),
         "unwind_completeness": unwind.completeness_confidence,
         "unwind_scorecard_rows": len(unwind.scorecard),
+        "mechanical_unwind_state": mechanical.unwind_state,
+        "mechanical_unwind_schema": mechanical.schema_version,
         "demo_defaults": {
             "as_of_date": DEFAULT_AS_OF_DATE,
             "compare_to_date": DEFAULT_COMPARE_TO_DATE,
