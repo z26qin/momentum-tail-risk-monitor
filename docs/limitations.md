@@ -34,6 +34,14 @@ This document lists what the MVP deliberately does **not** claim.
   correlated-theme unwind) plus optional FINRA / GDELT side notes. It does not
   observe ownership, leverage, financing, or forced selling. See
   `Future_To_DO.md` for T2–T4 production imagination.
+- The mechanical-unwind / market-absorption layer infers possible crowding from
+  factor footprints, momentum-extreme abnormal turnover, and short-horizon
+  price absorption. It uses daily public data only. Size control depends on
+  SEC shares outstanding coverage and may fall back to MomRank+Vol. Extreme
+  baskets are the PM L10∪S10 book, not French deciles.
+- The module detects factor-aligned trading footprints, not actual hedge-fund
+  liquidations. It should be interpreted as a mechanical-unwind proxy rather
+  than direct positioning evidence.
 - SEC fundamental coverage for the unwind anchor remains degraded / often
   unavailable under the approved feasibility audit.
 
