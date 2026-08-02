@@ -1,0 +1,201 @@
+{
+  "test_name": "final_mvp_rag_test",
+  "path_a_default_demo": {
+    "as_of_date": "2024-01-05",
+    "active_triggers": [],
+    "evidence_rows": 0,
+    "deepseek": {
+      "status": "inactive",
+      "message": "Evidence layer not activated because no configured momentum-risk trigger is active."
+    }
+  },
+  "path_b_rag_happy_path": {
+    "as_of_date": "2025-04-30",
+    "active_triggers": [
+      {
+        "trigger": "high_volatility_recovery",
+        "observed_value": 1.0,
+        "threshold": 1.0,
+        "status": "triggered"
+      },
+      {
+        "trigger": "short_loss_in_recovery",
+        "observed_value": 0.14,
+        "threshold": 0.1,
+        "status": "triggered"
+      },
+      {
+        "trigger": "portfolio_drawdown",
+        "observed_value": -0.22,
+        "threshold": -0.2,
+        "status": "triggered"
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "E1",
+        "date": "2025-04-23",
+        "timestamp": "2025-04-23T01:00:00+00:00",
+        "title": "Jim Cramer says the bear market rally could become a real recovery",
+        "source": "nbclosangeles.com",
+        "url": "https://www.nbclosangeles.com/news/business/money-report/jim-cramer-says-the-bear-market-rally-could-become-a-real-recovery/3684475/",
+        "gdelt_query": "policy",
+        "matched_trigger": "high_volatility_recovery",
+        "matched_keywords": "recovery, query:policy",
+        "match_count": 2,
+        "recency_days": 7,
+        "rank_score": 13.0
+      },
+      {
+        "evidence_id": "E2",
+        "date": "2025-04-23",
+        "timestamp": "2025-04-23T16:30:00+00:00",
+        "title": "Credit a  short squeeze  for the stock market big two - day bounce – NBC New York",
+        "source": "nbcnewyork.com",
+        "url": "https://www.nbcnewyork.com/news/business/money-report/credit-a-short-squeeze-for-the-stock-markets-big-two-day-bounce/6235691/",
+        "gdelt_query": "crowding",
+        "matched_trigger": "short_loss_in_recovery",
+        "matched_keywords": "short squeeze, query:crowding",
+        "match_count": 2,
+        "recency_days": 7,
+        "rank_score": 13.0
+      },
+      {
+        "evidence_id": "E3",
+        "date": "2025-04-21",
+        "timestamp": "2025-04-21T10:30:00+00:00",
+        "title": "Will the Stock Market Crash Again in 2025 ? Here What History Shows .",
+        "source": "fool.com",
+        "url": "https://www.fool.com/investing/2025/04/21/will-the-stock-market-crash-again-in-2025-heres-wh/?source=iedfolrf0000001",
+        "gdelt_query": "panic",
+        "matched_trigger": "portfolio_drawdown",
+        "matched_keywords": "crash, query:panic",
+        "match_count": 2,
+        "recency_days": 9,
+        "rank_score": 11.0
+      },
+      {
+        "evidence_id": "E4",
+        "date": "2025-04-04",
+        "timestamp": "2025-04-04T12:15:00+00:00",
+        "title": "Markets Need More Than Rate Cuts to Recover",
+        "source": "theepochtimes.com",
+        "url": "https://www.theepochtimes.com/opinion/markets-need-more-than-rate-cuts-to-recover-5836314",
+        "gdelt_query": "policy",
+        "matched_trigger": "high_volatility_recovery",
+        "matched_keywords": "rate cut, rate cuts, query:policy",
+        "match_count": 3,
+        "recency_days": 26,
+        "rank_score": 4.0
+      },
+      {
+        "evidence_id": "E5",
+        "date": "2025-04-11",
+        "timestamp": "2025-04-11T13:00:00+00:00",
+        "title": "Stock Market Crash Survival Guide For Retirees | Investor Business Daily",
+        "source": "investors.com",
+        "url": "https://www.investors.com/etfs-and-funds/personal-finance/stock-market-crash-how-retirees-can-endure/",
+        "gdelt_query": "panic",
+        "matched_trigger": "portfolio_drawdown",
+        "matched_keywords": "crash, query:panic",
+        "match_count": 2,
+        "recency_days": 19,
+        "rank_score": 1.0
+      },
+      {
+        "evidence_id": "E6",
+        "date": "2025-04-10",
+        "timestamp": "2025-04-10T17:00:00+00:00",
+        "title": "How the mother of all  short squeeze helped drive stocks to historic gains Wednesday",
+        "source": "cnbc.com",
+        "url": "https://www.cnbc.com/2025/04/10/how-the-mother-of-all-short-squeezes-helped-drive-stocks-to-historic-gains-wednesday.html",
+        "gdelt_query": "crowding",
+        "matched_trigger": "short_loss_in_recovery",
+        "matched_keywords": "short squeeze, query:crowding",
+        "match_count": 2,
+        "recency_days": 20,
+        "rank_score": 0.0
+      },
+      {
+        "evidence_id": "E7",
+        "date": "2025-04-19",
+        "timestamp": "2025-04-19T15:45:00+00:00",
+        "title": "Investor protection during market volatility through tactical fund",
+        "source": "cnbc.com",
+        "url": "https://www.cnbc.com/2025/04/19/investor-protection-during-market-volatility-through-tactical-fund.html",
+        "gdelt_query": "rotation",
+        "matched_trigger": "high_volatility_recovery",
+        "matched_keywords": "volatility",
+        "match_count": 1,
+        "recency_days": 11,
+        "rank_score": -1.0
+      },
+      {
+        "evidence_id": "E8",
+        "date": "2025-04-08",
+        "timestamp": "2025-04-08T03:45:00+00:00",
+        "title": "Get the Facts : What is the stock market crash of 1987 and why is it trending now ?",
+        "source": "koat.com",
+        "url": "https://www.koat.com/article/1987-market-crash-black-monday/64410743",
+        "gdelt_query": "panic",
+        "matched_trigger": "portfolio_drawdown",
+        "matched_keywords": "crash, query:panic",
+        "match_count": 2,
+        "recency_days": 22,
+        "rank_score": -2.0
+      },
+      {
+        "evidence_id": "E9",
+        "date": "2025-04-06",
+        "timestamp": "2025-04-06T10:00:00+00:00",
+        "title": "Warren Buffett been waiting years for a crash like this but he might not be buying just yet",
+        "source": "finance.yahoo.com",
+        "url": "https://finance.yahoo.com/news/warren-buffetts-waiting-years-crash-221858956.html",
+        "gdelt_query": "panic",
+        "matched_trigger": "portfolio_drawdown",
+        "matched_keywords": "crash, query:panic",
+        "match_count": 2,
+        "recency_days": 24,
+        "rank_score": -4.0
+      },
+      {
+        "evidence_id": "E10",
+        "date": "2025-04-06",
+        "timestamp": "2025-04-06T13:15:00+00:00",
+        "title": "Trump tariffs were expected to boost the dollar , but recession fears are dragging it down",
+        "source": "nbcchicago.com",
+        "url": "https://www.nbcchicago.com/news/business/money-report/trumps-tariffs-were-expected-to-boost-the-dollar-but-recession-fears-are-dragging-it-down/3714939/",
+        "gdelt_query": "riskoff",
+        "matched_trigger": "portfolio_drawdown",
+        "matched_keywords": "recession, query:riskoff",
+        "match_count": 2,
+        "recency_days": 24,
+        "rank_score": -4.0
+      }
+    ],
+    "deepseek": {
+      "status": "ok",
+      "message": "DeepSeek explanation generated.",
+      "cached": false,
+      "model": "deepseek-chat",
+      "trigger_summary": "The system has flagged a high-volatility recovery, short losses in that recovery, and a portfolio drawdown as of 2025-04-30.",
+      "recent_narrative": "In early April, news coverage was dominated by crash fears and recession concerns, with articles referencing historical crashes and Buffett's cautious stance [E3][E5][E8][E9][E10]. By mid-April, a sharp rebound occurred, attributed to a massive short squeeze [E6], and by late April, commentators like Jim Cramer suggested the rally could turn into a real recovery [E1]. However, some sources cautioned that rate cuts alone might not sustain the recovery [E4], and volatility remained a concern [E7].",
+      "momentum_mechanism": "The initial drawdown likely triggered panic and defensive positioning, as seen in crash-related headlines. The subsequent sharp recovery, driven by a short squeeze, forced short sellers to cover, amplifying upward momentum. This rapid reversal from extreme negative to positive sentiment can lead to high volatility and potential overshooting, consistent with the triggered high-volatility recovery and short-loss indicators.",
+      "key_evidence_ids": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7",
+        "E8",
+        "E9",
+        "E10"
+      ],
+      "limitations": "The evidence is based on a limited set of news articles and may not capture the full market context. The articles are from various dates and sources, and their relevance to the specific triggers is inferred from keyword matches. No quantitative market data is provided, so the magnitude of the drawdown or recovery is not verified.",
+      "pm_takeaway": "The market has experienced a sharp drawdown followed by a strong recovery, likely fueled by short covering. This environment presents elevated volatility and potential for continued momentum shifts. Monitor positions for further volatility and be aware of the risk of a reversal if the recovery loses steam."
+    }
+  },
+  "disclaimer": "The deterministic system identifies the risk state. Retrieval and DeepSeek are used only to explain the state using contemporaneous public-news evidence."
+}
