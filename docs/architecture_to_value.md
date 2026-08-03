@@ -1,7 +1,7 @@
 # Architecture to PM value
 
-One-page map from existing MVP components to the questions a momentum PM
-actually asks. This is not a new reporting framework.
+Internal map from MVP components to PM questions. For the product narrative and
+three-case demo, start with `README.md` and `notebooks/final_mvp_demo.ipynb`.
 
 | Existing component | PM question | Implemented value | Current evidence | Remaining limitation |
 | --- | --- | --- | --- | --- |
