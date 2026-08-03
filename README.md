@@ -39,7 +39,7 @@ NOT investment advice.
 
 ## What decision does this support?
 
-Momentum books can look “weak” for very different reasons. A single score collapses those reasons and invites false confidence.
+Momentum books have tail risks for very different reasons. 
 
 This monitor helps a PM answer:
 
@@ -47,7 +47,7 @@ This monitor helps a PM answer:
 
 It does **not** predict the exact timing of a crash or issue a trade instruction.
 
-Default monitored book: S&P 500 12-1 **long-10 / short-10** (customizable research stand-in). Ken French UMD / DM market state is **comparison context only**, never merged into a book score.
+Default monitored book: S&P 500 12-1 **long-10 / short-10** (customizable research stand-in). Ken French UMD / DM market state is **comparison context only**.
 
 ---
 
@@ -89,14 +89,14 @@ The system combines the two mechanisms so the PM can decide whether to:
 
 ```text
 Deterministic monitors  →  mechanism read  →  evidence challenge  →  PM next checks
-(scorecard / unwind)       (DM vs KL)         (support / contradict)   (not a trade ticket)
+(scorecard / unwind)       (DM vs KL)         (support / contradict)   (not a trade recommendation)
 ```
 
 ---
 
-## Product demo: three cases
+## Product demo: three case study
 
-Notebook path: [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb). Primary order: **current semi → 2020 validation → 2024 quiet control**.
+Notebook path: [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb). Primary order: **current momentum unwind → 2020 validation → 2024 quiet control**.
 
 ### Current semiconductor case (primary)
 
@@ -157,10 +157,6 @@ Detail: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
 | **Evidence card** | What timestamped macro/news context fits this date? | Exact-date replay (optional LLM narrative; cannot change numbers) |
 | **Research validation** | Do mechanisms leave distinct historical fingerprints? | Episode table + AI worksheet (interpretability only; not a backtest) |
 
-```text
-merge(layers) → FORBIDDEN
-deterministic_score → null   # by design, not a bug
-```
 
 ---
 
@@ -186,7 +182,7 @@ llm.write(triggers)    # no
 ## System design
 
 ```text
-                         ┌──────────── MVPConfig ────────────┐
+                         ┌──────────── Input Variable ────────────┐
                          │ as_of · compare_to · horizon · LLM │
                          └────────────────┬──────────────────┘
                                           │
@@ -270,10 +266,10 @@ llm.write(triggers)    # no
 [cache]  exact-date research preview          # offline, fail-closed
             │
             ▼
-[llm?]   constrained interpretation           # narrative only; ID-bound
+[llm?]   constrained interpretation           # narrative only
             │
             ▼
-[rag?]   GDELT + DeepSeek                     # trigger-gated; research path
+[rag?]   GDELT + DeepSeek                     # trigger + research path
 
 # privilege model
 evidence ⊬ rewrite(metric | threshold | trigger | risk_state)
