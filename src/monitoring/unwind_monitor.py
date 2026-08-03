@@ -680,20 +680,22 @@ def classify_unwind_state(
 
     gate = config.elevated_percentile
     states: list[str] = []
+    footprint_elevated_flags: list[bool | None] = []
+    turnover_elevated_flags: list[bool | None] = []
     active_recent = 0
     for row in merged.itertuples(index=False):
-        footprint_elev = _elevated(
-            _optional_float(getattr(row, "factor_footprint_percentile", None)),
-            gate,
+        footprint_percentile = _optional_float(
+            getattr(row, "factor_footprint_percentile", None)
         )
+        turnover_percentile = _optional_float(
+            getattr(row, "extreme_turnover_percentile", None)
+        )
+        footprint_elev = _elevated(footprint_percentile, gate)
         mom_beta_elev = _elevated(
             _optional_float(getattr(row, "momentum_beta_abs_percentile", None)),
             gate,
         )
-        turnover_elev = _elevated(
-            _optional_float(getattr(row, "extreme_turnover_percentile", None)),
-            gate,
-        )
+        turnover_elev = _elevated(turnover_percentile, gate)
         vol_elev = _elevated(_optional_float(row.vol_percentile), gate)
         beta_elev = _elevated(_optional_float(row.beta_gap_percentile), gate)
         continuation_elev = _elevated(
@@ -747,8 +749,18 @@ def classify_unwind_state(
         else:
             state = "NORMAL"
         states.append(state)
+        # Persist the elevation decisions already used for state classification
+        # so downstream compactors can copy them without re-applying a gate.
+        footprint_elevated_flags.append(
+            None if footprint_percentile is None else bool(footprint_elev)
+        )
+        turnover_elevated_flags.append(
+            None if turnover_percentile is None else bool(turnover_elev)
+        )
 
     merged["unwind_state"] = states
+    merged["factor_footprint_elevated"] = footprint_elevated_flags
+    merged["aligned_turnover_elevated"] = turnover_elevated_flags
     return merged
 
 
