@@ -141,9 +141,13 @@ def run_smoke_test() -> dict[str, object]:
         "full_run_fingerprint",
         "correlated-theme unwind",
         "Final MVP Demo",
+        "PM response readout",
     ):
         if marker not in notebook_source:
             raise AssertionError(f"final notebook is missing {marker!r}")
+    pm_response = primary.pm_response
+    if not pm_response.current_posture or not pm_response.response_categories:
+        raise AssertionError("PM response readout is incomplete")
     return {
         "status": "ready",
         "demo_mode": DEMO_MODE,
@@ -161,6 +165,8 @@ def run_smoke_test() -> dict[str, object]:
         "quant_model_version": card.audit_metadata["quant_model_version"],
         "interpretation_use_llm": interpretation.use_llm,
         "interpretation_version": interpretation.model_or_prompt_version,
+        "pm_response_use_llm": pm_response.use_llm,
+        "pm_response_categories": list(pm_response.response_categories),
         "threshold_profile": card.threshold_profile,
         "unwind_scenario": unwind.scenario_classification,
         "unwind_schema_version": unwind.schema_version,
