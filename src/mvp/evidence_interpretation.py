@@ -247,10 +247,25 @@ class EvidenceInterpreter(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
-def _percentile_status(percentile: float | None, *, gate: float) -> str:
-    if percentile is None:
+def _elevated_flag_status(value: Any) -> str:
+    if value is None:
         return "unavailable"
-    return "elevated" if percentile >= gate else "not_elevated"
+    if isinstance(value, float) and value != value:  # NaN
+        return "unavailable"
+    return "elevated" if bool(value) else "not_elevated"
+
+
+def _mechanical_history_row(mechanical: Any) -> Any | None:
+    history = getattr(mechanical, "history", None)
+    if history is None or not hasattr(history, "empty") or history.empty:
+        return None
+    as_of = getattr(mechanical, "as_of_date", None)
+    if as_of is not None and "date" in getattr(history, "columns", []):
+        as_of_text = str(as_of)[:10]
+        matched = history.loc[history["date"].astype(str).str[:10] == as_of_text]
+        if not matched.empty:
+            return matched.iloc[-1]
+    return history.iloc[-1]
 
 
 def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
@@ -267,24 +282,42 @@ def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
 
 
 def compact_mechanical_unwind_context(mechanical: Any) -> dict[str, Any]:
-    """Project a MechanicalUnwindAssessment into compact status fields."""
+    """Project a MechanicalUnwindAssessment into compact status fields.
 
-    from src.monitoring.unwind_monitor import DEFAULT_MECHANICAL_UNWIND_CONFIG
+    Copies elevation statuses already computed during mechanical classification.
+    Does not re-apply ``DEFAULT_MECHANICAL_UNWIND_CONFIG`` thresholds.
+    """
 
-    gate = float(DEFAULT_MECHANICAL_UNWIND_CONFIG.elevated_percentile)
+    if isinstance(mechanical, Mapping):
+        return {
+            "unwind_state": mechanical.get("unwind_state"),
+            "liquidity_absorption_failure": mechanical.get(
+                "liquidity_absorption_failure"
+            ),
+            "factor_footprint_status": mechanical.get(
+                "factor_footprint_status", "unavailable"
+            ),
+            "aligned_turnover_status": mechanical.get(
+                "aligned_turnover_status", "unavailable"
+            ),
+        }
+
+    row = _mechanical_history_row(mechanical)
+    footprint_status = "unavailable"
+    turnover_status = "unavailable"
+    if row is not None:
+        if "factor_footprint_elevated" in getattr(row, "index", []):
+            footprint_status = _elevated_flag_status(row["factor_footprint_elevated"])
+        if "aligned_turnover_elevated" in getattr(row, "index", []):
+            turnover_status = _elevated_flag_status(row["aligned_turnover_elevated"])
+
     return {
         "unwind_state": getattr(mechanical, "unwind_state", None),
         "liquidity_absorption_failure": getattr(
             mechanical, "liquidity_absorption_failure", None
         ),
-        "factor_footprint_status": _percentile_status(
-            getattr(mechanical, "factor_footprint_percentile", None),
-            gate=gate,
-        ),
-        "aligned_turnover_status": _percentile_status(
-            getattr(mechanical, "extreme_turnover_percentile", None),
-            gate=gate,
-        ),
+        "factor_footprint_status": footprint_status,
+        "aligned_turnover_status": turnover_status,
     }
 
 
