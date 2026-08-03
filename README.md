@@ -2,7 +2,7 @@
   <a href="docs/methodology.md"><img src="https://img.shields.io/badge/Docs-methodology-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="docs/demo_walkthrough.md"><img src="https://img.shields.io/badge/Demo-15--20%20min-0A7A3E?style=for-the-badge" alt="Demo walkthrough"></a>
   <a href="notebooks/final_mvp_demo.ipynb"><img src="https://img.shields.io/badge/Notebook-final__mvp__demo-1f6feb?style=for-the-badge" alt="Demo notebook"></a>
-  <a href="#limitations-read-this"><img src="https://img.shields.io/badge/Not-financial%20advice-critical?style=for-the-badge" alt="Not financial advice"></a>
+  <a href="#assumptions"><img src="https://img.shields.io/badge/Not-financial%20advice-critical?style=for-the-badge" alt="Not financial advice"></a>
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@ Default monitored book: S&P 500 12-1 **long-10 / short-10** (customizable resear
 
 ### Mechanism 1 — Recovery-driven momentum crash
 
-Based on Daniel and Moskowitz.
+Based on Daniel and Moskowitz (2016).
 
 **PM question:** Is the market recovering from a severe drawdown in a way that could produce a sharp loser-stock rebound and damage momentum?
 
@@ -63,7 +63,7 @@ Relevant signals include prior market drawdown, recovery state, loser- or short-
 
 ### Mechanism 2 — Crowded-position unwind
 
-Based on Khandani and Lo.
+Based on Khandani and Lo (2007; 2011).
 
 **PM question:** Is a crowded momentum trade being reduced or unwound in a way that could amplify losses across similar portfolios?
 
@@ -73,8 +73,8 @@ Do **not** claim forced deleveraging unless the evidence supports it.
 
 | Mechanism | Academic anchor | What would support it | What would weaken it |
 | --- | --- | --- | --- |
-| Recovery-driven crash | Daniel–Moskowitz | Panic / severe drawdown → rapid recovery → loser rebound / short-leg pain | Soft recovery without panic; no short-basket stress |
-| Crowded unwind | Khandani–Lo | Crowding / concentration + synchronized selling + weak absorption | Selling without crowding; healthy absorption; no propagation |
+| Recovery-driven crash | Daniel–Moskowitz (2016) | Panic / severe drawdown → rapid recovery → loser rebound / short-leg pain | Soft recovery without panic; no short-basket stress |
+| Crowded unwind | Khandani–Lo (2007; 2011) | Crowding / concentration + synchronized selling + weak absorption | Selling without crowding; healthy absorption; no propagation |
 
 ---
 
@@ -325,7 +325,7 @@ Open the single demo notebook:
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
 ```
 
-Guided product path: PM problem → two mechanisms → workflow → **current semi case** → AI evidence view → 2020 validation → 2024 quiet control → cross-case comparison → limitations.
+Guided product path: PM problem → two mechanisms → workflow → **current semi case** → AI evidence view → 2020 validation → 2024 quiet control → cross-case comparison → assumptions.
 
 Edit only the parameter cell for a live `run_mvp` date, then **Run All**:
 
@@ -449,20 +449,47 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 
 ---
 
-## Limitations (read this)
+## References
 
-- Default PM book uses **current SPY membership historically** → survivorship bias; not a plug-in for a live book yet.
-- UMD header state ≠ score for the PM book. Do not blend the two layers.
-- Evidence is **exact-date cached replay**, not institutional live retrieval.
-- Mechanism scenarios are **descriptive rules** without OOS predictive validation.
-- Episode fingerprints are **interpretability checks**, not predictive backtests; priors never retune thresholds.
-- No persisted historical mechanism/scorecard state series yet → descriptive PM-book forward-outcome table is deferred.
-- No leverage, financing, forced-selling, or order-flow observation.
-- Crowding is **book-structure proxy** (+ optional FINRA/GDELT side notes), not observed ownership or street positioning.
-- Optional LLM / RAG layers organize narrative only — they cannot change values, thresholds, triggers, or risk state. Incremental LLM analyst value remains unscored until reviewed runs.
-- Historical UMD tail-loss frequencies are comparison context — **not** the PM book’s probability.
+Core academic anchors for the two mechanism lenses. This repository is an
+operational monitoring prototype inspired by these papers; it is **not** a
+replication of either study.
 
-Full list: [docs/limitations.md](docs/limitations.md).
+1. **Daniel, K., & Moskowitz, T. J. (2016).** Momentum crashes.
+   *Journal of Financial Economics*, 122(2), 221–247.
+   https://doi.org/10.1016/j.jfineco.2015.12.002  
+   → Recovery-driven / panic-state momentum crash mechanism (Mechanism 1).
+
+2. **Khandani, A. E., & Lo, A. W. (2007).** What happened to the quants in August 2007?
+   Working paper / early analysis of the August 2007 quant unwind.  
+   **Khandani, A. E., & Lo, A. W. (2011).** What happened to the quants in August 2007?
+   Evidence from factors and transactions data.
+   *Journal of Financial Markets*, 14(1), 1–46.
+   https://doi.org/10.1016/j.finmar.2010.07.005  
+   → Crowded-position / quant-unwind mechanism (Mechanism 2).
+
+### Related data / factor references
+
+- **Ken French Data Library** — market, risk-free, and UMD factor series used as
+  the published momentum-factor comparison backdrop (not the PM book).
+  https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html
+
+---
+
+## Assumptions
+
+Standing assumptions for any PM-facing readout:
+
+- **Default book is a research stand-in** — S&P 12-1 L10/S10 with current SPY membership historically; not a live holdings plug-in yet.
+- **UMD is backdrop, not your book** — published-factor context only; never a score or probability for the PM book.
+- **Evidence is exact-date cached replay** — useful to challenge a mechanism read; not institutional live retrieval.
+- **Mechanisms are descriptive risk lenses** — organize what kind of stress may be forming; not crash forecasts.
+- **Historical fingerprints check interpretability** — coherent episode footprints only; not a predictive backtest.
+- **Crowding is a structure / public-footprint proxy** — flags where to look; does not observe ownership, leverage, financing, or forced selling.
+- **AI organizes judgment only** — cannot change metrics, thresholds, triggers, or risk state.
+- **UMD tail-loss frequencies are literature context** — not the PM book’s loss probability.
+
+Longer honesty list: [docs/limitations.md](docs/limitations.md).
 
 ---
 
