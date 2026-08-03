@@ -24,8 +24,6 @@
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-**Two established momentum-crash mechanisms + an AI-assisted evidence layer**, so a PM can judge whether current momentum weakness is ordinary noise, a recovery-driven reversal, or a crowded-position unwind.
-
 **A decision-support monitor for quant PMs:** is *my* momentum book becoming fragile, how does that compare with published UMD / Daniel–Moskowitz market context, and what timestamped evidence supports or challenges the reading?
 
 ```text
@@ -34,114 +32,6 @@ NOT a crash probability.
 NOT investment advice.
 ≈ 20h research MVP — descriptive · deterministic · auditable.
 ```
-
----
-
-## What decision does this support?
-
-Momentum books can look “weak” for very different reasons. A single score collapses those reasons and invites false confidence.
-
-This monitor helps a PM answer:
-
-> Is the weakness ordinary noise, a **recovery-driven** momentum crash setup (Daniel–Moskowitz), or a **crowded-position unwind** (Khandani–Lo) — and what should I monitor next?
-
-It does **not** predict the exact timing of a crash or issue a trade instruction.
-
-Default monitored book: S&P 500 12-1 **long-10 / short-10** (customizable research stand-in). Ken French UMD / DM market state is **comparison context only**, never merged into a book score.
-
----
-
-## Two momentum-crash mechanisms
-
-### Mechanism 1 — Recovery-driven momentum crash
-
-Based on Daniel and Moskowitz.
-
-**PM question:** Is the market recovering from a severe drawdown in a way that could produce a sharp loser-stock rebound and damage momentum?
-
-Relevant signals include prior market drawdown, recovery state, loser- or short-leg rebound, beta asymmetry, short-leg losses, and momentum-portfolio drawdown.
-
-### Mechanism 2 — Crowded-position unwind
-
-Based on Khandani and Lo.
-
-**PM question:** Is a crowded momentum trade being reduced or unwound in a way that could amplify losses across similar portfolios?
-
-Relevant evidence includes crowded or concentrated exposure, unusual reductions in technology or momentum exposure, correlated selling, and possible deleveraging or liquidity pressure.
-
-Do **not** claim forced deleveraging unless the evidence supports it.
-
-| Mechanism | Academic anchor | What would support it | What would weaken it |
-| --- | --- | --- | --- |
-| Recovery-driven crash | Daniel–Moskowitz | Panic / severe drawdown → rapid recovery → loser rebound / short-leg pain | Soft recovery without panic; no short-basket stress |
-| Crowded unwind | Khandani–Lo | Crowding / concentration + synchronized selling + weak absorption | Selling without crowding; healthy absorption; no propagation |
-
----
-
-## One PM decision workflow
-
-The system combines the two mechanisms so the PM can decide whether to:
-
-1. **Maintain monitoring** — signals incomplete or contained;
-2. **Inspect the short leg or concentrated exposures** — pressure is localized;
-3. **Challenge the signal with additional evidence** — text and structure disagree;
-4. **Discuss whether risk escalation is warranted** — mechanism channels are completing.
-
-```text
-Deterministic monitors  →  mechanism read  →  evidence challenge  →  PM next checks
-(scorecard / unwind)       (DM vs KL)         (support / contradict)   (not a trade ticket)
-```
-
----
-
-## Product demo: three cases
-
-Notebook path: [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb). Primary order: **current semi → 2020 validation → 2024 quiet control**.
-
-### Current semiconductor case (primary)
-
-Frozen point-in-time read for **2026-05-29** (not a live August assessment).
-
-> The evidence supports **localized crowding and meaningful structural pressure**, but does **not** yet confirm a broad recovery-driven momentum crash or forced portfolio unwind.
-
-| Question | Current read |
-| --- | --- |
-| What is happening? | Quant scorecard quiet; crowded-theme / concentration channels active; mechanical fragility without absorption failure |
-| Which mechanism is supported? | Khandani–Lo **partially supported** |
-| Which is only partial / weak? | Daniel–Moskowitz recovery crash **weak** |
-| What is not supported? | Forced deleveraging, factor-wide propagation, liquidity-absorption failure |
-| Where is the risk? | Long-side concentrated / correlated cluster |
-| What next? | Monitor propagation, absorption, and whether positioning evidence moves beyond contextual notes |
-
-Full readout: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md).
-
-### Historical validation: 2020
-
-**2020-03-24** — not a predictive backtest. When a known momentum-reversal episode occurred, recovery-crash indicators behaved coherently: severe drawdown, panic-elevated state, rapid recovery, short-leg loss / beta-gap pressure, `bear_market_recovery_crash` triggered; crowded-theme unwind not confirmed.
-
-> When a historically important momentum reversal occurred, the system’s mechanism-based indicators lined up in an economically coherent way.
-
-Case pack: [`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md).
-
-### Quiet control: 2024
-
-**2024-01-05** — same rules, different conclusion: soft UMD backdrop, **0 scorecard triggers**, recovery-crash incomplete (watch only), crowded unwind not confirmed, mechanical state `NORMAL`. PM posture: **maintain monitoring**.
-
-> The framework is selective. It does not label every weak or noisy momentum period as a crash setup.
-
-Case pack: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md).
-
-### Three-case snapshot
-
-| Question | Current semi | 2020 validation | 2024 control |
-| --- | --- | --- | --- |
-| Recovery mechanism | Partial / watch | Strongly present | Not present (incomplete) |
-| Crowded unwind evidence | Partially supported | Secondary / unconfirmed | Limited |
-| Short-leg pressure | Contained; risk in long crowding | Severe | Contained |
-| Evidence confidence | Mixed | Historically coherent | Low-risk / quiet |
-| PM workflow | Monitor and investigate | Escalate review | Maintain monitoring |
-
-Detail: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
 
 ---
 
@@ -285,27 +175,6 @@ Point-in-time rules of thumb:
 - evidence publication ≤ local cutoff (default 16:00 ET)
 - missing stays `unavailable` — never invented
 
-### How the AI evidence layer adds value
-
-The AI layer is **not** responsible for generating the deterministic risk signal.
-
-It helps the PM understand and challenge the signal by organizing timestamp-valid evidence into:
-
-- evidence supporting the recovery-crash mechanism;
-- evidence supporting the crowded-unwind mechanism;
-- contradicting evidence;
-- evidence that remains missing or unconfirmed.
-
-| PM question | Role of AI / evidence layer |
-| --- | --- |
-| Why might this signal be occurring? | Compresses market, portfolio, and text context into a mechanism narrative |
-| Which mechanism does the evidence support? | Separates DM vs KL vs fundamental / sector reads |
-| What argues against the risk interpretation? | Surfaces contradicting IDs and incomplete channels |
-| What should I check next? | Bounded monitoring and invalidation questions |
-| How confident should I be? | States missing evidence explicitly; never invents a score |
-
-Offline / no-key path uses a deterministic interpreter. Optional LLM narrative is constrained and ID-bound.
-
 ---
 
 ## Quick start
@@ -325,9 +194,7 @@ Open the single demo notebook:
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
 ```
 
-Guided product path: PM problem → two mechanisms → workflow → **current semi case** → AI evidence view → 2020 validation → 2024 quiet control → cross-case comparison → limitations.
-
-Edit only the parameter cell for a live `run_mvp` date, then **Run All**:
+Edit only the parameter cell, then **Run All**:
 
 ```python
 from src.mvp.config import MVPConfig
@@ -348,13 +215,12 @@ result = run_mvp(CONFIG)
 
 | Date | Why look |
 |---|---|
-| `2026-05-29` | **Primary product case** — `crowded_theme_unwind` on a pre-event correlated cluster (aligned) |
-| `2020-03-24` | Historical validation — `bear_market_recovery_crash` triggers (fingerprint: aligned) |
-| `2024-01-05` | Quiet control — recovery on watch, no confirmed theme unwind |
-| `2020-11-02` | Style-rotation prior; short reversal on **watch** (partially_aligned) |
+| `2020-03-24` | `bear_market_recovery_crash` triggers (fingerprint: aligned) |
+| `2020-11-02` | style-rotation prior; short reversal on **watch** (partially_aligned) |
+| `2024-01-05` | default demo — recovery on watch, no confirmed theme unwind |
+| `2026-05-29` | `crowded_theme_unwind` on a pre-event correlated cluster (aligned) |
 
-Full fingerprint table: [`outputs/research_validation/episode_fingerprints.md`](outputs/research_validation/episode_fingerprints.md).  
-Product case packs: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
+Full fingerprint table: [`outputs/research_validation/episode_fingerprints.md`](outputs/research_validation/episode_fingerprints.md).
 
 ### Optional env vars
 
@@ -414,7 +280,7 @@ momentum_crash/
 ├── docs/
 │   ├── methodology.md           # formulas, assumptions, decision boundary
 │   ├── limitations.md           # what we deliberately do not claim
-│   ├── demo_walkthrough.md      # reviewer path
+│   ├── demo_walkthrough.md      # 15–20 min reviewer path
 │   └── architecture_to_value.md # component → PM question → evidence
 ├── notebooks/
 │   └── final_mvp_demo.ipynb     # single presentation notebook
@@ -428,10 +294,6 @@ momentum_crash/
 ├── tests/                       # smoke / integration / contract tests
 ├── data/processed/              # committed reproducibility inputs
 └── outputs/
-    ├── current_semi_unwind/     # primary product case
-    ├── march_2020_reference/    # historical validation
-    ├── quiet_control_2024/      # quiet control
-    ├── cross_case_comparison.md
     ├── example_risk_output/     # PM card snapshot
     └── research_validation/     # fingerprints · AI worksheet · skip note
 ```
@@ -444,7 +306,7 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 
 1. [Methodology](docs/methodology.md) — portfolio construction, scorecard, unwind rules
 2. [Limitations](docs/limitations.md) — full honesty list
-3. [Demo walkthrough](docs/demo_walkthrough.md) — PM review script
+3. [Demo walkthrough](docs/demo_walkthrough.md) — 15–20 minute PM review script
 4. [Architecture to value](docs/architecture_to_value.md) — component → PM question → current evidence
 
 ---
@@ -460,7 +322,6 @@ Superseded phase docs / research modules live in Git history (`pre-mvp-consolida
 - No leverage, financing, forced-selling, or order-flow observation.
 - Crowding is **book-structure proxy** (+ optional FINRA/GDELT side notes), not observed ownership or street positioning.
 - Optional LLM / RAG layers organize narrative only — they cannot change values, thresholds, triggers, or risk state. Incremental LLM analyst value remains unscored until reviewed runs.
-- Historical UMD tail-loss frequencies are comparison context — **not** the PM book’s probability.
 
 Full list: [docs/limitations.md](docs/limitations.md).
 
