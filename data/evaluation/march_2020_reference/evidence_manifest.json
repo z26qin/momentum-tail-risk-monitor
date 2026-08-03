@@ -1,0 +1,76 @@
+{
+  "manifest_version": "march-2020-reference-manifest-v1",
+  "analysis_as_of_date": "2020-03-24",
+  "evidence_cutoff_timestamp": "2020-03-24T16:00:00-04:00",
+  "item_count": 7,
+  "items": [
+    {
+      "evidence_id": "M20-2020-001",
+      "source_document_id": "fed-2020-03-15-monetary20200315b",
+      "publication_timestamp": "2020-03-15T17:00:00-04:00",
+      "evidence_direction": "supporting",
+      "evidence_status": "verified",
+      "content_hash": "322420b378c8e9d0e6c7512fc97255d3e0957715635b8d74bbf45063ccba2499",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315b.htm"
+    },
+    {
+      "evidence_id": "M20-2020-002",
+      "source_document_id": "fed-2020-03-15-monetary20200315c",
+      "publication_timestamp": "2020-03-15T17:00:00-04:00",
+      "evidence_direction": "contextual",
+      "evidence_status": "verified",
+      "content_hash": "5df1a36acba585dffbf93daf0aee532ab6e6ed67cb72c3199fafb8d06bb0430f",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200315c.htm"
+    },
+    {
+      "evidence_id": "M20-2020-003",
+      "source_document_id": "fed-2020-03-17-monetary20200317b",
+      "publication_timestamp": "2020-03-17T18:00:00-04:00",
+      "evidence_direction": "contextual",
+      "evidence_status": "verified",
+      "content_hash": "0edbbdb47dbbbac89168401386f59d654e9c84c7e5171a5f26a60ded66cf0eca",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200317b.htm"
+    },
+    {
+      "evidence_id": "M20-2020-004",
+      "source_document_id": "fed-2020-03-19-monetary20200319c",
+      "publication_timestamp": "2020-03-19T17:00:00-04:00",
+      "evidence_direction": "contradicting",
+      "evidence_status": "verified",
+      "content_hash": "63f056a66684454bbe58a67dd4a8a4319b2afd62763c089645729cfce2441463",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200319c.htm"
+    },
+    {
+      "evidence_id": "M20-2020-005",
+      "source_document_id": "fed-2020-03-23-monetary20200323b",
+      "publication_timestamp": "2020-03-23T08:00:00-04:00",
+      "evidence_direction": "supporting",
+      "evidence_status": "verified",
+      "content_hash": "6cd3668fdeeef2ac164a7a83bfe1a628aa63be834abc85943669c312ec09c0fa",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20200323b.htm"
+    },
+    {
+      "evidence_id": "M20-2020-006",
+      "source_document_id": "treasury-2020-03-21-sm953",
+      "publication_timestamp": "2020-03-21T14:19:56+00:00",
+      "evidence_direction": "contextual",
+      "evidence_status": "verified",
+      "content_hash": "505d95e8bb84173228207ffd91259e96d17d3b0df4a184f59ce9d8a620e3b122",
+      "url_or_locator": "https://home.treasury.gov/news/press-releases/sm953"
+    },
+    {
+      "evidence_id": "M20-2020-007",
+      "source_document_id": "fed-2020-03-16-bcreg20200316a",
+      "publication_timestamp": "2020-03-16T09:30:00-04:00",
+      "evidence_direction": "contextual",
+      "evidence_status": "verified",
+      "content_hash": "5355f6f5b50060b3b63e5550b1b2605b6db9f6f9bac61f36e750d3ce40ed7889",
+      "url_or_locator": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20200316a.htm"
+    }
+  ],
+  "validation": {
+    "unique_evidence_ids": true,
+    "all_on_or_before_cutoff": true,
+    "prompt_version_reused": "evidence-interpretation-prompt-v2"
+  }
+}

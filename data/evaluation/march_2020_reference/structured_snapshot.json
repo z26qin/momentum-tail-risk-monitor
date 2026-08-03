@@ -1,0 +1,180 @@
+{
+  "snapshot_schema": "march-2020-reference-structured-snapshot-v1",
+  "repository": {
+    "branch": "main",
+    "commit_sha": "ecd75312afd0c44e4b2e208e4b5a853007aeed68",
+    "note": "Snapshot generated for March 2020 DM reference case; values are repository outputs unchanged."
+  },
+  "temporal_scope": {
+    "analysis_as_of_date": "2020-03-24",
+    "analysis_cutoff_timestamp": "2020-03-24T16:00:00-04:00",
+    "evidence_cutoff_timestamp": "2020-03-24T16:00:00-04:00",
+    "comparison_date": "2020-02-28",
+    "repository_data_last_updated": "2026-07-25T00:00:00.981755+00:00",
+    "scope_warning": "Historical reference case frozen at 2020-03-24 16:00 America/New_York."
+  },
+  "run": {
+    "entry_point": "src.mvp.pipeline.run_mvp",
+    "comparison_date": "2020-02-28",
+    "threshold_profile": "default",
+    "horizon_days": 20,
+    "use_llm": false,
+    "run_id": "e768a5d38eed7921",
+    "full_run_fingerprint": "34afaf20f8a43cc3",
+    "data_cutoff": "2020-03-24T16:00:00-04:00",
+    "quant_model_version": "phase-1-4-deterministic-v1:0c8b489894c8"
+  },
+  "market_backdrop": {
+    "dm_inspired_market_state": "panic_elevated",
+    "high_volatility_recovery": {
+      "current_value": 1.0,
+      "threshold": 1.0,
+      "status": "triggered",
+      "change_vs_comparison": 1.0
+    },
+    "bear_market_recovery_crash_conditions": {
+      "recent_severe_market_drawdown": {
+        "value": -0.34216280934892995,
+        "threshold": -0.2,
+        "met": true,
+        "required": true
+      },
+      "rapid_recovery_from_trough": {
+        "value": 0.09349999999999947,
+        "threshold": ">=5% within 63 trading days",
+        "met": true,
+        "required": true
+      },
+      "high_realized_market_volatility": {
+        "value": 0.9125616034000121,
+        "threshold": 0.17829225219948414,
+        "met": true,
+        "required": true
+      }
+    },
+    "short_book_reversal_crash_status": "watch"
+  },
+  "pm_book_stress": {
+    "triggered_quant_signals": [
+      "high_volatility_recovery",
+      "short_minus_long_beta_gap",
+      "short_loss_in_recovery"
+    ],
+    "signals": {
+      "high_volatility_recovery": {
+        "current_value": 1.0,
+        "threshold": 1.0,
+        "status": "triggered",
+        "change_vs_comparison": 1.0
+      },
+      "short_minus_long_beta_gap": {
+        "current_value": 0.05541899349973911,
+        "threshold": 0.0,
+        "status": "triggered",
+        "change_vs_comparison": 0.10174035383463242
+      },
+      "short_loss_in_recovery": {
+        "current_value": 0.40287442357217884,
+        "threshold": 0.15370220083518035,
+        "status": "triggered",
+        "change_vs_comparison": 0.30171633119502866
+      },
+      "portfolio_drawdown": {
+        "current_value": -0.04819865862548389,
+        "threshold": -0.1445314333859717,
+        "status": "not_triggered",
+        "change_vs_comparison": -0.011047252726512524
+      }
+    },
+    "unwind_scorecard": [
+      {
+        "metric": "portfolio_concentration",
+        "current_value": 18.003706186399388,
+        "threshold": 19.844082592036205,
+        "triggered": true,
+        "status": "available"
+      },
+      {
+        "metric": "momentum_breadth_deterioration",
+        "current_value": 0.7756813417190775,
+        "threshold": 0.672,
+        "triggered": false,
+        "status": "available"
+      },
+      {
+        "metric": "synchronous_winner_liquidation",
+        "current_value": -0.09281267531597678,
+        "threshold": 0.014467219943811298,
+        "triggered": false,
+        "status": "available"
+      },
+      {
+        "metric": "cross_sectional_reversal",
+        "current_value": -0.06149956612778851,
+        "threshold": 0.02288781629002401,
+        "triggered": false,
+        "status": "available"
+      },
+      {
+        "metric": "liquidity_amplification_proxy",
+        "current_value": 0.4,
+        "threshold": 0.5,
+        "triggered": false,
+        "status": "available"
+      },
+      {
+        "metric": "fundamental_anchor",
+        "current_value": null,
+        "threshold": "coverage-gated sign-vote rule",
+        "triggered": null,
+        "status": "unavailable"
+      }
+    ]
+  },
+  "structural_unwind": {
+    "schema_version": "momentum-unwind-assessment-v2",
+    "scenario_classification": "panic_recovery_momentum_crash",
+    "completeness_confidence": "moderate",
+    "active_scenarios": [
+      "bear_market_recovery_crash"
+    ],
+    "mechanism_statuses": {
+      "bear_market_recovery_crash": "triggered",
+      "short_book_reversal_crash": "watch",
+      "crowded_theme_unwind": "not_confirmed"
+    },
+    "most_exposed_book_channel": "short_basket"
+  },
+  "mechanical_unwind": {
+    "schema_version": "mechanical-unwind-v1",
+    "unwind_state": "FRAGILITY_BUILDING",
+    "control_spec": "mom_vol",
+    "factor_footprint_r2": 0.18905478758072503,
+    "factor_footprint_percentile": 0.9442231075697212,
+    "factor_footprint_status": "elevated",
+    "extreme_turnover_ratio": 1.0330452436099662,
+    "extreme_turnover_percentile": 0.6334661354581673,
+    "aligned_turnover_status": "not_elevated",
+    "liquidity_absorption_failure": false,
+    "absorption_percentile": 0.5936254980079682,
+    "warnings": [
+      "Mechanical-unwind diagnostics are public-data proxies, not observed hedge-fund liquidations or dealer inventory.",
+      "size control degraded to mom_vol; SEC\u00d7price coverage below gate"
+    ]
+  },
+  "pm_response": {
+    "posture": "escalate_for_pm_review",
+    "main_vulnerability": "short_basket",
+    "model_or_prompt_version": "deterministic-pm-response-v1",
+    "use_llm": false
+  },
+  "interpretation_contract": {
+    "prompt_version": "evidence-interpretation-prompt-v2",
+    "deterministic_version": "deterministic-evidence-interpretation-v2"
+  },
+  "known_gaps": [
+    "Existing 2020 gold corpus is dominated by official Fed/Treasury releases; it lacks contemporaneous market-desk reporting of loser-leg rebound.",
+    "No direct timestamp-valid evidence of crowded quant positioning or forced hedge-fund deleveraging was available in the reused corpus.",
+    "Contextual evidence cannot enter formal supporting/contradicting ID fields under the current MVP citation rules."
+  ]
+}
