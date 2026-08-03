@@ -610,6 +610,29 @@ def plot_trailing_risk_chart(
     return fig
 
 
+def _render_pm_response_html(result: MVPRunResult) -> str:
+    """Render the bounded PM decision-support readout."""
+
+    pm = result.pm_response
+    llm_status = "enabled" if pm.use_llm else "disabled / deterministic fallback"
+    return f"""
+  <h3>PM Response <span class="eyebrow">DECISION SUPPORT · LLM {escape(llm_status.upper())}</span></h3>
+  <div class="panel">
+    <h4>Current posture</h4>
+    <p>{escape(pm.current_posture)}</p>
+    <h4>Main vulnerability</h4>
+    <p>{escape(pm.main_vulnerability)}</p>
+    <h4>What would change the reading</h4>
+    <ul>{_list_html(pm.what_would_change_the_reading, 'None reported.')}</ul>
+    <h4>Conditional portfolio response</h4>
+    <ul>{_list_html(pm.conditional_response, 'None reported.')}</ul>
+    <h4>Why not act yet</h4>
+    <p>{escape(pm.why_not_act_yet)}</p>
+    <p><small>Bounded categories: {escape(', '.join(pm.response_categories))}. Conditional language only — not an execution instruction.</small></p>
+  </div>
+"""
+
+
 def render_pm_card_html(result: MVPRunResult) -> str:
     """Render the final PM Evidence Card as self-contained HTML."""
 
@@ -716,6 +739,8 @@ def render_pm_card_html(result: MVPRunResult) -> str:
   <h3>PM Interpretation <span class="eyebrow">LLM {escape(llm_status.upper())}</span></h3>
   <div class="narrative"><p>{escape(interpretation.pm_interpretation)}</p></div>
 
+  {_render_pm_response_html(result)}
+
   <div class="grid2">
     <div><h3>What to Monitor Next</h3><ul>{_list_html(interpretation.monitoring_questions[:5], 'No monitoring questions available.')}</ul></div>
     <div><h3>Invalidation Conditions</h3><ul>{_list_html(interpretation.invalidation_conditions[:4], 'No invalidation conditions available.')}</ul></div>
@@ -810,12 +835,36 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             f"- [{item.stance or 'unclassified'}] {item.headline_or_summary} "
             f"({item.source}, {item.timestamp})"
         )
+    pm = result.pm_response
     lines.extend(
         [
             "",
             "## PM interpretation (AI-assisted, evidence-constrained)",
             "",
             interpretation.pm_interpretation,
+            "",
+            "## PM response (decision support)",
+            "",
+            f"**Current posture:** {pm.current_posture}",
+            "",
+            f"**Main vulnerability:** {pm.main_vulnerability}",
+            "",
+            "**What would change the reading:**",
+            "",
+        ]
+    )
+    for item in pm.what_would_change_the_reading:
+        lines.append(f"- {item}")
+    lines.extend(["", "**Conditional portfolio response:**", ""])
+    for item in pm.conditional_response:
+        lines.append(f"- {item}")
+    lines.extend(
+        [
+            "",
+            f"**Why not act yet:** {pm.why_not_act_yet}",
+            "",
+            f"- Bounded categories: {', '.join(pm.response_categories)}",
+            f"- PM response LLM: {pm.use_llm} ({pm.model_or_prompt_version})",
             "",
             "## Suggested review actions",
             "",
@@ -832,6 +881,7 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             "- UMD is a comparison benchmark; the S&P 10/10 book is the customizable PM portfolio.",
             "- Evidence is exact-date cached replay, not live retrieval.",
             "- Mechanism scenarios are descriptive rules, not validated crash forecasts.",
+            "- PM response categories are bounded decision-support labels, not trade instructions.",
             "",
             "## Provenance",
             "",

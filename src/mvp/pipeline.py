@@ -28,6 +28,11 @@ from src.mvp.evidence_interpretation import (
     EvidenceInterpreter,
     interpret_evidence_card,
 )
+from src.mvp.pm_response import (
+    PMResponse,
+    PMResponseInterpreter,
+    build_pm_response,
+)
 
 MVP_RUN_SCHEMA_VERSION = "mvp-run-v2"
 
@@ -42,6 +47,7 @@ class MVPRunResult:
     interpretation: EvidenceInterpretation
     unwind: UnwindAssessment
     mechanical_unwind: MechanicalUnwindAssessment
+    pm_response: PMResponse
     full_run_fingerprint: str
     display_labels: dict[str, str]
 
@@ -67,6 +73,7 @@ class MVPRunResult:
             "interpretation": self.interpretation.to_dict(),
             "unwind": self.unwind.to_dict(),
             "mechanical_unwind": self.mechanical_unwind.to_dict(),
+            "pm_response": self.pm_response.to_dict(),
             "full_run_fingerprint": self.full_run_fingerprint,
             "display_labels": dict(self.display_labels),
         }
@@ -119,6 +126,7 @@ def run_mvp(
     config: MVPConfig,
     *,
     interpreter: EvidenceInterpreter | None = None,
+    pm_interpreter: PMResponseInterpreter | None = None,
 ) -> MVPRunResult:
     """Run the full deterministic MVP workflow for one configuration."""
 
@@ -145,6 +153,12 @@ def run_mvp(
         as_of_date=config.as_of_timestamp,
         processed_dir=config.processed_dir,
         config=config.mechanical_unwind_config,
+    )
+    pm_response = build_pm_response(
+        deterministic_input,
+        unwind,
+        use_llm=config.use_llm,
+        interpreter=pm_interpreter,
     )
     fingerprint = _full_run_fingerprint(
         config=config,
@@ -181,6 +195,7 @@ def run_mvp(
         interpretation=interpretation,
         unwind=unwind,
         mechanical_unwind=mechanical_unwind,
+        pm_response=pm_response,
         full_run_fingerprint=fingerprint,
         display_labels=display_labels,
     )
