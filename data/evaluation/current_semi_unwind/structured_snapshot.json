@@ -1,0 +1,213 @@
+{
+  "snapshot_schema": "current-semi-unwind-structured-snapshot-v1",
+  "repository": {
+    "branch": "main",
+    "commit_sha": "7441ffc54ef6522bc64c7d07201e5f0f47cbff03",
+    "working_tree_at_stage_a": "clean"
+  },
+  "temporal_scope": {
+    "current_market_date": "2026-08-03",
+    "analysis_as_of_date": "2026-05-29",
+    "analysis_cutoff_timestamp": "2026-05-29T16:00:00-04:00",
+    "evidence_cutoff_timestamp": "2026-05-29T16:00:00-04:00",
+    "repository_data_last_updated": "2026-07-28T15:29:13+00:00",
+    "staleness_calendar_days": 66,
+    "scope_warning": "This is the latest internally consistent active-pipeline snapshot, not a current 2026-08-03 market snapshot."
+  },
+  "run": {
+    "entry_point": "src.mvp.pipeline.run_mvp",
+    "comparison_date": "2026-04-30",
+    "threshold_profile": "default",
+    "horizon_days": 20,
+    "use_llm": false,
+    "run_id": "e9af01b53043a1a2",
+    "full_run_fingerprint": "9e7a705de352d184",
+    "data_version": "sha256:3ed1ffe1a49a778d",
+    "quant_model_version": "phase-1-4-deterministic-v1:0c8b489894c8"
+  },
+  "market_backdrop": {
+    "dm_inspired_market_state": "normal",
+    "high_volatility_recovery": {
+      "current_value": 0.0,
+      "threshold": 1.0,
+      "status": "not_triggered"
+    },
+    "recent_severe_market_drawdown": {
+      "value": -0.09457141603482766,
+      "threshold": -0.2,
+      "met": false
+    },
+    "rapid_recovery_from_trough": {
+      "value": 0.1943410361538216,
+      "threshold": ">=5% within 63 trading days",
+      "met": true
+    },
+    "high_realized_market_volatility": {
+      "value": 0.10603009006881499,
+      "threshold": 0.18146677048568394,
+      "met": false
+    }
+  },
+  "pm_book_stress": {
+    "triggered_quant_signals": [],
+    "signals": {
+      "short_minus_long_beta_gap": {
+        "current_value": -2.067731776337184,
+        "threshold": 0.24897918694136156,
+        "status": "not_triggered",
+        "change_vs_comparison": -0.172624853115114
+      },
+      "portfolio_drawdown": {
+        "current_value": -0.07522682931760427,
+        "threshold": -0.17408140972421293,
+        "status": "not_triggered",
+        "change_vs_comparison": -0.07522682931760427
+      },
+      "short_loss_in_recovery": {
+        "current_value": 0.15507930926767552,
+        "threshold": 0.25042021587620455,
+        "status": "not_triggered",
+        "change_vs_comparison": 0.00459015077663541
+      }
+    },
+    "unwind_scorecard": [
+      {
+        "metric": "portfolio_concentration",
+        "current_value": 19.518834600609683,
+        "threshold": 19.788818762157902,
+        "triggered": true,
+        "status": "available",
+        "context": {
+          "top3_abs_exposure_share": 0.19595102761503247,
+          "top5_abs_exposure_share": 0.30276803879230846,
+          "top_sector_exposure_share": 0.4808270076210872,
+          "sector_hhi": 0.309761781482612
+        }
+      },
+      {
+        "metric": "momentum_breadth_deterioration",
+        "current_value": 0.658,
+        "threshold": 0.5557851239669421,
+        "triggered": false,
+        "status": "available",
+        "context": {
+          "breadth_change_vs_previous": -0.07399999999999995,
+          "long_21d_participation_share": 1.0
+        }
+      },
+      {
+        "metric": "synchronous_winner_liquidation",
+        "current_value": -0.005880475274267424,
+        "threshold": 0.01921979353915349,
+        "triggered": false,
+        "status": "available",
+        "context": {
+          "long_return_5d": 0.053774788150848574,
+          "long_decline_share_5d": 0.4,
+          "sector_adjustment": "unavailable"
+        }
+      },
+      {
+        "metric": "cross_sectional_reversal",
+        "current_value": -0.03471090006488575,
+        "threshold": 0.03311335289481359,
+        "triggered": false,
+        "status": "available",
+        "context": {
+          "long_return_5d": 0.053774788150848574,
+          "short_underlying_return_5d": 0.01906388808596282,
+          "short_rise_share_5d": 0.6
+        }
+      },
+      {
+        "metric": "liquidity_amplification_proxy",
+        "current_value": 0.3,
+        "threshold": 0.5,
+        "triggered": false,
+        "status": "available",
+        "context": {
+          "liquidity_eligible_long_count": 10.0,
+          "long_median_amihud_5d": 5.599274975629229e-12
+        }
+      },
+      {
+        "metric": "fundamental_anchor",
+        "current_value": null,
+        "threshold": "coverage-gated sign-vote rule",
+        "triggered": null,
+        "status": "unavailable"
+      }
+    ]
+  },
+  "structural_unwind": {
+    "schema_version": "momentum-unwind-assessment-v2",
+    "scenario_classification": "crowded_momentum_unwind",
+    "completeness_confidence": "moderate",
+    "active_scenarios": [
+      "crowded_theme_unwind"
+    ],
+    "mechanism_statuses": {
+      "bear_market_recovery_crash": "watch",
+      "short_book_reversal_crash": "not_confirmed",
+      "crowded_theme_unwind": "triggered"
+    },
+    "most_exposed_book_channel": "long_side_crowding",
+    "theme_proxy": {
+      "proxy_label": "correlated_theme_proxy",
+      "formation_date": "2026-04-30",
+      "cluster_definition_cutoff": "2026-05-28",
+      "cluster_symbols": [
+        "CIEN",
+        "COHR",
+        "LITE"
+      ],
+      "cluster_exposure_share": 0.30000000000000004,
+      "cluster_average_residual_correlation": 0.7256340152091921,
+      "cluster_residual_loss_5d": 0.07383149066395749,
+      "residual_loss_threshold": 0.02927213315200897,
+      "cluster_decline_share_5d": 1.0,
+      "cluster_loss_contribution_share_5d": 0.977588848169409,
+      "cluster_abnormal_volume_share_5d": 0.6666666666666666,
+      "trigger": true,
+      "economic_theme_attribution": "unavailable",
+      "industry_classification": "unavailable"
+    }
+  },
+  "mechanical_unwind": {
+    "schema_version": "mechanical-unwind-v1",
+    "unwind_state": "FRAGILITY_BUILDING",
+    "control_spec": "mom_vol",
+    "factor_footprint_r2": 0.12513372366209508,
+    "factor_footprint_percentile": 0.7689243027888446,
+    "momentum_beta": 0.003963761596077802,
+    "extreme_turnover_ratio": 1.1125299392810475,
+    "extreme_turnover_percentile": 0.8565737051792829,
+    "short_horizon_reversal": 0.011506742256878554,
+    "continuation_pressure": -0.011506742256878554,
+    "liquidity_absorption_failure": false,
+    "absorption_percentile": 0.27091633466135456,
+    "stress_scope": "concentrated_correlated_cluster_with_elevated_turnover_but_no_absorption_failure",
+    "warnings": [
+      "Mechanical-unwind diagnostics are public-data proxies, not observed hedge-fund liquidations or dealer inventory.",
+      "size control degraded to mom_vol; SEC×price coverage below gate"
+    ]
+  },
+  "retrieved_evidence_state": {
+    "evidence_quality": "unavailable",
+    "retrieved_evidence_count": 0,
+    "reason": "No exact-date validated classification cache exists for 2026-05-29."
+  },
+  "pm_response": {
+    "posture": "escalate_for_pm_review",
+    "main_vulnerability": "long_side_crowding",
+    "model_or_prompt_version": "deterministic-pm-response-v1",
+    "use_llm": false
+  },
+  "known_gaps": [
+    "The snapshot is stale relative to 2026-08-03.",
+    "The correlated cluster is not an observed ownership or semiconductor-theme classification.",
+    "Sector-adjusted residual returns and industry classifications are unavailable.",
+    "The fundamental anchor is unavailable.",
+    "The repository cannot distinguish a current semiconductor repricing from factor propagation after the cutoff."
+  ]
+}

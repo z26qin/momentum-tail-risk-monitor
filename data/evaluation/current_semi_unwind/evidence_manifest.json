@@ -1,0 +1,160 @@
+{
+  "manifest_version": "current-semi-unwind-manifest-v1",
+  "analysis_as_of_date": "2026-05-29",
+  "evidence_cutoff_timestamp": "2026-05-29T16:00:00-04:00",
+  "retrieval_timestamp": "2026-08-03T02:47:50Z",
+  "record_count": 15,
+  "unique_id_check": true,
+  "duplicate_url_check": true,
+  "future_dated_records": 0,
+  "passage_hash_check": true,
+  "copyright_policy": "Only minimal close paraphrases are stored; full articles are not archived.",
+  "source_mix": {
+    "official_company_or_regulatory": 11,
+    "ratings_or_asset_manager": 2,
+    "financial_reporting_of_prime_brokerage_data": 2
+  },
+  "records": [
+    {
+      "evidence_id": "CSU-2026-001",
+      "content_hash": "1b29fdada98d871d80a6493621a4e053e1f195dff9beb36912d43cfe43b553c1",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-002",
+      "content_hash": "886a197eba1b58271014ede753a3fcf34ec1cb55a4bf68c7e8ad4efb6b40b98d",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-003",
+      "content_hash": "3e397ac5305ef05002215b18b2a022c4e9f95af4cb19bc19d423389699c33724",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-004",
+      "content_hash": "0a899420e460170a13a7f0c4fac05af89c9b55f90fb6f5cd98e8eeadc71a24ca",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-005",
+      "content_hash": "e32b51d0e7822b9663c8c10725993b13199349fe13fc626137ee16598a022b3a",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "ratings_research",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-006",
+      "content_hash": "c284d89069ea72a07d54ab6f370715138984abadd1e8f22017a2a1c3fcdaedb1",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-007",
+      "content_hash": "a1e5b9f88343c698b68c21987d3120e75a067140251dc5f8c1eb4d100fd6008d",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-008",
+      "content_hash": "2bd7e3490094beccfefbd633ed679bfcb672071a6946e0f0e50bb73085e4cf0e",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-009",
+      "content_hash": "6bf714aad075a27f89f07a48a4712c5addd35a91fc9777a63702d92926e25b74",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-010",
+      "content_hash": "7c8cebc53cf0e43b4543645433db5eac69c075252c2267f7e489b5665515fd04",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-011",
+      "content_hash": "06a064c6f90074625fd100e5ad08b6e4ddf089a42118b1c4c653b31cec931c62",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-012",
+      "content_hash": "5979b89ad87ca3bbc2aaedc2a56f0ba8eb0b50d73877d4ebee9e19aef5a18664",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "official_company",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    },
+    {
+      "evidence_id": "CSU-2026-013",
+      "content_hash": "e26a02edf487427c2804493f3f292c90a59df09d3ca2304b40810c5cc8140104",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "secondary_prime_brokerage_reporting",
+      "passage_grounding": "close_paraphrase_checked_against_source",
+      "limitation": "Underlying Goldman Sachs Prime Book report is not publicly archived in the repository."
+    },
+    {
+      "evidence_id": "CSU-2026-014",
+      "content_hash": "da121874b4259af3d7da237fd8327dc94578b2596704f0eefcbf31cf8910d2ea",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "secondary_prime_brokerage_reporting",
+      "passage_grounding": "close_paraphrase_checked_against_source",
+      "limitation": "Underlying Goldman Sachs Prime Brokerage data are reported second-hand."
+    },
+    {
+      "evidence_id": "CSU-2026-015",
+      "content_hash": "ad34cb9dfc515cfb941f861f9bb28c5cf7840671aff96faa565b7f2fb16b1b30",
+      "evidence_status": "verified",
+      "timestamp_valid": true,
+      "source_class": "asset_manager_commentary",
+      "passage_grounding": "close_paraphrase_checked_against_source"
+    }
+  ],
+  "material_exclusions": [
+    {
+      "title": "May 2026 Review and Outlook",
+      "source": "Nasdaq",
+      "reason": "Published after the May 29 cutoff; it cannot validate the point-in-time assessment."
+    },
+    {
+      "title": "Chip selloff erases over $1 trillion in stock market value",
+      "source": "Reuters syndicated by Investing.com",
+      "publication_timestamp": "2026-06-05",
+      "reason": "Future-dated relative to the May 29 cutoff; this is the later selloff the stale snapshot cannot assess."
+    },
+    {
+      "title": "Is AI infrastructure spending sustainable?",
+      "source": "T. Rowe Price",
+      "publication_timestamp": "2026-05",
+      "reason": "Month-only publication precision cannot establish availability by May 29."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "protocol_version": "current-semi-unwind-evidence-v1",
+  "analysis_as_of_date": "2026-05-29",
+  "evidence_cutoff_timestamp": "2026-05-29T16:00:00-04:00",
+  "purpose": "Human-reviewed evidence pack that keeps Daniel–Moskowitz recovery crash, Khandani–Lo crowded unwind, and fundamental repricing separate.",
+  "scope_constraints": [
+    "Evidence cannot change deterministic values, thresholds, labels, risk states, or PM response categories.",
+    "No item published after the cutoff may support the May 29 assessment.",
+    "A correlated-theme proxy is not an observed common-ownership or semiconductor classification.",
+    "No causality, probability, or trade recommendation is produced."
+  ],
+  "mechanism_taxonomy": [
+    "dm_prior_market_panic",
+    "dm_market_recovery",
+    "dm_loser_leg_rebound",
+    "kl_crowded_positioning",
+    "kl_synchronized_deleveraging",
+    "kl_liquidity_absorption_stress",
+    "kl_factor_propagation",
+    "fundamental_capex_repricing",
+    "fundamental_valuation_repricing",
+    "fundamental_competition_or_supply",
+    "fundamental_earnings_revision",
+    "generic_market_context",
+    "contradicting_evidence",
+    "insufficient_evidence"
+  ],
+  "repository_mapping": {
+    "bear_market_recovery_crash.recent_severe_market_drawdown": "dm_prior_market_panic",
+    "bear_market_recovery_crash.rapid_recovery_from_trough": "dm_market_recovery",
+    "short_book_reversal_crash.short_minus_long_reversal_extreme": "dm_loser_leg_rebound",
+    "crowded_theme_unwind.pre_event_correlated_cluster_concentration": "kl_crowded_positioning",
+    "crowded_theme_unwind.cluster_decline_breadth": "kl_synchronized_deleveraging",
+    "liquidity_amplification_proxy and mechanical_unwind.liquidity_absorption_failure": "kl_liquidity_absorption_stress",
+    "mechanical_unwind.factor_footprint_percentile": "kl_factor_propagation",
+    "fundamental_anchor": "fundamental_earnings_revision",
+    "no_direct_repository_equivalent": [
+      "fundamental_capex_repricing",
+      "fundamental_valuation_repricing",
+      "fundamental_competition_or_supply"
+    ]
+  },
+  "relevance_labels": {
+    "2": "directly useful for distinguishing mechanisms",
+    "1": "useful context but not mechanism-discriminating",
+    "0": "irrelevant, duplicate, generic, or unsupported"
+  },
+  "directions": [
+    "supporting",
+    "contradicting",
+    "contextual",
+    "irrelevant"
+  ],
+  "statuses": [
+    "verified",
+    "source_metadata_only",
+    "timestamp_uncertain",
+    "duplicate",
+    "excluded"
+  ],
+  "timestamp_rules": {
+    "exact": "Use only when the source states an offset-aware time.",
+    "date": "Use YYYY-MM-DD when only a publication date is reliably available; do not invent a time.",
+    "month": "Insufficient for inclusion when the month overlaps the cutoff; mark timestamp_uncertain.",
+    "future": "Any publication after the cutoff is excluded even if it describes the assessment period."
+  },
+  "passage_rules": [
+    "Store only the minimum passage needed for review.",
+    "Paraphrase where practical and never store a full copyrighted article.",
+    "The content_hash is SHA-256 over the UTF-8 passage exactly as stored.",
+    "Every supporting passage must be traceable to url_or_locator."
+  ],
+  "human_review_rule": "Candidate mechanism labels and directions are research hypotheses only. Annotation CSV semantic fields remain blank until reviewed."
+}
