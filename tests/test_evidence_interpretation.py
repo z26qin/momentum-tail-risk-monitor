@@ -245,7 +245,12 @@ def test_quantitative_fields_in_provider_output_fail_closed(
 
 def test_provider_list_counts_fail_closed(deterministic_input) -> None:
     payload = _valid_payload(deterministic_input)
-    payload["monitoring_questions"] = ("Is the state changing?",)
+    payload["monitoring_questions"] = (
+        "Is the state changing?",
+        "Does evidence remain mixed?",
+        "Do monitored signals deteriorate together?",
+        "Does an extra fourth question appear?",
+    )
     result = interpret_evidence_card(
         deterministic_input,
         interpreter=_FixedInterpreter(payload),
@@ -253,7 +258,7 @@ def test_provider_list_counts_fail_closed(deterministic_input) -> None:
     )
 
     assert result.use_llm is False
-    assert any("3 to 5 monitoring questions" in warning for warning in result.warnings)
+    assert any("1 to 3 monitoring questions" in warning for warning in result.warnings)
 
 
 def test_llm_generated_numerical_claims_fail_closed(

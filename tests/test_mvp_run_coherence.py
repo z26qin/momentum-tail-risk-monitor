@@ -14,7 +14,7 @@ def test_unified_run_shares_one_as_of_and_fingerprint() -> None:
     assert result.unwind.as_of_date == config.as_of_date
     # Fingerprint includes mechanical_unwind under mvp-run-v2; value changes when
     # that layer's summary fields or config change.
-    assert result.full_run_fingerprint == "7883519dff7a3a7b"
+    assert result.full_run_fingerprint == "240fa2bb30fabdf4"
     assert result.mechanical_unwind.as_of_date == config.as_of_date
     assert result.mechanical_unwind.schema_version == "mechanical-unwind-v1"
     assert result.deterministic_input.run_id == "53c34aa57bb437fc"

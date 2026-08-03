@@ -26,6 +26,8 @@ from src.mvp.evidence_card import (
 from src.mvp.evidence_interpretation import (
     EvidenceInterpretation,
     EvidenceInterpreter,
+    compact_mechanical_unwind_context,
+    compact_structural_unwind_context,
     interpret_evidence_card,
 )
 from src.mvp.pm_response import (
@@ -138,11 +140,6 @@ def run_mvp(
         processed_dir=config.processed_dir,
         output_dir=config.output_dir,
     )
-    interpretation = interpret_evidence_card(
-        deterministic_input,
-        use_llm=config.use_llm,
-        interpreter=interpreter,
-    )
     unwind = build_unwind_assessment(
         as_of_date=config.as_of_timestamp,
         processed_dir=config.processed_dir,
@@ -153,6 +150,13 @@ def run_mvp(
         as_of_date=config.as_of_timestamp,
         processed_dir=config.processed_dir,
         config=config.mechanical_unwind_config,
+    )
+    interpretation = interpret_evidence_card(
+        deterministic_input,
+        use_llm=config.use_llm,
+        interpreter=interpreter,
+        structural_unwind=compact_structural_unwind_context(unwind),
+        mechanical_unwind=compact_mechanical_unwind_context(mechanical_unwind),
     )
     pm_response = build_pm_response(
         deterministic_input,
