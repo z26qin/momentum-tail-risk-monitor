@@ -9,9 +9,11 @@ import pytest
 
 from src.mvp.evidence_card import build_deterministic_evidence_input
 from src.mvp.evidence_interpretation import (
+    INTERPRETATION_INSTRUCTIONS,
     INTERPRETATION_PROMPT_VERSION,
     MODEL_CONTEXT_FIELDS,
     EvidenceInterpretation,
+    compact_public_positioning_proxies,
     interpret_evidence_card,
 )
 
@@ -316,3 +318,131 @@ def test_causal_certainty_and_trade_claims_fail_closed(
         "causal, certainty, or recommendation" in warning
         for warning in result.warnings
     )
+
+
+class _ProxyAwareInterpreter:
+    """Stub that changes narrative only when elevated FINRA proxies are present."""
+
+    def __init__(self, base_payload: dict):
+        self.base_payload = base_payload
+        self.context = None
+        self.instructions = None
+
+    def interpret(self, *, context, instructions):
+        self.context = context
+        self.instructions = instructions
+        payload = dict(self.base_payload)
+        proxies = context.get("public_positioning_proxies") or []
+        elevated = any(
+            str(item.get("state") or "").startswith("elevated")
+            or (
+                isinstance(item.get("value"), (int, float))
+                and float(item["value"]) >= 1.0
+            )
+            for item in proxies
+        )
+        if elevated:
+            payload["pm_interpretation"] = (
+                "Public short-activity proxies are elevated in the loser "
+                "basket, increasing the relevance of short-side crowding as a "
+                "hypothesis. The data do not identify the underlying investors "
+                "or establish active covering."
+            )
+            payload["missing_or_uncertain_evidence"] = (
+                "Forced deleveraging remains unconfirmed.",
+                "Investor identity and active short covering remain unproven.",
+            )
+        else:
+            payload["pm_interpretation"] = (
+                "No useful public positioning proxy was supplied, so short-side "
+                "crowding remains unsupported as a positioning claim."
+            )
+        return payload
+
+
+def test_elevated_finra_proxy_changes_context_not_scorecard(
+    deterministic_input,
+) -> None:
+    structural = {
+        "scenario_classification": "crowded_theme_unwind",
+        "active_scenarios": ["crowded_theme_unwind"],
+        "mechanism_statuses": {
+            "bear_market_recovery_crash": "watch",
+            "crowded_theme_unwind": "triggered",
+            "short_book_reversal_crash": "not_confirmed",
+        },
+    }
+    mechanical = {
+        "unwind_state": "NORMAL",
+        "liquidity_absorption_failure": False,
+        "factor_footprint_status": "not_elevated",
+        "aligned_turnover_status": "not_elevated",
+    }
+    elevated_proxies = compact_public_positioning_proxies(
+        {
+            "as_of_date": deterministic_input.as_of_date,
+            "observation_date": deterministic_input.as_of_date,
+            "read": "confirm",
+            "short_interest_ratio_z": 1.4,
+            "short_interest_utilisation_z": 1.1,
+            "short_volume_share_z": 0.3,
+            "stale_trading_days": 2,
+            "limitations": (
+                "FINRA loser-leg short-interest proxies are public-data only.",
+            ),
+        }
+    )
+    before = deterministic_input.to_dict()
+    triggered_before = [
+        signal.name for signal in deterministic_input.triggered_quant_signals
+    ]
+    provider = _ProxyAwareInterpreter(_valid_payload(deterministic_input))
+
+    with_proxy = interpret_evidence_card(
+        deterministic_input,
+        use_llm=True,
+        interpreter=provider,
+        environment={"OPENAI_API_KEY": "test-only"},
+        structural_unwind=structural,
+        mechanical_unwind=mechanical,
+        public_positioning_proxies=elevated_proxies,
+    )
+    without_proxy = interpret_evidence_card(
+        deterministic_input,
+        use_llm=True,
+        interpreter=_ProxyAwareInterpreter(_valid_payload(deterministic_input)),
+        environment={"OPENAI_API_KEY": "test-only"},
+        structural_unwind=structural,
+        mechanical_unwind=mechanical,
+        public_positioning_proxies=[],
+    )
+
+    assert deterministic_input.to_dict() == before
+    assert [
+        signal.name for signal in deterministic_input.triggered_quant_signals
+    ] == triggered_before
+    assert set(provider.context) == set(MODEL_CONTEXT_FIELDS)
+    assert "public_positioning_proxies" in provider.context
+    assert provider.context["public_positioning_proxies"]
+    assert all(
+        item["evidence_class"] == "structured_public_proxy"
+        and item["source"] == "FINRA"
+        for item in provider.context["public_positioning_proxies"]
+    )
+    assert provider.context["retrieved_evidence"] == [
+        item.to_dict() for item in deterministic_input.retrieved_evidence
+    ]
+    assert provider.context["structural_unwind"] == structural
+    assert provider.context["mechanical_unwind"]["unwind_state"] == "NORMAL"
+    assert "public_positioning_proxies" in provider.instructions
+    assert "structured_public_proxy" in INTERPRETATION_INSTRUCTIONS
+    assert INTERPRETATION_PROMPT_VERSION.endswith("v4")
+    assert with_proxy.use_llm is True
+    assert "short-side crowding as a hypothesis" in with_proxy.pm_interpretation
+    assert "do not identify the underlying investors" in with_proxy.pm_interpretation
+    assert any(
+        "Forced deleveraging remains unconfirmed" in item
+        for item in with_proxy.missing_or_uncertain_evidence
+    )
+    assert without_proxy.pm_interpretation != with_proxy.pm_interpretation
+    assert "remains unsupported" in without_proxy.pm_interpretation

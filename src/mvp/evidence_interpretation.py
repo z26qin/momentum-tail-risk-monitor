@@ -2,11 +2,11 @@
 
 The quantitative input is immutable and remains the source of truth. An
 injected provider receives only an allow-listed copy of deterministic signals,
-retrieved evidence, historical context, and compact structural/mechanical
-unwind summaries, and may return only narrative fields plus evidence IDs. The
-module has no model SDK dependency and always falls back to calibrated
-deterministic text when credentials, a provider, or a valid structured
-response are unavailable.
+retrieved evidence, historical context, compact structural/mechanical unwind
+summaries, and optional typed public positioning proxies. It may return only
+narrative fields plus evidence IDs. The module has no model SDK dependency and
+always falls back to calibrated deterministic text when credentials, a provider,
+or a valid structured response are unavailable.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import dataclasses
 import json
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
@@ -23,7 +23,7 @@ from src.mvp.evidence_card import DeterministicEvidenceInput
 
 
 INTERPRETATION_SCHEMA_VERSION = "evidence-interpretation-v1"
-INTERPRETATION_PROMPT_VERSION = "evidence-interpretation-prompt-v2"
+INTERPRETATION_PROMPT_VERSION = "evidence-interpretation-prompt-v4"
 DETERMINISTIC_INTERPRETATION_VERSION = "deterministic-evidence-interpretation-v2"
 INTERPRETATION_INSTRUCTIONS = """\
 Return only the eight EvidenceInterpretation narrative fields.
@@ -34,16 +34,50 @@ Compare these three lenses separately and allow mixed or unresolved results:
 3) Fundamental or sector-specific repricing
 
 Use only the supplied quantitative signals, retrieved evidence, historical
-context, and the compact structural_unwind and mechanical_unwind summaries.
-Distinguish quantitative scorecard state from structural and mechanical state.
-State where structured and textual evidence agree or conflict. Identify missing
-evidence for factor propagation or liquidity failure. Cite evidence by supplied
-evidence_id only; contextual evidence may be discussed but cannot be treated as
-stance-confirmed support. Do not invent channels, calculate or restate numbers,
-alter values or trigger states, add external facts, assert causality or crash
-certainty, estimate probabilities, or give portfolio or trade recommendations.
-Return at most three concrete monitoring questions and at most three observable
-invalidation conditions. State uncertainty explicitly."""
+context, the compact structural_unwind and mechanical_unwind summaries, and
+public_positioning_proxies when present. Distinguish quantitative scorecard
+state from structural and mechanical state. State where structured and textual
+evidence agree or conflict. Identify missing evidence for factor propagation or
+liquidity failure. Cite evidence by supplied evidence_id only; contextual
+evidence may be discussed but cannot be treated as stance-confirmed support.
+
+public_positioning_proxies are a separate typed field of class
+structured_public_proxy (FINRA, CFTC, or similar). Use them only as contextual
+evidence. They must not be merged into retrieved_evidence, must not change
+deterministic scorecard or mechanism states, and must not be used to infer
+investor identity, hedge-fund ownership, common ownership, active short
+covering, leverage or financing pressure, forced deleveraging, or causality.
+Permitted example: public short-activity proxies are elevated in the loser
+basket, increasing the relevance of short-side crowding as a hypothesis; the
+data do not identify the underlying investors or establish active covering.
+Prohibited example: hedge funds are covering crowded shorts.
+
+When interpreting positioning or unwind-related evidence, answer for each
+material item: (1) what was actually observed; (2) whose positioning or flow
+the evidence represents, or unknown; (3) how broad the evidence is — name,
+theme, sector, factor, or market; (4) what stronger conclusion remains
+unproven. Keep these evidence classes separate and do not collapse them:
+portfolio concentration or narrow breadth; public positioning proxies such as
+short interest or CFTC data; reported investor flows such as Prime Book
+commentary; market footprints such as correlated selling, turnover, or weak
+liquidity; and hypotheses such as crowding, coordinated unwind, or forced
+deleveraging. Do not infer common ownership from correlated selling; hedge-fund
+selling from price or volume alone; single-stock momentum positioning from
+index-futures data; short covering from loser-stock outperformance alone; or
+forced deleveraging without direct evidence of leverage, margin pressure,
+financing stress, or compulsory risk reduction. Prefer bounded positioning
+states not_supported, crowding_plausible, localized_unwind_evidence, or
+broad_unwind_risk; keep forced deleveraging separate and normally report
+forced_deleveraging_unconfirmed. Prefer wording such as consistent with,
+suggests localized exposure reduction, raises unwind sensitivity, does not establish,
+or remains unconfirmed. Avoid claiming that positioning is unwinding, funds are
+deleveraging, a quant unwind is confirmed, or that positioning caused the reversal.
+
+Do not invent channels, calculate or restate numbers, alter values or trigger
+states, add external facts, assert causality or crash certainty, estimate
+probabilities, or give portfolio or trade recommendations. Return at most three
+concrete monitoring questions and at most three observable invalidation
+conditions. State uncertainty explicitly."""
 
 MODEL_OUTPUT_FIELDS = frozenset(
     {
@@ -68,15 +102,37 @@ MODEL_CONTEXT_FIELDS = frozenset(
         "historical_context",
         "structural_unwind",
         "mechanical_unwind",
+        "public_positioning_proxies",
     }
 )
-LLM_CREDENTIAL_ENV_VARS = ("OPENAI_API_KEY", "ANTHROPIC_API_KEY")
+LLM_CREDENTIAL_ENV_VARS = (
+    "DEEPSEEK_API_KEY",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+)
 
 MAX_NARRATIVE_CHARS = 600
 MAX_LIST_ITEMS = 8
 MAX_LIST_ITEM_CHARS = 300
 MAX_MONITORING_QUESTIONS = 3
 MAX_INVALIDATION_CONDITIONS = 3
+_PUBLIC_PROXY_EVIDENCE_CLASS = "structured_public_proxy"
+_PUBLIC_PROXY_SCOPE = (
+    "Momentum loser / short-basket public-data proxy universe "
+    "(not observed book ownership)"
+)
+_PUBLIC_PROXY_INFERENCE_LIMITS = (
+    "Cannot identify underlying investors or hedge-fund ownership.",
+    "Cannot establish common ownership, active short covering, leverage, "
+    "financing pressure, forced deleveraging, or causality.",
+    "Contextual only: cannot change scorecard values, thresholds, or "
+    "mechanism triggers.",
+)
+_FINRA_METRIC_LABELS = (
+    ("short_interest_ratio_z", "short_interest_ratio_z"),
+    ("short_interest_utilisation_z", "short_interest_utilisation_z"),
+    ("short_volume_share_z", "short_volume_share_z"),
+)
 _NUMERIC_LITERAL = re.compile(r"(?<![A-Za-z0-9_])[+-]?\d+(?:\.\d+)?%?")
 _NUMERIC_WORD = re.compile(
     r"\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|"
@@ -321,6 +377,141 @@ def compact_mechanical_unwind_context(mechanical: Any) -> dict[str, Any]:
     }
 
 
+def _proxy_state(value: float | None, overlay_read: str | None) -> str:
+    if value is None:
+        return "unavailable"
+    if value >= 1.0:
+        return "elevated"
+    if value <= -1.0:
+        return "depressed"
+    if overlay_read == "confirm":
+        return "elevated_context"
+    if overlay_read == "contradict":
+        return "counter_context"
+    return "neutral"
+
+
+def _normalize_public_proxy_item(item: Mapping[str, Any]) -> dict[str, Any]:
+    limitations = item.get("limitations") or ()
+    if isinstance(limitations, str):
+        limitation_list = [limitations]
+    else:
+        limitation_list = [str(entry) for entry in limitations if str(entry).strip()]
+    if not limitation_list:
+        raise ValueError("public_positioning_proxies items require limitations")
+    payload = {
+        "source": str(item.get("source") or "").strip(),
+        "metric": str(item.get("metric") or "").strip(),
+        "value": item.get("value"),
+        "state": str(item.get("state") or "").strip() or None,
+        "relevant_asset_or_portfolio_scope": str(
+            item.get("relevant_asset_or_portfolio_scope") or ""
+        ).strip(),
+        "reporting_lag": str(item.get("reporting_lag") or "").strip(),
+        "evidence_class": str(
+            item.get("evidence_class") or _PUBLIC_PROXY_EVIDENCE_CLASS
+        ).strip(),
+        "limitations": limitation_list,
+    }
+    if not payload["source"] or not payload["metric"]:
+        raise ValueError("public_positioning_proxies require source and metric")
+    if not payload["relevant_asset_or_portfolio_scope"]:
+        raise ValueError(
+            "public_positioning_proxies require relevant_asset_or_portfolio_scope"
+        )
+    if not payload["reporting_lag"]:
+        raise ValueError("public_positioning_proxies require reporting_lag")
+    if payload["evidence_class"] != _PUBLIC_PROXY_EVIDENCE_CLASS:
+        raise ValueError(
+            "public_positioning_proxies evidence_class must be "
+            f"{_PUBLIC_PROXY_EVIDENCE_CLASS}"
+        )
+    if payload["value"] is None and not payload["state"]:
+        raise ValueError("public_positioning_proxies require value or state")
+    return payload
+
+
+def compact_public_positioning_proxies(
+    positioning: Any | None = None,
+    *,
+    items: Sequence[Mapping[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Build typed public positioning proxies for LLM context only.
+
+    Accepts an optional FINRA ``PositioningSnapshot`` (or mapping with the same
+    fields) and/or already-shaped proxy items such as future CFTC rows. Output
+    never merges into ``retrieved_evidence`` and never alters deterministic
+    scorecard or mechanism state.
+    """
+
+    proxies: list[dict[str, Any]] = []
+    if items:
+        for item in items:
+            proxies.append(_normalize_public_proxy_item(item))
+
+    if positioning is not None:
+        if isinstance(positioning, Mapping):
+            read = positioning.get("read")
+            as_of_date = positioning.get("as_of_date")
+            observation_date = positioning.get("observation_date")
+            stale = positioning.get("stale_trading_days")
+            base_limitations = tuple(positioning.get("limitations") or ())
+            metric_values = {
+                key: positioning.get(key) for key, _ in _FINRA_METRIC_LABELS
+            }
+        else:
+            read = getattr(positioning, "read", None)
+            as_of_date = getattr(positioning, "as_of_date", None)
+            observation_date = getattr(positioning, "observation_date", None)
+            stale = getattr(positioning, "stale_trading_days", None)
+            base_limitations = tuple(getattr(positioning, "limitations", ()) or ())
+            metric_values = {
+                key: getattr(positioning, key, None) for key, _ in _FINRA_METRIC_LABELS
+            }
+        if read != "unavailable":
+            if stale is None:
+                lag = (
+                    f"observation {observation_date}; as-of {as_of_date}"
+                    if observation_date
+                    else f"as-of {as_of_date}"
+                )
+            elif int(stale) == 0:
+                lag = "same trading day as as-of"
+            else:
+                lag = f"{int(stale)} trading-day reporting lag vs as-of"
+            limitations = tuple(base_limitations) + _PUBLIC_PROXY_INFERENCE_LIMITS
+            for attr, metric in _FINRA_METRIC_LABELS:
+                value = metric_values.get(attr)
+                if value is None:
+                    continue
+                proxies.append(
+                    _normalize_public_proxy_item(
+                        {
+                            "source": "FINRA",
+                            "metric": metric,
+                            "value": float(value),
+                            "state": _proxy_state(float(value), str(read) if read else None),
+                            "relevant_asset_or_portfolio_scope": _PUBLIC_PROXY_SCOPE,
+                            "reporting_lag": lag,
+                            "evidence_class": _PUBLIC_PROXY_EVIDENCE_CLASS,
+                            "limitations": limitations,
+                        }
+                    )
+                )
+
+    return json.loads(
+        json.dumps(proxies[:MAX_LIST_ITEMS], sort_keys=True, allow_nan=False)
+    )
+
+
+def _normalize_public_positioning_proxies(
+    public_positioning_proxies: Sequence[Mapping[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    if not public_positioning_proxies:
+        return []
+    return compact_public_positioning_proxies(items=public_positioning_proxies)
+
+
 def _normalize_structural_unwind(
     structural_unwind: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
@@ -382,6 +573,7 @@ def _model_context(
     *,
     structural_unwind: Mapping[str, Any] | None = None,
     mechanical_unwind: Mapping[str, Any] | None = None,
+    public_positioning_proxies: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build a detached allow-listed model payload."""
 
@@ -405,6 +597,9 @@ def _model_context(
         ],
         "structural_unwind": _normalize_structural_unwind(structural_unwind),
         "mechanical_unwind": _normalize_mechanical_unwind(mechanical_unwind),
+        "public_positioning_proxies": _normalize_public_positioning_proxies(
+            public_positioning_proxies
+        ),
     }
     if frozenset(context) != MODEL_CONTEXT_FIELDS:
         raise AssertionError("model context allow-list changed unexpectedly")
@@ -744,6 +939,7 @@ def interpret_evidence_card(
     environment: Mapping[str, str] | None = None,
     structural_unwind: Mapping[str, Any] | None = None,
     mechanical_unwind: Mapping[str, Any] | None = None,
+    public_positioning_proxies: Sequence[Mapping[str, Any]] | None = None,
 ) -> EvidenceInterpretation:
     """Interpret a deterministic card without exposing writable quant fields.
 
@@ -751,7 +947,9 @@ def interpret_evidence_card(
     The repository intentionally contains no vendor client. Missing credentials,
     missing configuration, provider errors, and schema violations all return a
     deterministic interpretation with ``use_llm=False`` and a clear warning.
-    Compact structural and mechanical summaries are optional read-only context.
+    Compact structural/mechanical summaries and typed public positioning
+    proxies are optional read-only LLM context and never alter deterministic
+    scorecard or mechanism state.
     """
 
     if not isinstance(deterministic_input, DeterministicEvidenceInput):
@@ -763,6 +961,7 @@ def interpret_evidence_card(
     )
     structural = _normalize_structural_unwind(structural_unwind)
     mechanical = _normalize_mechanical_unwind(mechanical_unwind)
+    proxies = _normalize_public_positioning_proxies(public_positioning_proxies)
     if not use_llm:
         return _deterministic_interpretation(
             deterministic_input,
@@ -800,6 +999,7 @@ def interpret_evidence_card(
                 deterministic_input,
                 structural_unwind=structural,
                 mechanical_unwind=mechanical,
+                public_positioning_proxies=proxies,
             ),
             instructions=INTERPRETATION_INSTRUCTIONS,
         )
