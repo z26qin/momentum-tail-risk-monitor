@@ -11,13 +11,12 @@ probability experiment. Its generated predictions, coefficients, preprocessing
 statistics, split manifests, and audits were intentionally removed in commit
 `ae59f37` when the product moved to deterministic mechanism monitoring.
 
-## Evidence-generation prototype
+## Retired evidence-generation prototype
 
 `evidence/` contains the earlier request → keyword retrieval → fixture
-classification path and the standalone GDELT/DeepSeek experiment. The active
-MVP instead replays validated exact-date classified evidence through
-`src.evidence.research_preview` and constrains optional narrative providers at
-the `src.mvp` boundary.
+classification path. GDELT retrieval and DeepSeek/OpenAI risk-state
+interpretation are active capabilities under `src/evidence/` and are shown in
+the supported final notebook.
 
 ## Old notebook
 

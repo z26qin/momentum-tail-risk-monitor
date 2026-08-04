@@ -1,7 +1,10 @@
-"""Optional DeepSeek synthesis over retrieved GDELT evidence.
+"""Optional LLM synthesis over retrieved GDELT evidence.
 
 The LLM explains an already-triggered momentum-risk state. It must not
 recompute scores, assert causality, or issue trading recommendations.
+
+DeepSeek is the default provider because the prototype must run from China.
+OpenAI is an optional provider using the same prompt and validated JSON shape.
 """
 
 from __future__ import annotations
@@ -21,6 +24,8 @@ from src.utils.io import DEFAULT_OUTPUT_DIR, REPO_ROOT, read_json, write_json
 
 DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
 DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEFAULT_OPENAI_MODEL = "gpt-5.6-sol"
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_CACHE_DIR = DEFAULT_OUTPUT_DIR / "gdelt_evidence_cache"
 LLM_UNAVAILABLE_MESSAGE = (
     "LLM synthesis was unavailable. Retrieved GDELT evidence is shown without "
@@ -70,14 +75,16 @@ def _cache_key(
     as_of_date: str,
     active_triggers: Sequence[Mapping[str, Any]],
     evidence: pd.DataFrame,
+    provider: str,
     model: str,
 ) -> str:
     payload = {
         "as_of_date": as_of_date,
         "active_triggers": list(active_triggers),
         "evidence": evidence.to_dict(orient="records") if evidence is not None else [],
+        "provider": provider,
         "model": model,
-        "prompt_version": "gdelt-deepseek-explainer-v1",
+        "prompt_version": "gdelt-llm-risk-interpreter-v2",
     }
     digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
@@ -145,7 +152,7 @@ def _build_messages(
 def _validate_result(payload: Mapping[str, Any]) -> dict[str, Any]:
     missing = [key for key in _REQUIRED_RESULT_KEYS if key not in payload]
     if missing:
-        raise ValueError(f"DeepSeek response missing keys: {missing}")
+        raise ValueError(f"LLM response missing keys: {missing}")
     evidence_ids = payload["key_evidence_ids"]
     if not isinstance(evidence_ids, list):
         raise ValueError("key_evidence_ids must be a list")
@@ -177,7 +184,7 @@ def _extract_json_object(text: str) -> dict[str, Any]:
             raise
         parsed = json.loads(content[start : end + 1])
     if not isinstance(parsed, dict):
-        raise ValueError("DeepSeek response is not a JSON object")
+        raise ValueError("LLM response is not a JSON object")
     return parsed
 
 
@@ -187,15 +194,17 @@ def _post_chat_completion(
     model: str,
     messages: Sequence[Mapping[str, str]],
     base_url: str,
+    temperature: float | None = None,
     timeout_seconds: float = 45.0,
 ) -> str:
     endpoint = base_url.rstrip("/") + "/chat/completions"
     body = {
         "model": model,
         "messages": list(messages),
-        "temperature": 0.2,
         "response_format": {"type": "json_object"},
     }
+    if temperature is not None:
+        body["temperature"] = temperature
     request = urllib.request.Request(
         endpoint,
         data=json.dumps(body).encode("utf-8"),
@@ -209,19 +218,20 @@ def _post_chat_completion(
         payload = json.loads(response.read().decode("utf-8"))
     choices = payload.get("choices") or []
     if not choices:
-        raise ValueError("DeepSeek response contained no choices")
+        raise ValueError("LLM response contained no choices")
     message = choices[0].get("message") or {}
     content = message.get("content")
     if not content:
-        raise ValueError("DeepSeek response contained empty content")
+        raise ValueError("LLM response contained empty content")
     return str(content)
 
 
-def explain_risk_with_deepseek(
+def explain_risk_with_llm(
     active_triggers: list[dict[str, Any]],
     evidence: pd.DataFrame,
     as_of_date: date | datetime | str,
     *,
+    provider: str = "deepseek",
     cache_dir: Path | None = None,
     environment: Mapping[str, str] | None = None,
     load_dotenv: bool = True,
@@ -233,11 +243,12 @@ def explain_risk_with_deepseek(
         active_triggers: Already-triggered scorecard rows.
         evidence: Ranked GDELT evidence table with ``evidence_id`` values.
         as_of_date: Assessment date.
+        provider: ``deepseek`` (default) or ``openai``.
         cache_dir: Optional JSON cache directory for successful responses.
         environment: Optional env mapping; defaults to ``os.environ``.
         load_dotenv: When True, load repository ``.env`` keys if absent.
-        transport: Optional callable ``(api_key, model, messages, base_url)``
-            used by tests to mock the HTTP client.
+        transport: Optional keyword-callable accepting API key, model,
+            messages, base URL, and temperature, used by tests to mock HTTP.
 
     Returns:
         Structured result with explanation fields plus ``status`` /
@@ -247,6 +258,24 @@ def explain_risk_with_deepseek(
     if load_dotenv:
         _load_dotenv_if_present()
     env = dict(os.environ if environment is None else environment)
+    selected_provider = str(provider).strip().lower()
+    if selected_provider not in {"deepseek", "openai"}:
+        raise ValueError("provider must be 'deepseek' or 'openai'")
+    provider_label = "DeepSeek" if selected_provider == "deepseek" else "OpenAI"
+    if selected_provider == "deepseek":
+        api_key_name = "DEEPSEEK_API_KEY"
+        model_name = "DEEPSEEK_MODEL"
+        base_url_name = "DEEPSEEK_BASE_URL"
+        default_model = DEFAULT_DEEPSEEK_MODEL
+        default_base_url = DEFAULT_DEEPSEEK_BASE_URL
+        temperature = 0.2
+    else:
+        api_key_name = "OPENAI_API_KEY"
+        model_name = "OPENAI_MODEL"
+        base_url_name = "OPENAI_BASE_URL"
+        default_model = DEFAULT_OPENAI_MODEL
+        default_base_url = DEFAULT_OPENAI_BASE_URL
+        temperature = None
     as_of = _as_iso_date(as_of_date)
     evidence_rows = _evidence_payload(evidence)
     base_result = {
@@ -257,8 +286,8 @@ def explain_risk_with_deepseek(
         "key_evidence_ids": [],
         "limitations": "",
         "pm_takeaway": "",
-        "model": env.get("DEEPSEEK_MODEL", DEFAULT_DEEPSEEK_MODEL).strip()
-        or DEFAULT_DEEPSEEK_MODEL,
+        "provider": selected_provider,
+        "model": env.get(model_name, default_model).strip() or default_model,
         "cached": False,
     }
 
@@ -281,13 +310,14 @@ def explain_risk_with_deepseek(
             ),
         }
 
-    api_key = str(env.get("DEEPSEEK_API_KEY") or "").strip()
+    api_key = str(env.get(api_key_name) or "").strip()
     model = base_result["model"]
     cache_root = Path(cache_dir) if cache_dir is not None else DEFAULT_CACHE_DIR
     key = _cache_key(
         as_of_date=as_of,
         active_triggers=active_triggers,
         evidence=evidence,
+        provider=selected_provider,
         model=model,
     )
     cache_path = cache_root / f"{as_of}_{key}.json"
@@ -299,7 +329,7 @@ def explain_risk_with_deepseek(
                 **base_result,
                 **validated,
                 "status": "ok",
-                "message": "Loaded cached DeepSeek explanation.",
+                "message": f"Loaded cached {provider_label} explanation.",
                 "cached": True,
             }
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
@@ -309,7 +339,7 @@ def explain_risk_with_deepseek(
         return {
             **base_result,
             "status": "llm_unavailable",
-            "message": LLM_UNAVAILABLE_MESSAGE,
+            "message": f"{LLM_UNAVAILABLE_MESSAGE} Missing {api_key_name}.",
         }
 
     messages = _build_messages(
@@ -318,8 +348,8 @@ def explain_risk_with_deepseek(
         evidence_rows=evidence_rows,
     )
     base_url = (
-        str(env.get("DEEPSEEK_BASE_URL") or DEFAULT_DEEPSEEK_BASE_URL).strip()
-        or DEFAULT_DEEPSEEK_BASE_URL
+        str(env.get(base_url_name) or default_base_url).strip()
+        or default_base_url
     )
     try:
         if transport is not None:
@@ -328,6 +358,7 @@ def explain_risk_with_deepseek(
                 model=model,
                 messages=messages,
                 base_url=base_url,
+                temperature=temperature,
             )
         else:
             content = _post_chat_completion(
@@ -335,6 +366,7 @@ def explain_risk_with_deepseek(
                 model=model,
                 messages=messages,
                 base_url=base_url,
+                temperature=temperature,
             )
         validated = _validate_result(_extract_json_object(content))
     except (
@@ -358,6 +390,7 @@ def explain_risk_with_deepseek(
         {
             **validated,
             "as_of_date": as_of,
+            "provider": selected_provider,
             "model": model,
         },
     )
@@ -365,6 +398,40 @@ def explain_risk_with_deepseek(
         **base_result,
         **validated,
         "status": "ok",
-        "message": "DeepSeek explanation generated.",
+        "message": f"{provider_label} explanation generated.",
         "cached": False,
     }
+
+
+def explain_risk_with_deepseek(
+    active_triggers: list[dict[str, Any]],
+    evidence: pd.DataFrame,
+    as_of_date: date | datetime | str,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Interpret a deterministic risk state with DeepSeek."""
+
+    return explain_risk_with_llm(
+        active_triggers,
+        evidence,
+        as_of_date,
+        provider="deepseek",
+        **kwargs,
+    )
+
+
+def explain_risk_with_openai(
+    active_triggers: list[dict[str, Any]],
+    evidence: pd.DataFrame,
+    as_of_date: date | datetime | str,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Interpret a deterministic risk state with OpenAI."""
+
+    return explain_risk_with_llm(
+        active_triggers,
+        evidence,
+        as_of_date,
+        provider="openai",
+        **kwargs,
+    )
