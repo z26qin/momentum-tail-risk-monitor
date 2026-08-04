@@ -8,12 +8,17 @@ import pytest
 
 from src.monitoring.unwind_monitor import (
     MechanicalUnwindConfig,
+    _momentum_rank_panel,
     classify_unwind_state,
     compute_cross_sectional_factor_footprint,
     compute_market_absorption_proxy,
     compute_momentum_aligned_turnover,
     expanding_prior_percentile,
     build_mechanical_unwind_assessment,
+)
+from src.portfolio.momentum import (
+    build_momentum_holdings,
+    build_momentum_rank_snapshot,
 )
 
 
@@ -121,6 +126,29 @@ def test_factor_footprint_controls_are_lagged() -> None:
     )
 
 
+def test_momentum_rank_is_winner_high_and_effective_on_first_month_session() -> None:
+    prices = _prices(periods=320, n_symbols=36)
+    calendar = pd.DatetimeIndex(sorted(prices["date"].unique()))
+    snapshot = build_momentum_rank_snapshot(prices)
+    latest_month = snapshot["effective_month"].max()
+    formation = snapshot.loc[snapshot["effective_month"].eq(latest_month)]
+    winner = formation.loc[formation["price_momentum_rank"].idxmin()]
+    loser = formation.loc[formation["price_momentum_rank"].idxmax()]
+    assert winner["momentum_rank"] > loser["momentum_rank"]
+
+    first_session = calendar[calendar.to_period("M") == latest_month][0]
+    daily = _momentum_rank_panel(
+        prices,
+        calendar,
+        rank_snapshot=snapshot,
+    )
+    observed = daily.loc[
+        daily["date"].eq(first_session) & daily["symbol"].eq(winner["symbol"]),
+        "mom_rank_lag1",
+    ].iloc[0]
+    assert observed == pytest.approx(winner["momentum_rank"])
+
+
 def test_turnover_uses_lagged_membership_and_avoids_div_zero() -> None:
     prices = _prices(periods=280, n_symbols=30)
     dates = pd.DatetimeIndex(sorted(prices["date"].unique()))
@@ -209,8 +237,7 @@ def test_size_fallback_when_shares_missing() -> None:
 def test_assessment_snapshot_respects_as_of() -> None:
     prices = _prices(periods=320, n_symbols=36)
     dates = pd.DatetimeIndex(sorted(prices["date"].unique()))
-    symbols = sorted(prices["symbol"].unique())
-    holdings = _holdings(symbols, dates)
+    holdings = build_momentum_holdings(prices, n_long=5, n_short=5)
     risk = _risk(dates)
     as_of = dates[-5]
     future = prices.copy()
@@ -240,3 +267,32 @@ def test_assessment_snapshot_respects_as_of() -> None:
     assert baseline.unwind_state == shocked.unwind_state
     assert baseline.factor_footprint_r2 == shocked.factor_footprint_r2
     assert baseline.extreme_turnover_ratio == shocked.extreme_turnover_ratio
+
+
+def test_assessment_fails_closed_when_holdings_snapshot_diverges() -> None:
+    prices = _prices(periods=320, n_symbols=36)
+    dates = pd.DatetimeIndex(sorted(prices["date"].unique()))
+    holdings = build_momentum_holdings(prices, n_long=5, n_short=5)
+    risk = _risk(dates)
+    as_of = dates[-5]
+    inconsistent = holdings.copy()
+    latest_month = inconsistent["effective_month"].max()
+    row = inconsistent.index[inconsistent["effective_month"].eq(latest_month)][0]
+    inconsistent.loc[row, "momentum_return"] += 0.01
+
+    with pytest.raises(
+        ValueError,
+        match="disagree on momentum_return",
+    ):
+        build_mechanical_unwind_assessment(
+            as_of_date=as_of,
+            prices=prices,
+            holdings=inconsistent,
+            risk_history=risk,
+            shares=None,
+            config=MechanicalUnwindConfig(
+                min_cross_section=20,
+                history_window=120,
+                signal_lookback_months=14,
+            ),
+        )
