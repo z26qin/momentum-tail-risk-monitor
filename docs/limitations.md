@@ -75,3 +75,6 @@ This document lists what the MVP deliberately does **not** claim.
 - Without credentials or an injected interpreter, the path falls back to a
   deterministic narrative and records that LLM was not used.
 - Interpretation cannot change values, thresholds, triggers, or risk state.
+- The retained AI-value worksheet has no completed live-LLM arm or human model
+  scores for the primary May 29 case. It validates immutability and fallback
+  behavior, not incremental LLM usefulness or alpha.

@@ -5,6 +5,11 @@
 **Scope:** Historical partial evidence pack. It is not a current August market assessment.  
 **Interpretation layer:** `deterministic-evidence-interpretation-v2` with compact structural and mechanical context (`evidence-interpretation-prompt-v2`).
 
+**Evidence-layer note:** `CSU-*` denotes the separately curated,
+human-reviewed, cutoff-valid case pack. The active exact-date
+classification-cache replay is unavailable on 2026-05-29; curated evidence is
+interpretive context only and does not alter deterministic fields.
+
 | Lens | Status | Structured support | Text support | Missing evidence |
 | --- | --- | --- | --- | --- |
 | DM recovery crash | **weak** | Recovery from trough is present, but prior severe-drawdown and high-volatility conditions are false. `bear_market_recovery_crash` is `watch`; `short_book_reversal_crash` is `not_confirmed`; loser outperformance and short-rise breadth are below thresholds. Quantitative recovery and short-loss signals are not triggered. | RBC describes a broad recovery from the March selloff (`CSU-2026-015`, supporting). | No direct prior-loser rebound evidence; no broad panic confirmation; no short-leg loss trigger. |

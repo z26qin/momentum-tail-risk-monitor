@@ -2,8 +2,18 @@
 
 **Assessment date:** 2026-05-29  
 **Evidence cutoff:** 2026-05-29 16:00 America/New_York  
+**Risk horizon:** 20 trading days
+
+**Monitoring severity:** Elevated review / `FRAGILITY_BUILDING`; not a crash probability
+
 **Staleness warning:** This is a historical partial read and must not be presented as a current 2026-08-03 assessment.  
 **Interpretation:** `deterministic-evidence-interpretation-v2` · **PM response:** `deterministic-pm-response-v1`
+
+**Evidence-layer note:** The `CSU-*` records are a separate, manually curated
+and human-reviewed cutoff-valid case pack. Active exact-date
+classification-cache replay is unavailable for 2026-05-29, so these records
+challenge the deterministic snapshot without becoming pipeline-generated
+evidence or changing any quantitative field.
 
 ## Current read
 

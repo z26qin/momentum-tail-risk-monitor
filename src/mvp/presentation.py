@@ -761,6 +761,11 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
     card = result.deterministic_input
     interpretation = result.interpretation
     unwind = result.unwind
+    interpretation_heading = (
+        "AI-assisted, evidence-constrained"
+        if interpretation.use_llm
+        else "Evidence-assisted, deterministic fallback"
+    )
     signals = card.triggered_quant_signals + card.non_triggered_relevant_signals
     tail_loss = card.audit_metadata.get("tail_loss_frequency")
     horizon = card.audit_metadata.get(
@@ -839,7 +844,7 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
     lines.extend(
         [
             "",
-            "## PM interpretation (AI-assisted, evidence-constrained)",
+            f"## PM interpretation ({interpretation_heading})",
             "",
             interpretation.pm_interpretation,
             "",

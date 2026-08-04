@@ -50,7 +50,7 @@
 - [contextual] Job Openings and Labor Turnover, November 2023 (US Bureau of Labor Statistics, 2024-01-03T10:00:00-05:00)
 - [contextual] FOMC statement, December 13, 2023 (Federal Reserve Board, 2023-12-13T14:00:00-05:00)
 
-## PM interpretation (AI-assisted, evidence-constrained)
+## PM interpretation (Evidence-assisted, deterministic fallback)
 
 The supplied point-in-time evidence is mixed and should be treated as context rather than a causal conclusion. Lens read: DM recovery crash remains watch on structural channels and not confirmed for short-book reversal; Khandani-Lo crowded unwind is not confirmed; fundamental repricing stays unconfirmed without a structured fundamental anchor. Mechanical state is NORMAL, with liquidity absorption failure absent.
 
