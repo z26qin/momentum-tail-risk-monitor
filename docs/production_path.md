@@ -1,8 +1,8 @@
-# Future To-Do — PM imagination space
+# Production path
 
-This file is intentionally forward-looking. It records what the research MVP
-does **not** claim yet, and where a production path could go once a PM wants
-their own book, true crowding, and operational workflow.
+This document records what the research MVP does **not** claim yet, and where a
+production path could go once a PM wants their own book, true crowding, and an
+operational workflow.
 
 Nothing here changes current deterministic triggers, thresholds, or Evidence
 Card contracts.
@@ -93,7 +93,7 @@ These remain valuable independent of the crowding stack:
    PM-book forward outcomes can be summarized without a new backtest engine.
 3. **Production-grade retrieval** beyond offline exact-date preview
    (institutional news / filings with hard cutoffs).
-4. **Daily orchestration** — scheduled as-of runs, audit retention,
+4. **Daily scheduling** — scheduled as-of runs, audit retention,
    alerting on mechanism transitions only (not on a composite score).
 5. **Multi-book / multi-sleeve** — same monitor shell across several PM
    momentum variants with labeled separation from UMD comparison.
@@ -121,5 +121,5 @@ T4  Leverage / financing / flow  →  “who is forced to sell?”
 +   Ops / retrieval / multi-book →  production readiness
 ```
 
-Use this file as a conversation starter with PMs — not as a commitment
-calendar. Scope and data access decide which branch comes first.
+Use this file as a production-path discussion note with PMs — not as a
+commitment calendar. Scope and data access decide which branch comes first.

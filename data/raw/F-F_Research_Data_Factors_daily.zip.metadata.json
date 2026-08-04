@@ -3,7 +3,7 @@
   "bytes": 177699,
   "cached_path": "data/raw/F-F_Research_Data_Factors_daily.zip",
   "conversion_applied": "divide numeric observations by 100 to decimal return",
-  "offline_import_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/work/french-audit.0vW6fQ/F-F_Research_Data_Factors_daily.zip",
+  "offline_import_path": "data/raw/F-F_Research_Data_Factors_daily.zip",
   "offline_source_file_mtime_utc": "2026-07-24T14:41:22+00:00",
   "processed_as_of_date": "2026-05-29",
   "processed_first_observation": "1926-07-01",

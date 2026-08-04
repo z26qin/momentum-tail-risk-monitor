@@ -381,7 +381,7 @@ def test_build_does_not_modify_existing_artifacts() -> None:
         DEFAULT_PROCESSED_DIR / "leg_risk_history.parquet",
         DEFAULT_PROCESSED_DIR / "french_research_factors_daily.parquet",
         DEFAULT_PROCESSED_DIR / "momentum_labels_h20.parquet",
-        DEFAULT_OUTPUT_DIR / "debug" / "classified_evidence_2024-01-05.json",
+        DEFAULT_OUTPUT_DIR / "evidence_cache" / "classified_evidence_2024-01-05.json",
     ]
     before = {path: _sha256(path) for path in protected}
     build_evidence_card(as_of_date=EVIDENCE_DATE, use_llm=True)

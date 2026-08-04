@@ -1,26 +1,37 @@
 # AI value comparison summary
 
-Lightweight worksheet only. Human-review score columns are left blank.
+Concrete comparison for the primary frozen case (**2026-05-29 semi-unwind**).
+This is not a claim that AI creates incremental PM alpha. It shows how the
+evidence layer changes the **read** without changing deterministic metrics or
+thresholds.
 
-## Already demonstrated
+## Guardrails already demonstrated
 
-- AI cannot mutate quantitative state (quant_fields_unchanged across runnable arms: True).
-- Evidence is timestamp-controlled (automatic `evidence_cutoff_valid` checks on worksheet rows).
-- Outputs are schema-constrained (`DeterministicSynthesizer` / `EvidenceInterpretation` contracts).
-- Deterministic fallback exists when LLM credentials or an injected interpreter are unavailable.
-- External LLM actually called in this regeneration: 0 case(s); `not_run`: 4 case(s).
+- Deterministic scorecard values, thresholds, triggers, and mechanism states are
+  immutable to the interpretation layer (`quant_fields_unchanged = True` in
+  `ai_value_review.csv`).
+- Evidence is timestamp-controlled (`evidence_cutoff_valid` checks).
+- Missing credentials or schema failure falls back to deterministic narrative.
+- External LLM runs in the worksheet remain optional; human-score columns stay
+  blank until reviewed.
 
-## To be evaluated
+## Compact comparison — May 29 primary case
 
-- Whether LLM commentary is more mechanism-specific than the template.
-- Whether contradiction coverage improves for analysts.
-- Whether analyst review time falls.
-- Whether unsupported claims remain acceptably low.
+| Layer | What the PM sees | What changes? |
+|---|---|---|
+| **Deterministic-only monitoring** | Scorecard triggers inactive; `crowded_theme_unwind` triggered; concentration triggered; mechanical state `FRAGILITY_BUILDING`; absorption failure absent; DM recovery crash incomplete | Source of truth for risk state |
+| **Evidence-assisted interpretation** | Same quantitative state, plus stance-labeled text: recovery backdrop (`CSU-2026-015`), contradicting operating strength (`CSU-2026-008`), and explicit missing items (forced deleveraging, absorption failure, loser rebound) | Narrative organization only |
+| **What the evidence / AI layer added** | Separated DM vs Khandani–Lo vs fundamental lenses; located risk in long-side crowding rather than short-leg recovery pain; listed inspect-next / invalidation checks | Interpretation richness |
+| **Unsupported inference avoided** | Did **not** rewrite inactive scorecard triggers into a crash call; did **not** treat contextual Prime Book / capex items as stance-confirmed support; did **not** claim forced deleveraging | Safety |
+| **Contradictory evidence surfaced** | Strong supplier / operating results (`CSU-2026-008`) retained against a broad negative fundamental thesis | Challenge step |
+| **Still requires human review** | Whether the correlated-theme proxy maps to an economic semiconductor theme; whether post-cutoff market moves deserve a refreshed as-of run; whether positioning overlays would confirm or refute localized unwind | PM judgment |
 
-## Conclusion
+## Bottom line
 
-The repository demonstrates a safe architecture for AI-assisted explanation, while incremental analyst value remains a testable hypothesis.
+Deterministic monitors decide the state. The evidence layer (deterministic
+template or optional LLM) organizes supporting, contradicting, and missing
+material so the PM can challenge the signal before acting. It does not create a
+crash probability or change a threshold.
 
-Do **not** conclude that AI creates incremental PM value until a reviewed external LLM run fills the human-score columns in `ai_value_review.csv`.
-
-Worksheet rows: 12. Artifact: `ai_value_review.csv`.
+Worksheet detail: `ai_value_review.csv` and `ai_inputs/`.
+Episode interpretability: `episode_fingerprints.md`.
