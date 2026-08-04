@@ -19,7 +19,7 @@ from src.evidence.corpus import DEFAULT_CORPUS_PATH, load_corpus
 from src.utils.io import REPO_ROOT, read_json
 
 
-DEFAULT_CLASSIFICATION_DIR = REPO_ROOT / "outputs" / "debug"
+DEFAULT_CLASSIFICATION_DIR = REPO_ROOT / "outputs" / "evidence_cache"
 COMPONENT_LABEL = (
     "Phase 8 capability preview — not the completed Phase 8 implementation."
 )

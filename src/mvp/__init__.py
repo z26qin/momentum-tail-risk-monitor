@@ -1,2 +1,2 @@
-"""Contracts and orchestration primitives for the streamlined MVP."""
+"""MVP configuration, assessment entry point, and PM-facing contracts."""
 

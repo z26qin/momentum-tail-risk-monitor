@@ -3,7 +3,7 @@
 **Assessment date:** 2024-01-05  
 **Comparison date:** 2023-12-01  
 **Evidence cutoff:** 2024-01-05 16:00 America/New_York  
-**Role in product demo:** Quiet control — shows the framework does not escalate every soft momentum period into a crash setup.  
+**Role in product demo:** Quiet control — shows the monitor does not escalate every soft momentum period into a crash setup.  
 **Interpretation:** `deterministic-evidence-interpretation-v2` · **PM response:** `deterministic-pm-response-v1`
 
 ## Current read
@@ -44,4 +44,4 @@ Maintain the current posture and keep watching for a completed recovery-crash se
 
 ### Why this differs from 2020
 
-In March 2020 the panic-recovery sequence and short-leg loss channels were active. On 2024-01-05 those conditions are incomplete or absent, so the same framework stays selective rather than permanently alarmist.
+In March 2020 the panic-recovery sequence and short-leg loss channels were active. On 2024-01-05 those conditions are incomplete or absent, so the same rules stay selective rather than permanently alarmist.

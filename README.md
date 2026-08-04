@@ -7,23 +7,46 @@
 
 # Momentum Crash Monitor
 
-**An AI-assisted monitoring workflow that try to help PM recognize a fragile momentum setup, locate the risk in the book, and provide grounded interpretation with evidence before acting.**
+**An AI-assisted monitoring workflow that helps a PM recognize a fragile momentum setup, locate the risk in the book, and challenge the read with timestamp-valid evidence before acting.**
+
+This MVP is **not** trying to predict the exact timing of a momentum crash. It is designed to help the PM recognize a fragile setup, locate the risk in the book, identify the plausible mechanism, and challenge the signal with timestamp-valid evidence before acting.
 
 The prototype answers six questions:
 
-1. **What is the momentum outlook today/selected day? Do we have any momentum tail risk?**
-2. **Where is the risk: the long leg, short leg, or a concentrated cluster? Quantify them**
-3. **Does the setup resemble a recovery-driven momentum crash or a crowded unwind?**
+1. **What is the momentum outlook on the selected day? Is there momentum tail risk?**
+2. **Where is the risk: the long leg, short leg, or a concentrated cluster?**
+3. **Does the setup resemble a recovery-driven momentum crash or a crowded-position unwind?**
 4. **Which signals are active, incomplete, or absent?**
 5. **What timestamp-valid evidence supports or contradicts the read?**
-6. **What happened in the historic momentum crash? 2020,2007,2024**
+6. **How do known episodes (2020 recovery; 2024 quiet control) look under the same rules?**
 
 ```text
-Quant Metrics Monitoring → PM book risk  →  mechanism read(DM vs KL)  
-→  LLM-based evidence challenge  →  next checks
+Quant metrics → PM book risk → mechanism read (DM vs KL)
+→ evidence challenge (optional LLM) → next checks
 ```
 
-This is a research MVP. It does **not** predict an exact crash date, produce a crash probability, optimize a portfolio, or issue a trade instruction.
+This is an approximately **20-hour research MVP**. It does **not** predict an exact crash date, produce a crash probability, optimize a portfolio, or issue a trade instruction.
+
+### Start here
+
+```text
+README
+→ notebooks/final_mvp_demo.ipynb
+→ outputs/current_semi_unwind/              (PRIMARY example PM output, 2026-05-29)
+→ outputs/march_2020_reference/             (historical mechanism validation)
+→ outputs/quiet_control_2024/               (quiet control / selectivity)
+→ docs/methodology.md · docs/limitations.md
+→ src/mvp/
+```
+
+Artifact hierarchy:
+
+| Role | Path |
+|---|---|
+| **Primary example PM output** | `outputs/current_semi_unwind/` (2026-05-29) |
+| Historical mechanism validation | `outputs/march_2020_reference/` (2020-03-24) |
+| Quiet control (selectivity) | `outputs/quiet_control_2024/` + `outputs/quiet_control_example_risk_output/` |
+| AI-value comparison | `outputs/research_validation/ai_value_summary.md` |
 
 ---
 
@@ -150,7 +173,7 @@ The recommended review order is:
 2. **March 2020 historical validation**
 3. **January 2024 quiet control**
 
-### Current Semi Unwind case Lookback— 2026-05-29
+### Current Semi Unwind — primary example PM output (2026-05-29)
 
 > The evidence supports localized crowding and structural pressure, but does not confirm a broad recovery-driven momentum crash or forced deleveraging.
 
@@ -162,7 +185,7 @@ The recommended review order is:
 | What is not confirmed? | Broad propagation, liquidity failure, forced deleveraging |
 | What next? | Monitor breadth, selling propagation, absorption, and stronger positioning evidence |
 
-Full case: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
+Official primary example: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
 
 ### Historical validation — 2020-03-24 Covid
 
@@ -187,9 +210,10 @@ The same rules produce no escalation:
 - no confirmed crowded unwind;
 - recovery mechanism incomplete.
 
-This shows that the framework does not classify every weak momentum period as a crash setup.
+This shows that the same rules do not classify every weak momentum period as a crash setup.
 
-Full case: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md)
+Quiet-control case pack: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md)  
+Generated quiet-control card (secondary): [`outputs/quiet_control_example_risk_output/`](outputs/quiet_control_example_risk_output/)
 
 ---
 
@@ -217,7 +241,7 @@ S&P 500 → 12-1 rank → top 10 / bottom 10 → equal weight
 Intended future production path:
 PM universe → momentum signal → percentile selection
 → risk neutralization → portfolio constraints
-→ optimized weights → same monitoring framework
+→ optimized weights → same monitoring workflow
 ```
 
 The monitoring layer is designed to accept a different universe, portfolio size, and weight vector later.
@@ -369,32 +393,39 @@ result = run_mvp(config)
 ```text
 momentum_crash/
 ├── README.md
-├── Future_To_DO.md
 ├── docs/
-│   ├── methodology.md
+│   ├── methodology.md           # research memo
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
-│   └── architecture_to_value.md
+│   ├── production_path.md       # production path (not an internal todo list)
+│   ├── architecture_to_value.md # component → PM question map
+│   └── figures/                 # offline PM workflow prototype
 ├── notebooks/
-│   └── final_mvp_demo.ipynb
+│   └── final_mvp_demo.ipynb     # final demo
 ├── src/
-│   ├── mvp/                     # configuration, pipeline, PM presentation
-│   ├── monitoring/              # scorecard and unwind logic
-│   ├── portfolio/               # portfolio construction
+│   ├── mvp/                     # config, run_mvp, evidence card, PM response
+│   ├── monitoring/              # scorecard, unwind, crowding proxies
+│   ├── portfolio/               # 12-1 L10/S10 construction
 │   ├── regime/                  # market-state classification
-│   ├── risk/                    # beta and leg decomposition
-│   ├── evidence/                # timestamped evidence and optional LLM
+│   ├── risk/                    # beta, legs, concentration
+│   ├── evidence/                # timestamped evidence + optional LLM
 │   ├── features/
 │   ├── data/
 │   └── utils/
-├── tests/
-├── data/processed/
+├── tests/                       # regression guards for the MVP path
+├── data/
+│   ├── processed/               # bundled public processed panels
+│   ├── corpus/                  # versioned evidence corpus
+│   └── evaluation/              # frozen case evidence packs
 └── outputs/
-    ├── current_semi_unwind/
-    ├── march_2020_reference/
-    ├── quiet_control_2024/
+    ├── current_semi_unwind/                 # PRIMARY example PM output (2026-05-29)
+    ├── march_2020_reference/                # historical validation
+    ├── quiet_control_2024/                  # quiet control case pack
+    ├── quiet_control_example_risk_output/   # generated quiet-control card (2024-01-05)
     ├── cross_case_comparison.md
-    └── research_validation/
+    ├── evidence_cache/                      # exact-date validated classification caches
+    ├── gdelt_llm_reference/                 # cached LLM sample (labeled)
+    └── research_validation/                 # episode fingerprints / AI-value summary
 ```
 
 ---
@@ -428,11 +459,11 @@ The most useful next steps are:
 4. add robust multi-factor risk exposures;
 5. add institutional holdings, borrow, ETF flow, options, dealer gamma, and liquidity data;
 6. persist daily mechanism states for out-of-sample outcome analysis;
-7. extend the same framework to industry, country, and index-futures momentum.
+7. extend the same monitoring workflow to industry, country, and index-futures momentum.
 
 For industry momentum, the same workflow would rank point-in-time industry portfolios, neutralize market and industry-level risks, and monitor beta asymmetry, breadth, crowding, and reversal. Country or index momentum would use liquid index futures or ETFs with explicit controls for global equity beta, region, currency, and futures rolls.
 
-See [`Future_To_DO.md`](Future_To_DO.md) for the broader roadmap.
+See [`docs/production_path.md`](docs/production_path.md) for the broader production path.
 
 ---
 
