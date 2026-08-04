@@ -7,17 +7,20 @@
 
 # Momentum Crash Monitor
 
-**An AI-assisted monitoring workflow that helps a PM recognize a fragile momentum setup, locate the risk in the book, and challenge the interpretation with evidence before acting.**
+**An AI-assisted monitoring workflow that try to help PM recognize a fragile momentum setup, locate the risk in the book, and provide grounded interpretation with evidence before acting.**
 
-The prototype answers four questions:
+The prototype answers six questions:
 
-1. **Where is the risk: the long leg, short leg, or a concentrated cluster?**
-2. **Does the setup resemble a recovery-driven momentum crash or a crowded unwind?**
-3. **Which signals are active, incomplete, or absent?**
-4. **What timestamp-valid evidence supports or contradicts the read?**
+1. **What is the momentum outlook today/selected day? Do we have any momentum tail risk?**
+2. **Where is the risk: the long leg, short leg, or a concentrated cluster? Quantify them**
+3. **Does the setup resemble a recovery-driven momentum crash or a crowded unwind?**
+4. **Which signals are active, incomplete, or absent?**
+5. **What timestamp-valid evidence supports or contradicts the read?**
+6. **What happened in the historic momentum crash? 2020,2007,2024**
 
 ```text
-PM book risk  →  mechanism read  →  evidence challenge  →  next checks
+Quant Metrics Monitoring → PM book risk  →  mechanism read(DM vs KL)  
+→  LLM-based evidence challenge  →  next checks
 ```
 
 This is a research MVP. It does **not** predict an exact crash date, produce a crash probability, optimize a portfolio, or issue a trade instruction.
@@ -122,13 +125,18 @@ The PM book is the primary object. Ken French UMD and the Daniel–Moskowitz mar
 
 Open [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb).
 
+The `CONFIG` cell near the top is the PM sandbox: change its assessment date,
+comparison date, horizon, or LLM flag and run all cells to recompute the live
+assessment. The semiconductor, March 2020, January 2024, and cross-case sections
+are explicitly labeled frozen product packs and do not change with `CONFIG`.
+
 The recommended review order is:
 
-1. **Current semiconductor case**
+1. **Latest available semiconductor case (frozen 2026-05-29 assessment)**
 2. **March 2020 historical validation**
 3. **January 2024 quiet control**
 
-### Current semiconductor case — 2026-05-29
+### Current Semi Unwind case Lookback— 2026-05-29
 
 > The evidence supports localized crowding and structural pressure, but does not confirm a broad recovery-driven momentum crash or forced deleveraging.
 
@@ -142,7 +150,7 @@ The recommended review order is:
 
 Full case: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
 
-### Historical validation — 2020-03-24
+### Historical validation — 2020-03-24 Covid
 
 A known reversal episode produces a coherent recovery-crash footprint:
 
@@ -175,13 +183,13 @@ Full case: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_
 
 The default demo book is an equal-weight S&P 500 **12-1 momentum long-10 / short-10** portfolio.
 
-This is a transparent test portfolio, not a recommendation that an institutional momentum strategy should hold only 20 names.
+**Heads up:** Currently this is a proxy-like test portfolio, not a recommendation that an institutional momentum strategy should hold only 20 names.
 
 A production quant portfolio would more commonly:
 
 - rank a larger investable universe;
-- select percentile or decile portfolios;
-- hold many more names;
+- use percentile or decile to construct universe;
+- hold many more names:either hold the universe and adjust weight or L/S basket
 - neutralize market, industry, size, country, and other factor exposures;
 - apply liquidity, borrow, turnover, and risk constraints;
 - optimize weights rather than use equal weighting.
@@ -192,7 +200,7 @@ The MVP uses L10/S10 because every name, weight, cluster, and source of P&L can 
 Current demo:
 S&P 500 → 12-1 rank → top 10 / bottom 10 → equal weight
 
-Intended production path:
+Intended future production path:
 PM universe → momentum signal → percentile selection
 → risk neutralization → portfolio constraints
 → optimized weights → same monitoring framework
@@ -236,10 +244,10 @@ Concentration
 | Concentration | HHI and effective number of bets | Actual PM and cross-manager holdings |
 | Breadth / clustering | Signal breadth and correlated themes | Prime-broker position overlap |
 | Short crowding | Public short-interest context where available | Borrow utilization and stock-loan cost |
-| Flow | Turnover and timestamped narrative context | ETF, retail, and institutional flows |
+| Flow | Turnover and timestamped narrative context | Leveraged ETF positions, retail flow, and institutional flows |
 | Liquidity | Absorption and price-impact-style proxies | Order-book and market-impact data |
-| Options | Not directly observed | Options positioning and dealer gamma |
-| Financing | Not directly observed | Leverage, margin, and financing pressure |
+| Options | TBD| Options positioning and dealer gamma |
+| Financing | TBD | Leverage, margin, and financing pressure |
 
 Public proxies identify where crowding may be plausible. They cannot confirm true ownership overlap, leverage, or forced selling.
 
@@ -289,7 +297,7 @@ Public proxies identify where crowding may be plausible. They cannot confirm tru
 1. **PM book first.** UMD is context, not a substitute for the actual portfolio.
 2. **Mechanisms stay separate.** Recovery risk and crowded unwind are not collapsed into one score.
 3. **AI cannot change the numbers.** It organizes and challenges evidence only.
-4. **Missing evidence stays missing.** Ownership, leverage, and forced selling are not inferred without data.
+4. **Missing evidence stays missing.** Ownership, leverage, and forced selling are not inferred without data. NO HALLUCINATIONS.
 5. **Point-in-time discipline.** Features and evidence must have been available by the selected date.
 
 ```text
@@ -299,7 +307,7 @@ mechanism interpretation
         ↓
 timestamp-valid evidence
         ↓
-optional LLM summary
+    LLM summary
 
 The LLM cannot rewrite:
 metric | threshold | trigger | risk state

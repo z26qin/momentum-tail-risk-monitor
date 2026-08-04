@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from src.evidence.classification_validation import (
+from legacy.evidence.classification_validation import (
     validate_and_build_evidence_items,
 )
-from src.evidence.prompts import build_classifier_input
+from legacy.evidence.prompts import build_classifier_input
 from src.monitoring.contracts import (
     EVIDENCE_CLASSIFICATIONS,
     EVIDENCE_ITEM_MECHANISMS,

@@ -26,7 +26,7 @@ from src.mvp.contracts import (
     PrimaryRiskAssessment,
     ProvenanceRef,
 )
-from src.monitoring.risk_state import assessment_timestamp
+from src.utils.market_time import assessment_timestamp
 from src.utils.io import (
     DEFAULT_OUTPUT_DIR,
     DEFAULT_PROCESSED_DIR,
