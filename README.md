@@ -27,6 +27,20 @@ This is a research MVP. It does **not** predict an exact crash date, produce a c
 
 ---
 
+## PM workflow prototype
+
+Interactive prototype of how frozen research outputs can enter an auditable PM workflow. Snapshot below shows the Semi-unwind case (as of 2026-05-29) — not a live market call.
+
+<p align="center">
+  <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum crash risk monitor — PM workflow prototype" width="920">
+</p>
+
+Open [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html) in a browser (offline, no build step). Switch cases, drill into scorecard rows, and use the inspect-next actions.
+
+Prototype only · frozen research outputs · not production investment advice.
+
+---
+
 ## Momentum-crash logic
 
 A momentum portfolio is generally long recent winners and short recent losers. It can become fragile through two different mechanisms.
