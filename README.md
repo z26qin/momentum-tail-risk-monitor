@@ -2,184 +2,409 @@
   <a href="docs/methodology.md"><img src="https://img.shields.io/badge/Docs-methodology-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="docs/demo_walkthrough.md"><img src="https://img.shields.io/badge/Demo-15--20%20min-0A7A3E?style=for-the-badge" alt="Demo walkthrough"></a>
   <a href="notebooks/final_mvp_demo.ipynb"><img src="https://img.shields.io/badge/Notebook-final__mvp__demo-1f6feb?style=for-the-badge" alt="Demo notebook"></a>
-  <a href="#assumptions"><img src="https://img.shields.io/badge/Not-financial%20advice-critical?style=for-the-badge" alt="Not financial advice"></a>
+  <a href="#limitations-and-assumptions"><img src="https://img.shields.io/badge/Research-MVP-orange?style=for-the-badge" alt="Research MVP"></a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11--3.14-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11-3.14">
-  <img src="https://img.shields.io/badge/uv-package%20manager-DE5FE9?style=for-the-badge" alt="uv">
-  <img src="https://img.shields.io/badge/tests-~175%20pytest-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="pytest">
-  <img src="https://img.shields.io/badge/version-v0.1.0-blue?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/status-research%20MVP-orange?style=for-the-badge" alt="Research MVP">
-  <img src="https://img.shields.io/badge/score-deterministic%20%7C%20null-lightgrey?style=for-the-badge" alt="No aggregate score">
-</p>
+# Momentum Crash Monitor
+
+**An AI-assisted decision-support prototype for understanding when a momentum book may be vulnerable to a sharp reversal.**
+
+The system does not try to predict the exact crash date. It helps a PM answer four practical questions:
+
+1. **What kind of momentum stress is forming?**
+2. **Where is the risk in the book: the long leg, the short leg, or a crowded cluster?**
+3. **Does the current setup resemble a recovery-driven crash or a crowded unwind?**
+4. **What evidence supports, contradicts, or is still missing from that interpretation?**
 
 ```text
-╔══════════════════════════════════════════════════════════════════╗
-║  MOMENTUM CRASH · tail-risk monitor for quant PMs                ║
-║  ──────────────────────────────────────────────────────────────  ║
-║  object_0 : PM momentum book     (S&P 12-1 L10/S10 default)      ║
-║  object_1 : UMD / DM benchmark   (literature context only)       ║
-║  invariant: layers never merge · deterministic_score = null      ║
-╚══════════════════════════════════════════════════════════════════╝
+PM book risk          Market regime          Crowding structure        Evidence
+Where is the pain?  + Why now?             + Can it propagate?       + What confirms it?
 ```
 
-**Two established momentum-crash mechanisms + an AI-assisted evidence layer**, so a PM can judge whether current momentum weakness is ordinary noise, a recovery-driven reversal, or a crowded-position unwind.
-
-**A decision-support monitor for quant PMs:** is *my* momentum book becoming fragile, how does that compare with published UMD / Daniel–Moskowitz market context, and what timestamped evidence supports or challenges the reading?
-
-```text
-NOT a trading system.
-NOT a crash probability.
-NOT investment advice.
-≈ 20h research MVP — descriptive · deterministic · auditable.
-```
+This is a **research MVP**, not a trading system, crash probability, or portfolio optimizer.
 
 ---
 
-## What decision does this support?
+## The momentum-crash logic in one minute
 
-Momentum books can look “weak” for very different reasons. A single score collapses those reasons and invites false confidence.
+A momentum portfolio is typically long recent winners and short recent losers.
 
-This monitor helps a PM answer:
+That trade can become vulnerable in two different ways.
 
-> Is the weakness ordinary noise, a **recovery-driven** momentum crash setup (Daniel–Moskowitz), or a **crowded-position unwind** (Khandani–Lo) — and what should I monitor next?
+### 1. Recovery-driven reversal
 
-It does **not** predict the exact timing of a crash or issue a trade instruction.
+During a bear market, recent winners often behave more defensively and can have lower market beta, while recent losers may be distressed, cyclical, or high beta.
 
-Default monitored book: S&P 500 12-1 **long-10 / short-10** (customizable research stand-in). Ken French UMD / DM market state is **comparison context only**, never merged into a book score.
+When the market suddenly rebounds:
+
+```text
+Bear market
+    ↓
+Winners become relatively defensive
+Losers become distressed / high beta
+    ↓
+Sharp market recovery
+    ↓
+High-beta losers rebound faster than low-beta winners
+    ↓
+The short leg loses heavily
+    ↓
+Momentum portfolio can crash
+```
+
+This is the Daniel–Moskowitz mechanism. The important point is not simply that “the market is up.” The dangerous setup is:
+
+> **A severe prior drawdown, followed by a fast recovery, with a strong loser-stock rebound and short-leg pain.**
+
+The monitor therefore checks the market state, recovery speed, long-versus-short beta, short-leg losses, and portfolio drawdown together.
+
+### 2. Crowded-position unwind
+
+A momentum book can also be fragile when many investors own similar winners, short similar losers, or concentrate in the same themes.
+
+When those positions are reduced at the same time:
+
+```text
+Similar portfolios
+    ↓
+Concentrated holdings / narrow breadth / shared themes
+    ↓
+One-sided selling or covering
+    ↓
+Weak liquidity absorption
+    ↓
+Correlated losses spread across books
+```
+
+This is the Khandani–Lo mechanism. A crowded selloff is not automatically forced deleveraging. The system only treats crowding as a **risk amplifier** unless positioning, liquidity, and propagation evidence become stronger.
 
 ---
 
-## Two momentum-crash mechanisms
+## What the prototype monitors
 
-### Mechanism 1 — Recovery-driven momentum crash
+| PM question | What the system looks at | Why it matters |
+|---|---|---|
+| Is the market in a dangerous recovery state? | Prior drawdown, volatility, recovery speed, UMD context | Recovery crashes are state-dependent |
+| Is the short leg becoming dangerous? | Short-leg return, loser rebound, short-versus-long beta | Momentum crashes often come through the short book |
+| Is the book concentrated? | Effective number of bets, HHI, theme clusters | Fewer independent bets make exits more correlated |
+| Is momentum breadth narrowing? | Share of the universe supporting the signal | A narrow trade is easier to crowd and reverse |
+| Is selling propagating? | Correlated selloff, turnover, absorption proxies | Distinguishes local weakness from a wider unwind |
+| Does outside evidence agree? | Timestamped news, positioning notes, short-interest context | Helps challenge the quantitative reading |
 
-Based on Daniel and Moskowitz (2016).
+The output remains a set of **separate, auditable signals**. They are not merged into one opaque crash score.
 
-**PM question:** Is the market recovering from a severe drawdown in a way that could produce a sharp loser-stock rebound and damage momentum?
+---
 
-Relevant signals include prior market drawdown, recovery state, loser- or short-leg rebound, beta asymmetry, short-leg losses, and momentum-portfolio drawdown.
+## Portfolio construction: why L10 / S10?
 
-### Mechanism 2 — Crowded-position unwind
+The default demo portfolio is an equal-weight S&P 500 **12-1 momentum long-10 / short-10** book.
 
-Based on Khandani and Lo (2007; 2011).
+This is deliberately a small, readable research portfolio—not a claim that institutional momentum funds trade only 20 names.
 
-**PM question:** Is a crowded momentum trade being reduced or unwound in a way that could amplify losses across similar portfolios?
+### What institutional implementations usually do
 
-Relevant evidence includes crowded or concentrated exposure, unusual reductions in technology or momentum exposure, correlated selling, and possible deleveraging or liquidity pressure.
+A production quant portfolio would more commonly:
 
-Do **not** claim forced deleveraging unless the evidence supports it.
+- rank the full investable universe by momentum;
+- select percentile or decile portfolios;
+- hold many more names;
+- neutralize market, industry, country, size, and other factor exposures;
+- apply liquidity, borrow, turnover, and risk constraints;
+- optimize weights rather than use simple equal weights.
 
-| Mechanism | Academic anchor | What would support it | What would weaken it |
-| --- | --- | --- | --- |
-| Recovery-driven crash | Daniel–Moskowitz (2016) | Panic / severe drawdown → rapid recovery → loser rebound / short-leg pain | Soft recovery without panic; no short-basket stress |
-| Crowded unwind | Khandani–Lo (2007; 2011) | Crowding / concentration + synchronized selling + weak absorption | Selling without crowding; healthy absorption; no propagation |
+### Why this MVP uses 10 long and 10 short names
+
+The L10/S10 design was chosen because it makes the prototype easy to inspect:
+
+- a PM can see every name and weight;
+- long- and short-leg attribution is transparent;
+- cluster and concentration diagnostics are intuitive;
+- the demo runs quickly using public data;
+- failures are easier to trace than in a 300-name optimized portfolio.
+
+The core monitoring logic is **portfolio-agnostic**. The intended production path is:
+
+```text
+Demo:
+S&P 500 → 12-1 rank → top 10 / bottom 10 → equal weight
+
+Production:
+PM universe → momentum signal → percentile selection
+→ risk neutralization → liquidity / borrow constraints
+→ optimized weights → same monitoring framework
+```
+
+So L10/S10 should be read as a **test harness for the monitoring system**, not the proposed final portfolio construction method.
+
+---
+
+## Beta: what is used and why?
+
+Beta is not a fixed company characteristic. It changes with the estimation window, market regime, data frequency, outliers, and risk model.
+
+Institutional risk systems may use:
+
+- historical market beta;
+- shrinkage or Bayesian beta;
+- multi-factor exposures;
+- robust regressions that reduce the effect of extreme observations;
+- vendor risk models;
+- portfolio optimization that targets near-zero aggregate factor exposure.
+
+### MVP choice
+
+This prototype uses a transparent historical realized beta estimate for each stock and then aggregates it using portfolio weights.
+
+```text
+stock beta ≈ covariance(stock return, market return)
+             ---------------------------------------
+                    variance(market return)
+
+portfolio beta ≈ sum(weight × stock beta)
+```
+
+The purpose is not to replace a production risk model. It is to answer a narrower question:
+
+> **Does the current short basket behave materially more like a high-beta recovery trade than the long basket?**
+
+This matters because the recovery-crash mechanism becomes more plausible when the short leg has greater upside sensitivity during a rebound.
+
+### Why this choice is acceptable for the MVP
+
+- It is reproducible with public data.
+- The PM can inspect the calculation.
+- It directly maps to the economic mechanism being tested.
+- It avoids pretending that a simple prototype has access to a full institutional risk model.
+
+### Known limitations
+
+Raw historical beta can be unstable. Extreme returns, changing business exposures, and short samples may distort the estimate.
+
+A production version should therefore:
+
+1. use a longer and explicitly chosen estimation window;
+2. winsorize or robustly down-weight extreme observations;
+3. shrink stock betas toward industry or market priors;
+4. estimate multiple factor exposures, not only market beta;
+5. calculate portfolio-level exposure from actual PM weights;
+6. compare ex-ante risk-model beta with realized up-market and down-market beta.
+
+In other words, the current beta is a **diagnostic lens**, not a portfolio-neutralization engine.
+
+---
+
+## How crowding is monitored
+
+Crowding cannot be observed from one number. It is better treated as a chain:
+
+```text
+Position overlap
+    + Concentration
+    + Limited liquidity
+    + One-sided flow
+    + Weak market absorption
+    = Higher unwind risk
+```
+
+The MVP separates what can be measured from public data from what would require institutional or vendor data.
+
+### Available in the MVP
+
+| Crowding dimension | MVP proxy | PM interpretation |
+|---|---|---|
+| Portfolio concentration | HHI and effective number of bets | Is risk dominated by a few names? |
+| Momentum breadth | Share of names supporting the momentum signal | Is the trade broad or increasingly narrow? |
+| Cluster exposure | Correlated names and shared themes | Could several positions move together? |
+| Theme unwind | Pre-existing cluster followed by broad correlated selling | Is pressure spreading beyond one stock? |
+| Liquidity absorption | Turnover and price-impact-style proxies | Is the market absorbing the selling cleanly? |
+| Short interest | Public FINRA-based context where available | Is the loser leg visibly crowded on the short side? |
+| Narrative attention | Timestamped public news context | Are investors discussing the same crowded trade? |
+
+### Important data that is not directly available
+
+A stronger production crowding monitor would add:
+
+- institutional holdings and prime-broker crowding;
+- ETF ownership and creation/redemption flows;
+- retail flow;
+- options positioning;
+- dealer gamma exposure;
+- borrow utilization and stock-loan cost;
+- fund leverage and financing pressure;
+- actual order-book liquidity and market impact;
+- cross-manager position overlap.
+
+These inputs answer different questions:
+
+| Data | What it would tell the PM |
+|---|---|
+| Short interest / borrow cost | How crowded and expensive the short side is |
+| Institutional holdings | Whether ownership is concentrated among similar investors |
+| ETF flows | Whether passive or thematic vehicles may transmit selling |
+| Retail flow | Whether speculative participation is amplifying the move |
+| Options / dealer gamma | Whether hedging flows may accelerate or dampen price moves |
+| Prime-broker data | Whether multiple funds hold the same trade |
+| Liquidity and market impact | Whether the market can absorb an exit |
+| Leverage / financing | Whether losses may force position reduction |
+
+The current prototype therefore does **not** claim to observe true ownership or forced selling. It flags where crowding risk appears structurally plausible and where additional data should be requested.
+
+---
+
+## Extending the framework to industry-level momentum
+
+The same monitoring logic can be applied above the stock level.
+
+### Equity industry momentum
+
+For industries within one country:
+
+1. group stocks by a stable point-in-time industry classification;
+2. construct industry returns using liquid, investable constituents;
+3. rank industries using a 12-1 or alternative momentum signal;
+4. go long stronger industries and short weaker industries;
+5. neutralize market and country exposure;
+6. monitor industry breadth, concentration, beta asymmetry, and cross-industry reversal.
+
+The PM question becomes:
+
+> Are strong industries becoming crowded and narrow, while weak high-beta industries are positioned for a sharp recovery?
+
+A production implementation should avoid using today’s industry membership historically and should account for sector reclassifications.
+
+### Country and index momentum
+
+At the index level, implementation would more naturally use:
+
+- country equity-index futures;
+- liquid index ETFs;
+- currency-hedged or explicitly unhedged returns;
+- country and regional risk controls.
+
+A simple structure would be:
+
+```text
+Country/index universe
+→ rank by medium-term momentum
+→ long stronger indices / short weaker indices
+→ neutralize global equity beta, region, and currency risk
+→ monitor recovery, crowding, liquidity, and cross-market reversal
+```
+
+Additional risks become important:
+
+- different trading hours;
+- holidays and stale prices;
+- FX exposure;
+- futures rolls and basis;
+- country concentration;
+- capital controls;
+- geopolitical jumps;
+- differences in index composition.
+
+The architecture remains the same: **portfolio risk first, regime second, crowding third, evidence last.**
+
+---
+
+## Two objects, never blended
+
+The system keeps the PM book and the academic benchmark separate.
+
+| Object | Role |
+|---|---|
+| **PM momentum portfolio** | The primary object being monitored. In the demo, this is the S&P 500 L10/S10 portfolio. |
+| **Ken French UMD / Daniel–Moskowitz context** | A published factor and market-state reference used to understand the broader momentum backdrop. |
+
+UMD is not treated as the PM book, and its historical tail frequency is not presented as the PM portfolio’s crash probability.
 
 ---
 
 ## One PM decision workflow
 
-The system combines the two mechanisms so the PM can decide whether to:
-
-1. **Maintain monitoring** — signals incomplete or contained;
-2. **Inspect the short leg or concentrated exposures** — pressure is localized;
-3. **Challenge the signal with additional evidence** — text and structure disagree;
-4. **Discuss whether risk escalation is warranted** — mechanism channels are completing.
-
 ```text
-Deterministic monitors  →  mechanism read  →  evidence challenge  →  PM next checks
-(scorecard / unwind)       (DM vs KL)         (support / contradict)   (not a trade ticket)
+1. Locate the risk
+   Long leg, short leg, concentration, or market regime?
+
+2. Identify the mechanism
+   Recovery-driven reversal, crowded unwind, or ordinary noise?
+
+3. Challenge the interpretation
+   What evidence supports it? What contradicts it? What is missing?
+
+4. Decide the next check
+   Maintain monitoring, inspect exposures, request better positioning data,
+   or discuss whether risk reduction deserves review.
 ```
+
+The prototype does not issue a trade ticket. It organizes the evidence needed for a PM discussion.
 
 ---
 
 ## Product demo: three cases
 
-Notebook path: [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb). Primary order: **current semi → 2020 validation → 2024 quiet control**.
+Open [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb).
 
-### Current semiconductor case (primary)
+The recommended review order is:
 
-Frozen point-in-time read for **2026-05-29** (not a live August assessment).
+1. **Current semiconductor case** — primary product example;
+2. **March 2020** — historical recovery-crash validation;
+3. **January 2024** — quiet control.
 
-> The evidence supports **localized crowding and meaningful structural pressure**, but does **not** yet confirm a broad recovery-driven momentum crash or forced portfolio unwind.
+### Current semiconductor case: 2026-05-29
 
-| Question | Current read |
-| --- | --- |
-| What is happening? | Quant scorecard quiet; crowded-theme / concentration channels active; mechanical fragility without absorption failure |
-| Which mechanism is supported? | Khandani–Lo **partially supported** |
-| Which is only partial / weak? | Daniel–Moskowitz recovery crash **weak** |
-| What is not supported? | Forced deleveraging, factor-wide propagation, liquidity-absorption failure |
-| Where is the risk? | Long-side concentrated / correlated cluster |
-| What next? | Monitor propagation, absorption, and whether positioning evidence moves beyond contextual notes |
+> The evidence supports localized crowding and structural pressure, but does not confirm a broad recovery-driven momentum crash or forced deleveraging.
 
-Full readout: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md).
+| PM question | Read |
+|---|---|
+| Where is the risk? | Concentrated and correlated long-side semiconductor exposure |
+| Recovery-crash mechanism? | Weak / incomplete |
+| Crowded-unwind mechanism? | Partially supported |
+| What is not confirmed? | Broad propagation, liquidity failure, forced deleveraging |
+| What next? | Monitor breadth, selling propagation, absorption, and stronger positioning evidence |
 
-### Historical validation: 2020
+Full case: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
 
-**2020-03-24** — not a predictive backtest. When a known momentum-reversal episode occurred, recovery-crash indicators behaved coherently: severe drawdown, panic-elevated state, rapid recovery, short-leg loss / beta-gap pressure, `bear_market_recovery_crash` triggered; crowded-theme unwind not confirmed.
+### Historical validation: 2020-03-24
 
-> When a historically important momentum reversal occurred, the system’s mechanism-based indicators lined up in an economically coherent way.
+The system identifies a coherent recovery-crash footprint:
 
-Case pack: [`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md).
+- severe prior market drawdown;
+- panic-elevated state;
+- rapid recovery;
+- short-leg and beta-gap pressure;
+- recovery-crash mechanism triggered.
 
-### Quiet control: 2024
+This is an interpretability check, not a claim of predictive backtest performance.
 
-**2024-01-05** — same rules, different conclusion: soft UMD backdrop, **0 scorecard triggers**, recovery-crash incomplete (watch only), crowded unwind not confirmed, mechanical state `NORMAL`. PM posture: **maintain monitoring**.
+Full case: [`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md)
 
-> The framework is selective. It does not label every weak or noisy momentum period as a crash setup.
+### Quiet control: 2024-01-05
 
-Case pack: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md).
+The same rules produce no escalation:
 
-### Three-case snapshot
+- soft bear / low-volatility backdrop;
+- zero scorecard triggers;
+- no confirmed crowded unwind;
+- recovery mechanism incomplete.
 
-| Question | Current semi | 2020 validation | 2024 control |
-| --- | --- | --- | --- |
-| Recovery mechanism | Partial / watch | Strongly present | Not present (incomplete) |
-| Crowded unwind evidence | Partially supported | Secondary / unconfirmed | Limited |
-| Short-leg pressure | Contained; risk in long crowding | Severe | Contained |
-| Evidence confidence | Mixed | Historically coherent | Low-risk / quiet |
-| PM workflow | Monitor and investigate | Escalate review | Maintain monitoring |
+This demonstrates that the framework does not label every weak momentum period as a crash setup.
 
-Detail: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
+Full case: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md)
 
 ---
 
 ## What a PM gets in one run
 
-| Layer | Question it answers | Output |
-|---|---|---|
-| **UMD / DM benchmark** | What does the published momentum-factor backdrop look like? | `normal` / `bear_low_volatility` / `panic_elevated` + state-conditioned UMD tail-loss context |
-| **PM book scorecard** | Is *my* 12-1 long/short book showing known stress channels? | 4 deterministic rows with prior-only thresholds |
-| **Unwind monitor** | Which crash *mechanism* is lighting up? | 6-row structure + 3 independent scenarios |
-| **Crowding monitor** | Is the book *structurally* tight / theme-crowded? | T0 proxies (concentration, breadth, theme unwind) + optional T1 FINRA/GDELT side notes |
-| **Mechanical unwind** | Is there a factor-aligned / absorption-stress footprint? | Factor R², extreme turnover ratio, absorption proxy, rule-based state |
-| **Evidence card** | What timestamped macro/news context fits this date? | Exact-date replay (optional LLM narrative; cannot change numbers) |
-| **Research validation** | Do mechanisms leave distinct historical fingerprints? | Episode table + AI worksheet (interpretability only; not a backtest) |
-
-```text
-merge(layers) → FORBIDDEN
-deterministic_score → null   # by design, not a bug
-```
-
----
-
-## Why this exists
-
-Momentum crashes are rare and state-dependent. A rebound after a severe drawdown can hurt a recent-winner / short-loser book in ways a single vol number misses.
-
-Most dashboards either:
-- collapse everything into one opaque score, or
-- show UMD factor stress and pretend it *is* your book.
-
-This MVP keeps the objects separate and reviewable — so a PM can challenge the reading, not just accept a label.
-
-```text
-# failure modes we refuse
-opaque_score(book)     # no
-umd_state == my_book   # no
-llm.write(triggers)    # no
-```
+| Output | PM use |
+|---|---|
+| Market-state context | Understand whether the market is in panic, bear, recovery, or normal conditions |
+| Long/short leg decomposition | See where P&L pressure is coming from |
+| Beta comparison | Assess whether the short book is exposed to a rebound |
+| Drawdown and short-loss checks | Identify whether bounded stress thresholds are breached |
+| Concentration and breadth | See whether the trade is narrow or dominated by a cluster |
+| Unwind mechanism read | Separate recovery risk from crowded-position risk |
+| Evidence card | Review timestamp-valid supporting and contradicting evidence |
+| Missing-data statement | Understand what cannot be concluded from public data |
 
 ---
 
@@ -198,209 +423,86 @@ llm.write(triggers)    # no
             ▼                             ▼                             ▼
    ┌────────────────┐          ┌──────────────────┐          ┌───────────────────┐
    │ UMD / DM       │          │ PM momentum book │          │ Unwind +          │
-   │ comparison     │          │ (S&P 10/10 def.) │          │ 3 mechanisms      │
+   │ comparison     │          │ (S&P 10/10 demo) │          │ mechanism monitor │
    │────────────────│          │──────────────────│          │───────────────────│
-   │ market state   │          │ 4-row scorecard  │          │ concentration     │
-   │ panic / bear   │          │ leg risk decomp  │          │ breadth, reversal │
-   │ UMD tail freq  │          │                  │          │ theme unwind, …   │
+   │ market state   │          │ leg attribution  │          │ recovery reversal │
+   │ panic / bear   │          │ beta comparison  │          │ crowding / breadth│
+   │ UMD context    │          │ bounded triggers │          │ propagation       │
    └───────┬────────┘          └────────┬─────────┘          └─────────┬─────────┘
            │                            │                              │
-           │                            │         ┌────────────────────┤
-           │                            │         │ Crowding panel     │
-           │                            │         │ T0 proxies + T1    │
-           │                            │         │ FINRA/GDELT notes  │
-           │                            │         └─────────┬──────────┘
-           └────────────────────────────┴───────────────────┘
+           └────────────────────────────┴──────────────────────────────┘
                                           │
                                           ▼
-                          ┌── Deterministic Evidence Card ──┐
-                          └───────────────┬─────────────────┘
-                     ┌────────────────────┴────────────────────┐
-                     ▼                                         ▼
-          exact-date evidence                       optional constrained
-          replay (default)                          LLM narrative
-                     └────────────────────┬────────────────────┘
+                              Deterministic risk read
+                                          │
+                           ┌──────────────┴──────────────┐
+                           ▼                             ▼
+                 exact-date evidence            optional constrained
+                 replay and retrieval           LLM interpretation
+                           └──────────────┬──────────────┘
                                           ▼
-                         charts · JSON · HTML · Markdown
+                               PM-facing evidence card
                                           │
                                           ▼
-                    ┌── research_validation (offline) ──┐
-                    │ episode fingerprints · AI arms    │
-                    │ reuse run_mvp · no new thresholds │
-                    └───────────────────────────────────┘
+                               charts · JSON · Markdown
 ```
 
-### Two objects, never blended
+### Design principles
 
-| Object | Role | Modules |
-|---|---|---|
-| **PM momentum portfolio** | Primary monitored book. Default: equal-weight S&P 500 12-1 **long-10 / short-10**. Framework is built so names/weights/universe can be swapped later. Crowding proxies attach to this book. | `portfolio/`, `monitoring/scorecard.py`, `monitoring/unwind_structure.py`, `risk/leg_decomposition.py`, `mvp/crowding_context.py` |
-| **UMD comparison benchmark** | Literature backdrop only. Ken French UMD + Daniel–Moskowitz-inspired state. Answers “what does the published factor look like?”, **not** “how stressed is my book?”. | `risk/dm_engine.py`, `regime/market_state.py` |
+1. **The PM book is the main object.** UMD is market context only.
+2. **Mechanisms remain separate.** Recovery risk and crowded unwind are not collapsed into one score.
+3. **AI cannot change the numbers.** It only organizes evidence and explains the read.
+4. **Missing data stays missing.** The system does not infer ownership, leverage, or forced selling without evidence.
+5. **Every output is point-in-time.** Features and evidence must have been available by the selected date.
 
-### Monitoring panels (the actual PM surface)
-
-**Four-row scorecard** (PM book):
-1. `high_volatility_recovery` — early recovery + high realized vol (macro gate)
-2. `short_minus_long_beta_gap` — short leg beta vs long leg
-3. `portfolio_drawdown` — book drawdown
-4. `short_loss_in_recovery` — short-leg pain in recovery
-
-**Three independent crash mechanisms** (descriptive rules, not forecasts):
-1. `bear_market_recovery_crash` — deep drawdown → fast recovery → high vol
-2. `short_book_reversal_crash` — extreme short-minus-long reversal + broad loser rally
-3. `crowded_theme_unwind` — correlated long cluster (`t-1`) + extreme broad selloff
-
-**Crowding monitor** (book-structure proxies; no aggregate crowding score):
-- T0 spine from unwind: portfolio concentration (effective bets / HHI), momentum breadth, correlated-theme unwind
-- T1 side notes only: FINRA loser-leg short-interest z + GDELT crowding attention z (`confirm` / `contradict` / `neutral`)
-- Proxies, not ownership / leverage / financing; side notes never change triggers
-
-**Research validation** (thin offline layer; reuses `run_mvp`):
-- Episode fingerprints on known dates — interpretability check that mechanisms differ (`aligned` / `partially_aligned` / `not_aligned`)
-- AI value worksheet — quant-only vs `DeterministicSynthesizer` vs optional LLM (`not_run` without credentials; never fabricates)
-- PM-book forward-outcome table **skipped** until historical mechanism/scorecard states are persisted
-- Map: [`docs/architecture_to_value.md`](docs/architecture_to_value.md) · regen: `uv run python -m src.research_validation`
-
-### Evidence stack (cannot rewrite risk state)
+### Evidence privilege model
 
 ```text
-[truth]  scorecard / unwind / crowding proxies
-            │
-            ▼
-[cache]  exact-date research preview          # offline, fail-closed
-            │
-            ▼
-[llm?]   constrained interpretation           # narrative only; ID-bound
-            │
-            ▼
-[rag?]   GDELT + DeepSeek                     # trigger-gated; research path
+Deterministic metrics and thresholds
+                ↓
+Mechanism interpretation
+                ↓
+Timestamp-valid evidence retrieval
+                ↓
+Optional LLM summary
 
-# privilege model
-evidence ⊬ rewrite(metric | threshold | trigger | risk_state)
+LLM output cannot rewrite:
+metric | threshold | trigger | portfolio state
 ```
-
-Point-in-time rules of thumb:
-- market / risk windows end on `as_of_date`
-- theme-cluster membership stops at `t-1`
-- evidence publication ≤ local cutoff (default 16:00 ET)
-- missing stays `unavailable` — never invented
-
-### How the AI evidence layer adds value
-
-The AI layer is **not** responsible for generating the deterministic risk signal.
-
-It helps the PM understand and challenge the signal by organizing timestamp-valid evidence into:
-
-- evidence supporting the recovery-crash mechanism;
-- evidence supporting the crowded-unwind mechanism;
-- contradicting evidence;
-- evidence that remains missing or unconfirmed.
-
-| PM question | Role of AI / evidence layer |
-| --- | --- |
-| Why might this signal be occurring? | Compresses market, portfolio, and text context into a mechanism narrative |
-| Which mechanism does the evidence support? | Separates DM vs KL vs fundamental / sector reads |
-| What argues against the risk interpretation? | Surfaces contradicting IDs and incomplete channels |
-| What should I check next? | Bounded monitoring and invalidation questions |
-| How confident should I be? | States missing evidence explicitly; never invents a score |
-
-Offline / no-key path uses a deterministic interpreter. Optional LLM narrative is constrained and ID-bound.
 
 ---
 
 ## Quick start
 
-Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
+Requirements: Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --locked --all-groups
-uv run python -m src.mvp.demo_smoke_test    # → {"status": "ready"}
-uv run python -m src.research_validation    # → outputs/research_validation/*
-uv run python -m pytest -q                  # contract + smoke tests
+uv run python -m src.mvp.demo_smoke_test
+uv run python -m pytest -q
 ```
 
-Open the single demo notebook:
+Open the demo notebook:
 
 ```bash
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
 ```
 
-Guided product path: PM problem → two mechanisms → workflow → **current semi case** → AI evidence view → 2020 validation → 2024 quiet control → cross-case comparison → assumptions.
-
-Edit only the parameter cell for a live `run_mvp` date, then **Run All**:
+Run the pipeline directly:
 
 ```python
 from src.mvp.config import MVPConfig
 from src.mvp.pipeline import run_mvp
 
-CONFIG = MVPConfig(
+config = MVPConfig(
     as_of_date="2024-01-05",
     compare_to_date="2023-12-01",
     threshold_profile="default",
     horizon_days=20,
-    use_llm=False,          # reliable offline path; full card still renders
+    use_llm=False,
 )
-result = run_mvp(CONFIG)
-# result.unwind · result.deterministic_input · crowding via presentation
-```
 
-### Contrast dates worth reviewing
-
-| Date | Why look |
-|---|---|
-| `2026-05-29` | **Primary product case** — `crowded_theme_unwind` on a pre-event correlated cluster (aligned) |
-| `2020-03-24` | Historical validation — `bear_market_recovery_crash` triggers (fingerprint: aligned) |
-| `2024-01-05` | Quiet control — recovery on watch, no confirmed theme unwind |
-| `2020-11-02` | Style-rotation prior; short reversal on **watch** (partially_aligned) |
-
-Full fingerprint table: [`outputs/research_validation/episode_fingerprints.md`](outputs/research_validation/episode_fingerprints.md).  
-Product case packs: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
-
-### Optional env vars
-
-| Variable | Purpose |
-|---|---|
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Evidence-card LLM narrative |
-| `DEEPSEEK_API_KEY` | Optional GDELT RAG explainer |
-| `SEC_CONTACT_EMAIL` | SEC EDGAR fetch (fundamental anchor) |
-
----
-
-## Example output (2024-01-05)
-
-From [`outputs/example_risk_output/pm_risk_assessment_2024-01-05.md`](outputs/example_risk_output/pm_risk_assessment_2024-01-05.md):
-
-```text
-$ run_mvp --as-of 2024-01-05
-────────────────────────────────────────────────────────
-UMD comparison benchmark:     bear_low_volatility
-PM scorecard triggers:        0
-Active mechanism scenarios:   none
-Crowding (T0):                concentration / breadth normal; theme not_confirmed
-Crowding (T1 side notes):     FINRA neutral · GDELT narrative neutral
-Evidence quality:             available
-────────────────────────────────────────────────────────
-short_minus_long_beta_gap     not_triggered
-portfolio_drawdown            not_triggered
-short_loss_in_recovery        not_triggered
-────────────────────────────────────────────────────────
-Fingerprint: 750f22225b7d9592
-deterministic_score: null
-```
-
-A PM reading this should conclude: *backdrop is soft-bear / low-vol; the customized book is not firing stress or crowding channels on this date* — not “crash probability = X%”.
-
-Research-validation side panel (same date as negative control):
-
-```text
-$ python -m src.research_validation
-────────────────────────────────────────────────────────
-episode fingerprints     → outputs/research_validation/episode_fingerprints.md
-ai value worksheet       → ai_value_review.csv  (LLM arm: not_run w/o keys)
-pm-book forward outcomes → skipped (no historical mechanism series yet)
-architecture → value     → docs/architecture_to_value.md
-────────────────────────────────────────────────────────
-# priors never enter computation · no threshold retune after the table
+result = run_mvp(config)
 ```
 
 ---
@@ -410,99 +512,78 @@ architecture → value     → docs/architecture_to_value.md
 ```text
 momentum_crash/
 ├── README.md
-├── Future_To_DO.md              # PM imagination space (T2–T4+)
+├── Future_To_DO.md
 ├── docs/
-│   ├── methodology.md           # formulas, assumptions, decision boundary
-│   ├── limitations.md           # what we deliberately do not claim
-│   ├── demo_walkthrough.md      # reviewer path
-│   └── architecture_to_value.md # component → PM question → evidence
+│   ├── methodology.md
+│   ├── limitations.md
+│   ├── demo_walkthrough.md
+│   └── architecture_to_value.md
 ├── notebooks/
-│   └── final_mvp_demo.ipynb     # single presentation notebook
+│   └── final_mvp_demo.ipynb
 ├── src/
-│   ├── mvp/                     # config · pipeline · card · crowding · present
-│   ├── research_validation.py   # episode fingerprints · AI arms · writers
-│   ├── monitoring/              # scorecard · unwind · contracts
-│   ├── portfolio/ regime/ risk/ features/
-│   ├── evidence/                # corpus · preview · optional GDELT/DeepSeek
-│   └── data/ utils/
-├── tests/                       # smoke / integration / contract tests
-├── data/processed/              # committed reproducibility inputs
+│   ├── mvp/                     # configuration, pipeline, PM presentation
+│   ├── monitoring/              # scorecard and unwind logic
+│   ├── portfolio/               # portfolio construction
+│   ├── regime/                  # market-state classification
+│   ├── risk/                    # beta and leg decomposition
+│   ├── evidence/                # timestamped evidence and optional LLM layer
+│   ├── features/
+│   ├── data/
+│   └── utils/
+├── tests/
+├── data/processed/
 └── outputs/
-    ├── current_semi_unwind/     # primary product case
-    ├── march_2020_reference/    # historical validation
-    ├── quiet_control_2024/      # quiet control
+    ├── current_semi_unwind/
+    ├── march_2020_reference/
+    ├── quiet_control_2024/
     ├── cross_case_comparison.md
-    ├── example_risk_output/     # PM card snapshot
-    └── research_validation/     # fingerprints · AI worksheet · skip note
+    └── research_validation/
 ```
-
-Superseded phase docs / research modules live in Git history (`pre-mvp-consolidation` tag).
 
 ---
 
-## Documentation
+## Limitations and assumptions
 
-1. [Methodology](docs/methodology.md) — portfolio construction, scorecard, unwind rules
-2. [Limitations](docs/limitations.md) — full honesty list
-3. [Demo walkthrough](docs/demo_walkthrough.md) — PM review script
-4. [Architecture to value](docs/architecture_to_value.md) — component → PM question → current evidence
+- The L10/S10 portfolio is a transparent demo portfolio, not an institutional construction recommendation.
+- Historical S&P membership is not fully point-in-time in the current prototype.
+- Beta is a public-data realized estimate, not a vendor or production multi-factor risk model.
+- The system does not currently optimize the portfolio to zero factor exposure.
+- Crowding metrics are proxies and do not observe true manager overlap, leverage, financing, or forced selling.
+- Public short-interest and news data are incomplete and may arrive with delays.
+- Historical cases test whether the mechanism read is economically coherent; they do not establish predictive performance.
+- The LLM layer organizes and challenges evidence but cannot change deterministic risk outputs.
+- UMD context is not the PM book’s loss probability.
+- No output should be interpreted as investment advice.
+
+See [`docs/limitations.md`](docs/limitations.md) for the full list.
+
+---
+
+## Production roadmap
+
+The highest-value extensions are:
+
+1. plug in actual PM holdings, weights, and constraints;
+2. replace L10/S10 with percentile-based, risk-neutralized portfolio construction;
+3. use point-in-time universe and industry membership;
+4. add robust multi-factor beta and risk-model exposures;
+5. add institutional holdings, ETF flows, borrow, options, dealer gamma, and liquidity data;
+6. persist daily mechanism states for out-of-sample outcome analysis;
+7. extend the same framework to industry, country, and index-futures momentum;
+8. upgrade evidence retrieval while preserving the rule that AI cannot alter the risk state.
+
+See [`Future_To_DO.md`](Future_To_DO.md) for the broader roadmap.
 
 ---
 
 ## References
 
-Core academic anchors for the two mechanism lenses. This repository is an
-operational monitoring prototype inspired by these papers; it is **not** a
-replication of either study.
+1. **Daniel, K., & Moskowitz, T. J. (2016).** Momentum Crashes.  
+   *Journal of Financial Economics*, 122(2), 221–247.  
+   Recovery-driven momentum-crash mechanism.
 
-1. **Daniel, K., & Moskowitz, T. J. (2016).** Momentum crashes.
-   *Journal of Financial Economics*, 122(2), 221–247.
-   https://doi.org/10.1016/j.jfineco.2015.12.002  
-   → Recovery-driven / panic-state momentum crash mechanism (Mechanism 1).
+2. **Khandani, A. E., & Lo, A. W. (2007; 2011).** What Happened to the Quants in August 2007?  
+   Crowded-position and quant-unwind mechanism.
 
-2. **Khandani, A. E., & Lo, A. W. (2007).** What happened to the quants in August 2007?
-   Working paper / early analysis of the August 2007 quant unwind.  
-   **Khandani, A. E., & Lo, A. W. (2011).** What happened to the quants in August 2007?
-   Evidence from factors and transactions data.
-   *Journal of Financial Markets*, 14(1), 1–46.
-   https://doi.org/10.1016/j.finmar.2010.07.005  
-   → Crowded-position / quant-unwind mechanism (Mechanism 2).
-
-### Related data / factor references
-
-- **Ken French Data Library** — market, risk-free, and UMD factor series used as
-  the published momentum-factor comparison backdrop (not the PM book).
-  https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html
-
----
-
-## Assumptions
-
-Standing assumptions for any PM-facing readout:
-
-- **Default book is a research stand-in** — S&P 12-1 L10/S10 with current SPY membership historically; not a live holdings plug-in yet.
-- **UMD is backdrop, not your book** — published-factor context only; never a score or probability for the PM book.
-- **Evidence is exact-date cached replay** — useful to challenge a mechanism read; not institutional live retrieval.
-- **Mechanisms are descriptive risk lenses** — organize what kind of stress may be forming; not crash forecasts.
-- **Historical fingerprints check interpretability** — coherent episode footprints only; not a predictive backtest.
-- **Crowding is a structure / public-footprint proxy** — flags where to look; does not observe ownership, leverage, financing, or forced selling.
-- **AI organizes judgment only** — cannot change metrics, thresholds, triggers, or risk state.
-- **UMD tail-loss frequencies are literature context** — not the PM book’s loss probability.
-
-Longer honesty list: [docs/limitations.md](docs/limitations.md).
-
----
-
-## Future work
-
-See **[Future_To_DO.md](Future_To_DO.md)** for the PM-facing roadmap (T2 holdings
-plug-in, T3 observed crowding, T4 leverage / financing / flow, and broader
-production imagination). Short list:
-
-- Point-in-time membership and industry history
-- Plug-in interface for a PM’s own holdings / weights
-- Observed holdings / leverage / flow / street crowding
-- Persist mechanism/scorecard history → descriptive 5d/20d PM-book forward outcomes
-- Out-of-sample validation of the three mechanism rules
-- Production-grade retrieval beyond offline preview
-- Human-reviewed LLM arm scores in `ai_value_review.csv`
+3. **Ken French Data Library.**  
+   UMD and market-factor data used as published comparison context.
