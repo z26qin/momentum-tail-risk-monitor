@@ -664,7 +664,8 @@ def prepare_ai_review_cases(
                     {
                         "run_status": "not_run",
                         "reason": (
-                            "No OPENAI_API_KEY / ANTHROPIC_API_KEY present; "
+                            "No DEEPSEEK_API_KEY / OPENAI_API_KEY / "
+                            "ANTHROPIC_API_KEY present; "
                             "structured model context persisted for review."
                         ),
                         "model_context_path": _relpath(context_path),

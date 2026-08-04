@@ -19,6 +19,7 @@ from src.monitoring.unwind_monitor import (
 )
 from src.monitoring.unwind_structure import UnwindAssessment, build_unwind_assessment
 from src.mvp.config import MVPConfig
+from src.mvp.crowding_context import build_positioning_snapshot
 from src.mvp.evidence_card import (
     DeterministicEvidenceInput,
     build_deterministic_evidence_input,
@@ -27,6 +28,7 @@ from src.mvp.evidence_interpretation import (
     EvidenceInterpretation,
     EvidenceInterpreter,
     compact_mechanical_unwind_context,
+    compact_public_positioning_proxies,
     compact_structural_unwind_context,
     interpret_evidence_card,
 )
@@ -151,12 +153,20 @@ def run_mvp(
         processed_dir=config.processed_dir,
         config=config.mechanical_unwind_config,
     )
+    positioning = build_positioning_snapshot(
+        as_of_date=config.as_of_date,
+        context_elevated=bool(deterministic_input.triggered_quant_signals),
+        processed_dir=config.processed_dir,
+    )
     interpretation = interpret_evidence_card(
         deterministic_input,
         use_llm=config.use_llm,
         interpreter=interpreter,
         structural_unwind=compact_structural_unwind_context(unwind),
         mechanical_unwind=compact_mechanical_unwind_context(mechanical_unwind),
+        public_positioning_proxies=compact_public_positioning_proxies(
+            positioning
+        ),
     )
     pm_response = build_pm_response(
         deterministic_input,
