@@ -159,6 +159,16 @@ institutional news feeds.
 - AI may organize evidence but must not become an independent risk signal
   without validation.
 
+## Rejected probability baseline
+
+An earlier fitted-probability prototype was deliberately retired rather than
+carried into the final product. Its development calibration slopes were about
+0.17, development log loss was worse than a constant baseline, and the
+20-trading-day holdout contained only one independent event episode. Those
+results were insufficient for a defensible PM-book crash probability. The
+final MVP therefore reports transparent mechanism states and descriptive
+severity while explicitly declining to publish a calibrated crash probability.
+
 ## Principal limitations
 
 See [limitations.md](limitations.md).

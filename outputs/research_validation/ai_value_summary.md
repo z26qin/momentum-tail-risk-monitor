@@ -15,6 +15,16 @@ thresholds.
 - External LLM runs in the worksheet remain optional; human-score columns stay
   blank until reviewed.
 
+## Evaluation status
+
+The retained worksheet does **not** demonstrate measured incremental LLM value.
+For the May 29 `theme_proxy` case, the LLM arm is `not_run`,
+`external_llm_called=False`, the active-pipeline evidence count is zero, and
+the human score columns are blank. The comparison below therefore demonstrates
+the value of an **evidence-assisted interpretation design** using the separate
+human-curated `CSU-*` pack; it must not be described as an evaluated live-model
+uplift result.
+
 ## Compact comparison — May 29 primary case
 
 | Layer | What the PM sees | What changes? |
@@ -32,6 +42,16 @@ Deterministic monitors decide the state. The evidence layer (deterministic
 template or optional LLM) organizes supporting, contradicting, and missing
 material so the PM can challenge the signal before acting. It does not create a
 crash probability or change a threshold.
+
+## Human PM-usefulness review
+
+A compact human review of the frozen May 29 case scored it **16/18** on a
+0–3 rubric: mechanism discrimination 3, portfolio linkage 2, evidence
+grounding 3, contradiction coverage 3, next-diagnostic usefulness 3, and
+brevity 2. The main deduction was deliberate: the default book and statistical
+cluster are not a validated semiconductor portfolio or observed common
+ownership. This is a review of the completed case pack, not an LLM benchmark
+and not evidence of incremental alpha.
 
 Worksheet detail: `ai_value_review.csv` and `ai_inputs/`.
 Episode interpretability: `episode_fingerprints.md`.

@@ -2,7 +2,15 @@
 
 **Assessment date:** 2020-03-24  
 **Evidence cutoff:** 2020-03-24 16:00 America/New_York  
+**Risk horizon:** 20 trading days
+
 **Interpretation:** `deterministic-evidence-interpretation-v2` · **Prompt:** `evidence-interpretation-prompt-v2` · **PM response:** `deterministic-pm-response-v1`
+
+**Evidence-layer note:** `M20-*` denotes a separate manually curated,
+cutoff-valid historical reference pack. Active exact-date
+classification-cache replay is unavailable on 2020-03-24; the curated records
+support historical interpretation but are not pipeline-retrieved evidence and
+cannot change the deterministic state.
 
 ## Current read
 
