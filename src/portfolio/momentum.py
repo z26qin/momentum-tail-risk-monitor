@@ -137,6 +137,49 @@ def build_momentum_signals(
     ).reset_index(drop=True)
 
 
+def build_momentum_rank_snapshot(
+    prices: pd.DataFrame,
+    *,
+    exclude_incomplete_last_month: bool = True,
+) -> pd.DataFrame:
+    """Build the canonical formation-date momentum rank snapshot.
+
+    ``price_momentum_rank`` preserves the portfolio's deterministic ordinal
+    convention (one is the strongest winner). ``momentum_rank`` is the
+    winner-high percentile exposure used by cross-sectional diagnostics.
+    Both are formed once per calendar month and become effective in month
+    ``m+1``.
+    """
+
+    signals = build_momentum_signals(
+        prices,
+        exclude_incomplete_last_month=exclude_incomplete_last_month,
+    )
+    if signals.empty:
+        return signals.assign(
+            price_momentum_rank=pd.Series(dtype="int64"),
+            momentum_rank=pd.Series(dtype="float64"),
+            rankable_universe=pd.Series(dtype="int64"),
+        )
+
+    records: list[pd.DataFrame] = []
+    for _, group in signals.groupby("formation_month", sort=True):
+        ranked = group.sort_values(
+            ["momentum_return", "symbol"],
+            ascending=[False, True],
+        ).copy()
+        rankable = len(ranked)
+        ranked["price_momentum_rank"] = np.arange(1, rankable + 1)
+        ranked["momentum_rank"] = 1.0 - (
+            ranked["price_momentum_rank"] / (rankable + 1.0)
+        )
+        ranked["rankable_universe"] = rankable
+        records.append(ranked)
+    return pd.concat(records, ignore_index=True).sort_values(
+        ["formation_month", "price_momentum_rank", "symbol"]
+    ).reset_index(drop=True)
+
+
 def build_momentum_holdings(
     prices: pd.DataFrame,
     universe: pd.DataFrame | None = None,
@@ -155,17 +198,13 @@ def build_momentum_holdings(
         allowed = set(universe["symbol"].astype(str))
         filtered = prices.loc[prices["symbol"].astype(str).isin(allowed)].copy()
 
-    signals = build_momentum_signals(filtered)
+    signals = build_momentum_rank_snapshot(filtered)
     records: list[pd.DataFrame] = []
     for _, group in signals.groupby("formation_month", sort=True):
-        ranked = group.sort_values(
-            ["momentum_return", "symbol"],
-            ascending=[False, True],
-        ).copy()
+        ranked = group.sort_values(["price_momentum_rank", "symbol"]).copy()
         rankable = len(ranked)
         if rankable < n_long + n_short:
             continue
-        ranked["price_momentum_rank"] = np.arange(1, rankable + 1)
         long = ranked.head(n_long).copy()
         short = ranked.tail(n_short).sort_values(
             ["momentum_return", "symbol"],
@@ -176,7 +215,6 @@ def build_momentum_holdings(
         short["leg"] = "short"
         short["weight"] = -1.0 / n_short
         selected = pd.concat([long, short], ignore_index=True)
-        selected["rankable_universe"] = rankable
         selected["n_long"] = n_long
         selected["n_short"] = n_short
         selected["membership_status"] = MEMBERSHIP_STATUS

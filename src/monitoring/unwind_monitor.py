@@ -19,7 +19,7 @@ from typing import Any, Literal
 import numpy as np
 import pandas as pd
 
-from src.portfolio.momentum import build_momentum_signals
+from src.portfolio.momentum import build_momentum_rank_snapshot
 from src.utils.io import DEFAULT_PROCESSED_DIR, iso_date
 
 MECHANICAL_UNWIND_SCHEMA_VERSION = "mechanical-unwind-v1"
@@ -215,32 +215,150 @@ def _daily_security_panel(
 def _momentum_rank_panel(
     prices: pd.DataFrame,
     calendar: pd.DatetimeIndex,
+    *,
+    rank_snapshot: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Map monthly 12-1 ranks onto trading days, then lag one session."""
+    """Carry the latest known formation rank through its effective month."""
 
-    signals = build_momentum_signals(prices)
-    if signals.empty:
+    ranks = (
+        build_momentum_rank_snapshot(prices)
+        if rank_snapshot is None
+        else rank_snapshot.copy()
+    )
+    if ranks.empty:
         return pd.DataFrame(columns=["date", "symbol", "mom_rank_lag1"])
-
-    ranked_parts: list[pd.DataFrame] = []
-    for _, group in signals.groupby("formation_month", sort=True):
-        part = group.sort_values(
-            ["momentum_return", "symbol"], ascending=[False, True]
-        ).copy()
-        part["mom_rank"] = np.arange(1, len(part) + 1, dtype=float)
-        part["mom_rank"] = part["mom_rank"] / (len(part) + 1.0)
-        ranked_parts.append(
-            part.loc[:, ["effective_month", "symbol", "mom_rank"]]
-        )
-    ranks = pd.concat(ranked_parts, ignore_index=True)
+    required = {"effective_month", "symbol", "momentum_rank"}
+    missing = sorted(required - set(ranks.columns))
+    if missing:
+        raise KeyError(f"momentum rank snapshot missing required columns: {missing}")
+    ranks = ranks.loc[:, ["effective_month", "symbol", "momentum_rank"]].copy()
+    ranks["symbol"] = ranks["symbol"].astype(str)
     ranks["effective_month"] = ranks["effective_month"].astype("period[M]")
+    if ranks.duplicated(["effective_month", "symbol"]).any():
+        raise ValueError("momentum rank snapshot contains duplicate month/symbol rows")
 
     dates = pd.DataFrame({"date": pd.DatetimeIndex(calendar).normalize()})
     dates["effective_month"] = dates["date"].dt.to_period("M")
     daily = dates.merge(ranks, on="effective_month", how="left")
-    daily = daily.sort_values(["symbol", "date"])
-    daily["mom_rank_lag1"] = daily.groupby("symbol", sort=False)["mom_rank"].shift(1)
+    daily = daily.rename(columns={"momentum_rank": "mom_rank_lag1"})
     return daily.loc[:, ["date", "symbol", "mom_rank_lag1"]]
+
+
+def _validate_momentum_snapshot_consistency(
+    holdings: pd.DataFrame,
+    rank_snapshot: pd.DataFrame,
+    *,
+    analysis_start: pd.Timestamp,
+    as_of: pd.Timestamp,
+) -> None:
+    """Fail closed when portfolio holdings and regression ranks diverge."""
+
+    required_holdings = {
+        "formation_date",
+        "formation_month",
+        "effective_month",
+        "symbol",
+        "leg",
+        "momentum_return",
+        "n_long",
+        "n_short",
+        "price_momentum_rank",
+        "rankable_universe",
+    }
+    missing = sorted(required_holdings - set(holdings.columns))
+    if missing:
+        raise KeyError(
+            "holdings cannot be reconciled to the momentum snapshot; "
+            f"missing columns: {missing}"
+        )
+    required_ranks = {
+        "formation_date",
+        "formation_month",
+        "effective_month",
+        "symbol",
+        "momentum_return",
+        "price_momentum_rank",
+        "rankable_universe",
+        "momentum_rank",
+    }
+    rank_missing = sorted(required_ranks - set(rank_snapshot.columns))
+    if rank_missing:
+        raise KeyError(f"momentum rank snapshot missing required columns: {rank_missing}")
+
+    book = holdings.loc[:, sorted(required_holdings)].copy()
+    snapshot = rank_snapshot.loc[:, sorted(required_ranks)].copy()
+    for frame in (book, snapshot):
+        frame["formation_date"] = pd.to_datetime(frame["formation_date"]).dt.normalize()
+        frame["formation_month"] = frame["formation_month"].astype("period[M]")
+        frame["effective_month"] = frame["effective_month"].astype("period[M]")
+        frame["symbol"] = frame["symbol"].astype(str)
+
+    first_month = pd.Timestamp(analysis_start).to_period("M")
+    last_month = pd.Timestamp(as_of).to_period("M")
+    snapshot = snapshot.loc[
+        snapshot["effective_month"].between(first_month, last_month)
+    ].copy()
+    months = set(snapshot["effective_month"])
+    book = book.loc[book["effective_month"].isin(months)].copy()
+    if snapshot.empty or book.empty:
+        raise ValueError("no overlapping momentum snapshot exists for the analysis window")
+    if set(book["effective_month"]) != months:
+        raise ValueError("holdings are missing an effective month in the analysis window")
+    if book.duplicated(["effective_month", "symbol"]).any():
+        raise ValueError("holdings contain duplicate effective-month/symbol rows")
+
+    reconciled = book.merge(
+        snapshot,
+        on=["effective_month", "symbol"],
+        how="left",
+        suffixes=("_holding", "_snapshot"),
+        validate="one_to_one",
+        indicator=True,
+    )
+    if reconciled["_merge"].ne("both").any():
+        raise ValueError("holdings contain names absent from the momentum rank snapshot")
+
+    exact_fields = (
+        "formation_date",
+        "formation_month",
+        "price_momentum_rank",
+        "rankable_universe",
+    )
+    for field in exact_fields:
+        if not reconciled[f"{field}_holding"].eq(
+            reconciled[f"{field}_snapshot"]
+        ).all():
+            raise ValueError(f"holdings and momentum snapshot disagree on {field}")
+    if not np.allclose(
+        pd.to_numeric(reconciled["momentum_return_holding"], errors="coerce"),
+        pd.to_numeric(reconciled["momentum_return_snapshot"], errors="coerce"),
+        rtol=1e-12,
+        atol=1e-14,
+        equal_nan=False,
+    ):
+        raise ValueError("holdings and momentum snapshot disagree on momentum_return")
+
+    for effective_month, group in reconciled.groupby("effective_month", sort=True):
+        n_long_values = pd.to_numeric(group["n_long"], errors="coerce").unique()
+        n_short_values = pd.to_numeric(group["n_short"], errors="coerce").unique()
+        if len(n_long_values) != 1 or len(n_short_values) != 1:
+            raise ValueError("holdings contain inconsistent portfolio sizes")
+        n_long = int(n_long_values[0])
+        n_short = int(n_short_values[0])
+        if len(group) != n_long + n_short:
+            raise ValueError(
+                f"holdings are incomplete for effective month {effective_month}"
+            )
+        rank = pd.to_numeric(group["price_momentum_rank_holding"], errors="coerce")
+        rankable = pd.to_numeric(
+            group["rankable_universe_holding"], errors="coerce"
+        )
+        expected_long = rank.le(n_long)
+        expected_short = rank.gt(rankable - n_short)
+        if not group["leg"].eq("long").equals(expected_long):
+            raise ValueError("long holdings do not match the canonical momentum ranks")
+        if not group["leg"].eq("short").equals(expected_short):
+            raise ValueError("short holdings do not match the canonical momentum ranks")
 
 
 def _size_lag_panel(
@@ -382,6 +500,7 @@ def compute_cross_sectional_factor_footprint(
     prices: pd.DataFrame,
     *,
     shares: pd.DataFrame | None = None,
+    momentum_ranks: pd.DataFrame | None = None,
     config: MechanicalUnwindConfig = DEFAULT_MECHANICAL_UNWIND_CONFIG,
 ) -> pd.DataFrame:
     """Estimate daily factor-footprint regressions with lagged controls.
@@ -393,7 +512,11 @@ def compute_cross_sectional_factor_footprint(
 
     panel = _daily_security_panel(prices, config=config)
     calendar = pd.DatetimeIndex(sorted(panel["date"].unique()))
-    ranks = _momentum_rank_panel(prices, calendar)
+    ranks = _momentum_rank_panel(
+        prices,
+        calendar,
+        rank_snapshot=momentum_ranks,
+    )
     sizes = _size_lag_panel(prices, shares)
     frame = panel.merge(ranks, on=["date", "symbol"], how="left")
     if sizes.empty:
@@ -836,8 +959,18 @@ def build_mechanical_unwind_assessment(
     price_frame = price_frame.loc[price_frame["date"].ge(signal_start)].copy()
     risk_frame = risk_frame.loc[risk_frame["date"].ge(analysis_start)].copy()
 
+    momentum_ranks = build_momentum_rank_snapshot(price_frame)
+    _validate_momentum_snapshot_consistency(
+        holdings_frame,
+        momentum_ranks,
+        analysis_start=analysis_start,
+        as_of=as_of,
+    )
     footprint = compute_cross_sectional_factor_footprint(
-        price_frame, shares=share_frame, config=config
+        price_frame,
+        shares=share_frame,
+        momentum_ranks=momentum_ranks,
+        config=config,
     )
     # Turnover / absorption reuse the same trimmed price window; each call is
     # intentionally self-contained for readability of the public API.
