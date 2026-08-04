@@ -663,17 +663,13 @@ dependencies = [
     { name = "scikit-learn" },
 ]
 
-[package.optional-dependencies]
-test = [
-    { name = "pytest" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
     { name = "matplotlib" },
     { name = "nbclient" },
     { name = "nbformat" },
+    { name = "pytest" },
 ]
 
 [package.metadata]
@@ -681,10 +677,8 @@ requires-dist = [
     { name = "numpy", specifier = "==2.4.4" },
     { name = "pandas", specifier = "==3.0.2" },
     { name = "pyarrow", specifier = "==25.0.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = "==9.0.3" },
     { name = "scikit-learn", specifier = "==1.8.0" },
 ]
-provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -692,6 +686,7 @@ dev = [
     { name = "matplotlib", specifier = "==3.11.1" },
     { name = "nbclient", specifier = "==0.11.0" },
     { name = "nbformat", specifier = "==5.10.4" },
+    { name = "pytest", specifier = "==9.0.3" },
 ]
 
 [[package]]

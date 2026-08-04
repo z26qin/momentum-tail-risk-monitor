@@ -6,7 +6,7 @@ import math
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-from src.evidence.prompts import (
+from legacy.evidence.prompts import (
     CLASSIFIER_MODE,
     PROMPT_VERSION,
     RESPONSE_FIELDS,

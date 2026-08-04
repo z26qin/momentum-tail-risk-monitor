@@ -1,0 +1,1 @@
+"""Retired fitted-probability baseline."""
