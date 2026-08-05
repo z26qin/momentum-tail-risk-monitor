@@ -27,10 +27,10 @@ from src.mvp.evidence_card import (
 from src.mvp.evidence_interpretation import (
     EvidenceInterpretation,
     EvidenceInterpreter,
-    compact_mechanical_unwind_context,
-    compact_public_positioning_proxies,
-    compact_structural_unwind_context,
     interpret_evidence_card,
+    mechanical_unwind_summary,
+    public_positioning_proxy_items,
+    structural_unwind_summary,
 )
 from src.mvp.pm_response import (
     PMResponse,
@@ -162,9 +162,9 @@ def run_mvp(
         deterministic_input,
         use_llm=config.use_llm,
         interpreter=interpreter,
-        structural_unwind=compact_structural_unwind_context(unwind),
-        mechanical_unwind=compact_mechanical_unwind_context(mechanical_unwind),
-        public_positioning_proxies=compact_public_positioning_proxies(
+        structural_unwind=structural_unwind_summary(unwind),
+        mechanical_unwind=mechanical_unwind_summary(mechanical_unwind),
+        public_positioning_proxies=public_positioning_proxy_items(
             positioning
         ),
     )

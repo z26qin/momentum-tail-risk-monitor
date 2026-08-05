@@ -26,7 +26,7 @@ from src.mvp.evidence_card import DeterministicEvidenceInput
 
 
 PM_RESPONSE_SCHEMA_VERSION = "pm-response-v1"
-PM_RESPONSE_PROMPT_VERSION = "pm-response-prompt-v1"
+PM_RESPONSE_PROMPT_VERSION = "pm-response-prompt-v2"
 DETERMINISTIC_PM_RESPONSE_VERSION = "deterministic-pm-response-v1"
 
 ALLOWED_RESPONSE_CATEGORIES = frozenset(
@@ -154,15 +154,36 @@ PM_MODEL_OUTPUT_FIELDS = frozenset(
 )
 
 PM_RESPONSE_INSTRUCTIONS = """\
-Return only the six PMResponse fields. Use only the supplied deterministic
-signals, mechanism statuses, and allowed response categories. Rank and select
-from allowed categories; do not invent new categories. Use conditional PM
-language (if confirmed, would become relevant, worth reviewing, consider,
-subject to PM review). Do not recommend securities, position sizes, option
-strikes, or execution instructions. Do not alter trigger states or invent
-thresholds. Do not estimate crash probability."""
+Write a short decision-support read as a risk analyst speaking to a portfolio
+manager and quant researcher. Return only the six PMResponse fields as JSON.
 
-LLM_CREDENTIAL_ENV_VARS = ("OPENAI_API_KEY", "ANTHROPIC_API_KEY")
+Tone and style:
+- Use plain analyst prose in complete sentences. Sound like a desk note, not a
+  schema dump or API log.
+- current_posture and main_vulnerability must be human-readable sentences.
+  Never return bare enum/slug tokens such as monitor_more_closely,
+  escalate_for_pm_review, broader_strategy_drawdown, or short_basket.
+- what_would_change_the_reading and why_not_act_yet should also be prose. You
+  may name mechanisms or signals in words, but do not reply with snake_case
+  identifiers alone.
+- Prefer category_labels language when discussing actions; selected_categories
+  alone may use the allowed machine keys.
+
+Content rules:
+- Use only the supplied deterministic signals, mechanism statuses, and allowed
+  response categories. Rank and select a short subset of allowed categories
+  (typically 2-5); do not dump the full allow-list. Do not invent categories.
+- Use conditional PM language (if confirmed, would become relevant, worth
+  reviewing, consider, subject to PM review).
+- Do not recommend securities, position sizes, option strikes, or execution
+  instructions. Do not alter trigger states or invent thresholds. Do not
+  estimate crash probability."""
+
+LLM_CREDENTIAL_ENV_VARS = (
+    "DEEPSEEK_API_KEY",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+)
 
 MAX_NARRATIVE_CHARS = 600
 MAX_LIST_ITEMS = 8
@@ -707,7 +728,21 @@ def _model_context(
     return json.loads(json.dumps(payload, sort_keys=True, allow_nan=False))
 
 
+def _is_bare_enum_slug(text: str) -> bool:
+    compact = text.strip().lower().replace("-", "_")
+    if compact in ALLOWED_POSTURES or compact in ALLOWED_VULNERABILITIES:
+        return True
+    # Reject snake_case identifier-only replies (e.g. short_book_reversal_crash).
+    return bool(re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", compact))
+
+
 def _validate_pm_llm_text(response: PMResponse) -> None:
+    for field_name in ("current_posture", "main_vulnerability"):
+        value = getattr(response, field_name)
+        if _is_bare_enum_slug(value):
+            raise ValueError(
+                f"{field_name} must be analyst prose, not an enum/slug token"
+            )
     narrative_fields = (
         response.current_posture,
         response.main_vulnerability,
@@ -716,6 +751,10 @@ def _validate_pm_llm_text(response: PMResponse) -> None:
         response.why_not_act_yet,
     )
     for text in narrative_fields:
+        if _is_bare_enum_slug(text):
+            raise ValueError(
+                "PM narrative fields must be analyst prose, not enum/slug tokens"
+            )
         if _NUMERIC_LITERAL.search(text) or _NUMERIC_WORD.search(text):
             raise ValueError("PM response must not introduce numerical values")
         if _TICKER_HINT.search(text) or _POSITION_SIZE.search(text):

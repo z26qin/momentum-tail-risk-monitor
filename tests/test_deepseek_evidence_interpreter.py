@@ -11,7 +11,7 @@ from src.mvp.deepseek_evidence_interpreter import DeepSeekEvidenceInterpreter
 from src.mvp.evidence_card import build_deterministic_evidence_input
 from src.mvp.evidence_interpretation import (
     MODEL_CONTEXT_FIELDS,
-    compact_public_positioning_proxies,
+    public_positioning_proxy_items,
     interpret_evidence_card,
 )
 
@@ -82,7 +82,7 @@ def _valid_payload(deterministic_input) -> dict:
 def test_deepseek_interpreter_receives_proxies_without_changing_scorecard(
     deterministic_input,
 ) -> None:
-    elevated_proxies = compact_public_positioning_proxies(
+    elevated_proxies = public_positioning_proxy_items(
         {
             "as_of_date": deterministic_input.as_of_date,
             "observation_date": deterministic_input.as_of_date,
