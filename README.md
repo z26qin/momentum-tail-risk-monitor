@@ -165,23 +165,24 @@ The PM book is the primary object. Ken French UMD and the Daniel–Moskowitz mar
 Open [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb).
 
 The `CONFIG` cell near the top is the PM sandbox: change its assessment date,
-comparison date, horizon, or LLM flag and run all cells to recompute the live
-assessment. The semiconductor, March 2020, January 2024, and cross-case sections
-are explicitly labeled frozen product packs and do not change with `CONFIG`.
+comparison date, horizon, or LLM flag and run all cells to recompute a dated
+assessment. The May 29 correlated-cluster, March 2020, January 2024, and
+cross-case sections are explicitly labeled frozen product packs and do not
+change with `CONFIG`.
 
 The recommended review order is:
 
-1. **Latest available semiconductor case (frozen 2026-05-29 assessment)**
+1. **Primary correlated-cluster case (frozen 2026-05-29 assessment)**
 2. **March 2020 historical validation**
 3. **January 2024 quiet control**
 
-### Current Semi Unwind — primary example PM output (2026-05-29)
+### Primary correlated-cluster case — example PM output (2026-05-29, frozen)
 
 > The evidence supports localized crowding and structural pressure, but does not confirm a broad recovery-driven momentum crash or forced deleveraging.
 
 | PM question | Current read |
 |---|---|
-| Where is the risk? | Concentrated and correlated long-side semiconductor exposure |
+| Where is the risk? | Concentrated, correlated long-side cluster (`CIEN`–`COHR`–`LITE`); economic theme attribution is unavailable |
 | Risk horizon | 20 trading days |
 | Monitoring severity | Elevated review / `FRAGILITY_BUILDING`; not a crash probability |
 | Recovery-crash mechanism? | Weak / incomplete |
@@ -230,8 +231,8 @@ The default demo book is an equal-weight S&P 500 **12-1 momentum long-10 / short
 A production quant portfolio would more commonly:
 
 - rank a larger investable universe;
-- use percentile or decile to construct universe;
-- hold many more names:either hold the universe and adjust weight or L/S basket
+- use percentile or decile ranks to construct the portfolio;
+- hold many more names, either across the ranked universe or in larger long/short baskets;
 - neutralize market, industry, size, country, and other factor exposures;
 - apply liquidity, borrow, turnover, and risk constraints;
 - optimize weights rather than use equal weighting.
@@ -398,7 +399,7 @@ result = run_mvp(config)
 momentum_crash/
 ├── README.md
 ├── docs/
-│   ├── methodology.md           # research memo
+│   ├── methodology.md           # technical methodology
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
 │   ├── production_path.md       # production path (not an internal todo list)
@@ -428,7 +429,6 @@ momentum_crash/
     ├── quiet_control_example_risk_output/   # generated quiet-control card (2024-01-05)
     ├── cross_case_comparison.md
     ├── evidence_cache/                      # exact-date validated classification caches
-    ├── gdelt_llm_reference/                 # cached LLM sample (labeled)
     └── research_validation/                 # episode fingerprints / AI-value summary
 ```
 
