@@ -47,7 +47,7 @@ from src.utils.io import (
 #: would send SEC a contact that does not resolve, which is the thing the policy
 #: exists to prevent. Unset is therefore an error, not a fallback.
 SEC_CONTACT_EMAIL_VAR = "SEC_CONTACT_EMAIL"
-USER_AGENT_TEMPLATE = "momentum-tail-risk research {contact}"
+USER_AGENT_TEMPLATE = "momentum-crash research {contact}"
 
 TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 CONCEPT_URL = (

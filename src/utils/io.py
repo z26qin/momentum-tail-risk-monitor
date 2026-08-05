@@ -117,7 +117,7 @@ def cache_public_source(
     else:
         request = urllib.request.Request(
             source_url,
-            headers={"User-Agent": "momentum-tail-risk/0.1 research pipeline"},
+            headers={"User-Agent": "momentum-crash/0.1 research pipeline"},
         )
         try:
             with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
