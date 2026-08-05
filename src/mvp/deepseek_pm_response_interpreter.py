@@ -1,4 +1,4 @@
-"""DeepSeek-backed ``EvidenceInterpreter`` for the Evidence Card path."""
+"""DeepSeek-backed ``PMResponseInterpreter`` for the PM response path."""
 
 from __future__ import annotations
 
@@ -14,11 +14,11 @@ from src.evidence.deepseek_explainer import (
     _load_dotenv_if_present,
     _post_chat_completion,
 )
-from src.mvp.evidence_interpretation import MODEL_OUTPUT_FIELDS
+from src.mvp.pm_response import PM_MODEL_OUTPUT_FIELDS
 
 
-class DeepSeekEvidenceInterpreter:
-    """Structured Evidence Card interpreter using the shared DeepSeek client."""
+class DeepSeekPMResponseInterpreter:
+    """Structured PM response interpreter using the shared DeepSeek client."""
 
     def __init__(
         self,
@@ -44,7 +44,7 @@ class DeepSeekEvidenceInterpreter:
             _load_dotenv_if_present()
         return dict(os.environ if self._environment is None else self._environment)
 
-    def interpret(
+    def interpret_pm_response(
         self,
         *,
         context: Mapping[str, Any],
@@ -71,15 +71,16 @@ class DeepSeekEvidenceInterpreter:
         system = (
             f"{instructions}\n\n"
             "Respond with a single JSON object using exactly these keys: "
-            f"{', '.join(sorted(MODEL_OUTPUT_FIELDS))}. "
-            "narrative_changes, supporting_evidence_ids, "
-            "contradicting_evidence_ids, missing_or_uncertain_evidence, "
-            "monitoring_questions, and invalidation_conditions must be JSON "
-            "arrays of strings. Keep pm_interpretation to at most 1000 "
-            "characters. monitoring_questions and invalidation_conditions "
-            "must not include numbers, percentages, or threshold literals. "
-            "Do not say low-risk state or mechanical unwind is normal; "
-            "narrative_state must be short analyst prose."
+            f"{', '.join(sorted(PM_MODEL_OUTPUT_FIELDS))}. "
+            "what_would_change_the_reading, conditional_response, and "
+            "selected_categories must be JSON arrays of strings. "
+            "current_state, main_vulnerability, what_would_change_the_reading, "
+            "conditional_response, and why_not_act_yet must be analyst prose "
+            "sentences for a PM/quant reader — never bare enum/slug tokens. "
+            "Select at most three selected_categories. Prefer rebound-sensitive "
+            "short-basket vulnerability language over vague broader drawdown; "
+            "when a short-interest proxy is elevated, mention it as contextual "
+            "support in main_vulnerability."
         )
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system},
@@ -111,11 +112,11 @@ class DeepSeekEvidenceInterpreter:
                 timeout_seconds=self._timeout_seconds,
             )
         parsed = _extract_json_object(content)
-        missing = MODEL_OUTPUT_FIELDS.difference(parsed)
-        extra = set(parsed).difference(MODEL_OUTPUT_FIELDS)
+        missing = PM_MODEL_OUTPUT_FIELDS.difference(parsed)
+        extra = set(parsed).difference(PM_MODEL_OUTPUT_FIELDS)
         if missing or extra:
             raise ValueError(
-                "DeepSeek response fields do not match the schema "
+                "DeepSeek PM response fields do not match the schema "
                 f"(missing={sorted(missing)}, extra={sorted(extra)})"
             )
         return parsed

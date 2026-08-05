@@ -2,7 +2,7 @@
 
 The quantitative input is immutable and remains the source of truth. An
 injected provider receives only an allow-listed copy of deterministic signals,
-retrieved evidence, historical context, compact structural/mechanical unwind
+retrieved evidence, historical context, structural/mechanical unwind
 summaries, and optional typed public positioning proxies. It may return only
 narrative fields plus evidence IDs. The module has no model SDK dependency and
 always falls back to calibrated deterministic text when credentials, a provider,
@@ -23,10 +23,11 @@ from src.mvp.evidence_card import DeterministicEvidenceInput
 
 
 INTERPRETATION_SCHEMA_VERSION = "evidence-interpretation-v1"
-INTERPRETATION_PROMPT_VERSION = "evidence-interpretation-prompt-v4"
+INTERPRETATION_PROMPT_VERSION = "evidence-interpretation-prompt-v8"
 DETERMINISTIC_INTERPRETATION_VERSION = "deterministic-evidence-interpretation-v2"
 INTERPRETATION_INSTRUCTIONS = """\
 Return only the eight EvidenceInterpretation narrative fields.
+Write like a PM morning risk note: concise, conditional, and hierarchy-aware.
 
 Compare these three lenses separately and allow mixed or unresolved results:
 1) Daniel-Moskowitz recovery crash
@@ -34,12 +35,27 @@ Compare these three lenses separately and allow mixed or unresolved results:
 3) Fundamental or sector-specific repricing
 
 Use only the supplied quantitative signals, retrieved evidence, historical
-context, the compact structural_unwind and mechanical_unwind summaries, and
-public_positioning_proxies when present. Distinguish quantitative scorecard
+context, the structural_unwind and mechanical_unwind summaries, and
+public_positioning_proxies when present. Quantitative signal context is
+status-only (no raw levels or thresholds); public proxies may include state
+labels without z-score magnitudes. Distinguish quantitative scorecard
 state from structural and mechanical state. State where structured and textual
 evidence agree or conflict. Identify missing evidence for factor propagation or
 liquidity failure. Cite evidence by supplied evidence_id only; contextual
 evidence may be discussed but cannot be treated as stance-confirmed support.
+
+Critical wording (do not over-infer):
+- Untriggered deterministic signals mean only that escalation thresholds are not
+  breached. Never translate this into a "low-risk state", "benign risk", or
+  "no risk". Prefer: signals remain below their escalation thresholds; the
+  setup warrants monitoring but does not indicate an active momentum unwind.
+- Do not say "the mechanical unwind is normal". Prefer: there is no evidence of
+  a broad mechanical unwind / no broad mechanical unwind is confirmed.
+- narrative_state must be short analyst prose (for example "Normal drawdown;
+  no confirmed escalation"), never a bare slug such as normal_drawdown.
+- When a short-interest proxy is elevated, say short-side crowding is plausible
+  and that the short basket is the first area to review, while stating clearly
+  that this does not establish active covering or forced deleveraging.
 
 public_positioning_proxies are a separate typed field of class
 structured_public_proxy (FINRA, CFTC, or similar). Use them only as contextual
@@ -75,9 +91,12 @@ deleveraging, a quant unwind is confirmed, or that positioning caused the revers
 
 Do not invent channels, calculate or restate numbers, alter values or trigger
 states, add external facts, assert causality or crash certainty, estimate
-probabilities, or give portfolio or trade recommendations. Return at most three
-concrete monitoring questions and at most three observable invalidation
-conditions. State uncertainty explicitly."""
+probabilities, or give portfolio or trade recommendations. Keep
+pm_interpretation to at most 1000 characters. Return at most three concrete
+monitoring questions and at most three observable invalidation conditions.
+monitoring_questions and invalidation_conditions must not include numbers,
+percentages, or threshold literals (for example 0.71 or -20%); describe
+signals and mechanisms in words only. State uncertainty explicitly."""
 
 MODEL_OUTPUT_FIELDS = frozenset(
     {
@@ -112,6 +131,7 @@ LLM_CREDENTIAL_ENV_VARS = (
 )
 
 MAX_NARRATIVE_CHARS = 600
+MAX_PM_INTERPRETATION_CHARS = 1000
 MAX_LIST_ITEMS = 8
 MAX_LIST_ITEM_CHARS = 300
 MAX_MONITORING_QUESTIONS = 3
@@ -176,14 +196,16 @@ _EMPTY_MECHANICAL_UNWIND = {
 }
 
 
-def _text(value: Any, name: str) -> str:
+def _text(
+    value: Any, name: str, *, max_chars: int = MAX_NARRATIVE_CHARS
+) -> str:
     if not isinstance(value, str):
         raise ValueError(f"{name} must be a string")
     cleaned = value.strip()
     if not cleaned:
         raise ValueError(f"{name} cannot be empty")
-    if len(cleaned) > MAX_NARRATIVE_CHARS:
-        raise ValueError(f"{name} exceeds {MAX_NARRATIVE_CHARS} characters")
+    if len(cleaned) > max_chars:
+        raise ValueError(f"{name} exceeds {max_chars} characters")
     return cleaned
 
 
@@ -264,7 +286,11 @@ class EvidenceInterpretation:
         object.__setattr__(
             self,
             "pm_interpretation",
-            _text(self.pm_interpretation, "pm_interpretation"),
+            _text(
+                self.pm_interpretation,
+                "pm_interpretation",
+                max_chars=MAX_PM_INTERPRETATION_CHARS,
+            ),
         )
         object.__setattr__(
             self,
@@ -324,8 +350,8 @@ def _mechanical_history_row(mechanical: Any) -> Any | None:
     return history.iloc[-1]
 
 
-def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
-    """Project an UnwindAssessment into the compact interpretation context."""
+def structural_unwind_summary(unwind: Any) -> dict[str, Any]:
+    """Project an UnwindAssessment into the interpretation summary context."""
 
     return {
         "scenario_classification": getattr(unwind, "scenario_classification", None),
@@ -337,8 +363,8 @@ def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
     }
 
 
-def compact_mechanical_unwind_context(mechanical: Any) -> dict[str, Any]:
-    """Project a MechanicalUnwindAssessment into compact status fields.
+def mechanical_unwind_summary(mechanical: Any) -> dict[str, Any]:
+    """Project a MechanicalUnwindAssessment into interpretation status fields.
 
     Copies elevation statuses already computed during mechanical classification.
     Does not re-apply ``DEFAULT_MECHANICAL_UNWIND_CONFIG`` thresholds.
@@ -431,12 +457,12 @@ def _normalize_public_proxy_item(item: Mapping[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def compact_public_positioning_proxies(
+def public_positioning_proxy_items(
     positioning: Any | None = None,
     *,
     items: Sequence[Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Build typed public positioning proxies for LLM context only.
+    """Build typed public positioning proxies for interpretation context only.
 
     Accepts an optional FINRA ``PositioningSnapshot`` (or mapping with the same
     fields) and/or already-shaped proxy items such as future CFTC rows. Output
@@ -509,7 +535,7 @@ def _normalize_public_positioning_proxies(
 ) -> list[dict[str, Any]]:
     if not public_positioning_proxies:
         return []
-    return compact_public_positioning_proxies(items=public_positioning_proxies)
+    return public_positioning_proxy_items(items=public_positioning_proxies)
 
 
 def _normalize_structural_unwind(
@@ -568,6 +594,65 @@ def _structural_or_mechanical_active(
     return False
 
 
+def _change_direction_label(change_vs_comparison: Any) -> str | None:
+    if change_vs_comparison is None:
+        return None
+    try:
+        value = float(change_vs_comparison)
+    except (TypeError, ValueError):
+        return None
+    if abs(value) <= 1e-12:
+        return "unchanged"
+    return "increased" if value > 0 else "decreased"
+
+
+def _sanitize_quantitative_signal(signal: Mapping[str, Any]) -> dict[str, Any]:
+    """Drop raw levels/thresholds so the model cannot echo banned numbers."""
+
+    return {
+        "name": signal.get("name"),
+        "status": signal.get("status"),
+        "direction": signal.get("direction"),
+        "source_component": signal.get("source_component"),
+        "change_vs_comparison": _change_direction_label(
+            signal.get("change_vs_comparison")
+        ),
+    }
+
+
+def _sanitize_historical_context(item: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "state": item.get("state"),
+        "note": item.get("note"),
+        "latest_label_available_date": item.get("latest_label_available_date"),
+    }
+
+
+def _sanitize_public_proxy(item: Mapping[str, Any]) -> dict[str, Any]:
+    payload = dict(item)
+    # Keep elevated/neutral/state labels; omit the z-score magnitude.
+    payload.pop("value", None)
+    return payload
+
+
+def _sanitize_retrieved_evidence(item: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep stance wiring; strip digit-heavy free text that models tend to copy."""
+
+    return {
+        "evidence_id": item.get("evidence_id"),
+        "source": item.get("source"),
+        "stance": item.get("stance"),
+        "relevance_reason": item.get("relevance_reason"),
+        "headline_or_summary": _NUMERIC_LITERAL.sub(
+            "[n]", str(item.get("headline_or_summary") or "")
+        ).strip()
+        or None,
+        # Locator URLs often embed dates/ids; stance + evidence_id are enough.
+        "citation_or_locator": None,
+        "timestamp": item.get("timestamp"),
+    }
+
+
 def _model_context(
     deterministic_input: DeterministicEvidenceInput,
     *,
@@ -575,7 +660,12 @@ def _model_context(
     mechanical_unwind: Mapping[str, Any] | None = None,
     public_positioning_proxies: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Build a detached allow-listed model payload."""
+    """Build a detached allow-listed model payload.
+
+    Prototype priority: stable LLM narrative output. Raw scorecard levels,
+    thresholds, proxy z-scores, and analog return stats are omitted so the
+    model is less likely to restate banned numeric literals.
+    """
 
     context = {
         "as_of_date": deterministic_input.as_of_date,
@@ -583,23 +673,28 @@ def _model_context(
         "overall_risk_state": deterministic_input.overall_risk_state,
         "deterministic_score": deterministic_input.deterministic_score,
         "quantitative_signals": [
-            signal.to_dict()
+            _sanitize_quantitative_signal(signal.to_dict())
             for signal in (
                 deterministic_input.triggered_quant_signals
                 + deterministic_input.non_triggered_relevant_signals
             )
         ],
         "retrieved_evidence": [
-            item.to_dict() for item in deterministic_input.retrieved_evidence
+            _sanitize_retrieved_evidence(item.to_dict())
+            for item in deterministic_input.retrieved_evidence
         ],
         "historical_context": [
-            dict(item) for item in deterministic_input.historical_analogs
+            _sanitize_historical_context(item)
+            for item in deterministic_input.historical_analogs
         ],
         "structural_unwind": _normalize_structural_unwind(structural_unwind),
         "mechanical_unwind": _normalize_mechanical_unwind(mechanical_unwind),
-        "public_positioning_proxies": _normalize_public_positioning_proxies(
-            public_positioning_proxies
-        ),
+        "public_positioning_proxies": [
+            _sanitize_public_proxy(item)
+            for item in _normalize_public_positioning_proxies(
+                public_positioning_proxies
+            )
+        ],
     }
     if frozenset(context) != MODEL_CONTEXT_FIELDS:
         raise AssertionError("model context allow-list changed unexpectedly")
@@ -761,8 +856,10 @@ def _deterministic_interpretation(
         f"liquidity absorption failure "
         f"{'present' if absorption is True else 'absent' if absorption is False else 'unavailable'}."
     )
-    if len(pm_interpretation) > MAX_NARRATIVE_CHARS:
-        pm_interpretation = pm_interpretation[: MAX_NARRATIVE_CHARS - 1].rstrip() + "."
+    if len(pm_interpretation) > MAX_PM_INTERPRETATION_CHARS:
+        pm_interpretation = (
+            pm_interpretation[: MAX_PM_INTERPRETATION_CHARS - 1].rstrip() + "."
+        )
 
     missing = list(deterministic_input.data_warnings)
     if not evidence:
@@ -841,7 +938,23 @@ def _provider_payload(raw: Any) -> dict[str, Any]:
     return payload
 
 
+_OVERCLAIM_PHRASES = (
+    re.compile(r"\blow[-\s]?risk state\b", re.IGNORECASE),
+    re.compile(r"\bmechanical unwind is normal\b", re.IGNORECASE),
+    re.compile(r"\bunwind is normal\b", re.IGNORECASE),
+)
+
+
+def _is_slug_like_narrative(text: str) -> bool:
+    compact = text.strip().lower().replace("-", "_").replace(" ", "_")
+    return bool(re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", compact))
+
+
 def _validate_llm_text(interpretation: EvidenceInterpretation) -> None:
+    if _is_slug_like_narrative(interpretation.narrative_state):
+        raise ValueError(
+            "narrative_state must be analyst prose, not an enum/slug token"
+        )
     narrative_fields = (
         interpretation.narrative_state,
         *interpretation.narrative_changes,
@@ -856,6 +969,11 @@ def _validate_llm_text(interpretation: EvidenceInterpretation) -> None:
         if any(pattern.search(text) for pattern in _PROHIBITED_CLAIMS):
             raise ValueError(
                 "LLM narrative contains a causal, certainty, or recommendation claim"
+            )
+        if any(pattern.search(text) for pattern in _OVERCLAIM_PHRASES):
+            raise ValueError(
+                "LLM narrative over-infers risk: do not call untriggered signals "
+                "a low-risk state or say mechanical unwind is normal"
             )
 
 

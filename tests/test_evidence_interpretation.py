@@ -13,7 +13,7 @@ from src.mvp.evidence_interpretation import (
     INTERPRETATION_PROMPT_VERSION,
     MODEL_CONTEXT_FIELDS,
     EvidenceInterpretation,
-    compact_public_positioning_proxies,
+    public_positioning_proxy_items,
     interpret_evidence_card,
 )
 
@@ -112,11 +112,19 @@ def test_deterministic_values_identical_with_llm_on_and_off(
     assert "data_warnings" not in provider.context
     assert provider.context["quantitative_signals"]
     assert {
-        "current_value",
-        "threshold",
+        "name",
         "status",
+        "direction",
         "change_vs_comparison",
     }.issubset(provider.context["quantitative_signals"][0])
+    assert "current_value" not in provider.context["quantitative_signals"][0]
+    assert "threshold" not in provider.context["quantitative_signals"][0]
+    assert provider.context["quantitative_signals"][0]["change_vs_comparison"] in {
+        None,
+        "unchanged",
+        "increased",
+        "decreased",
+    }
     assert not {
         "overall_risk_state",
         "deterministic_score",
@@ -263,6 +271,36 @@ def test_provider_list_counts_fail_closed(deterministic_input) -> None:
     assert any("1 to 3 monitoring questions" in warning for warning in result.warnings)
 
 
+def test_pm_interpretation_allows_up_to_1000_chars(deterministic_input) -> None:
+    payload = _valid_payload(deterministic_input)
+    long_text = (
+        "The supplied point-in-time evidence is mixed and should be treated as "
+        "context rather than a causal conclusion. "
+        + ("Monitoring remains appropriate. " * 20)
+    ).strip()
+    payload["pm_interpretation"] = long_text[:900]
+    assert 600 < len(payload["pm_interpretation"]) <= 1000
+
+    accepted = interpret_evidence_card(
+        deterministic_input,
+        use_llm=True,
+        interpreter=_FixedInterpreter(payload),
+        environment={"OPENAI_API_KEY": "test-only"},
+    )
+    assert accepted.use_llm is True
+    assert len(accepted.pm_interpretation) == len(payload["pm_interpretation"].strip())
+
+    payload["pm_interpretation"] = "x" * 1001
+    rejected = interpret_evidence_card(
+        deterministic_input,
+        use_llm=True,
+        interpreter=_FixedInterpreter(payload),
+        environment={"OPENAI_API_KEY": "test-only"},
+    )
+    assert rejected.use_llm is False
+    assert any("exceeds 1000 characters" in warning for warning in rejected.warnings)
+
+
 def test_llm_generated_numerical_claims_fail_closed(
     deterministic_input,
 ) -> None:
@@ -378,7 +416,7 @@ def test_elevated_finra_proxy_changes_context_not_scorecard(
         "factor_footprint_status": "not_elevated",
         "aligned_turnover_status": "not_elevated",
     }
-    elevated_proxies = compact_public_positioning_proxies(
+    elevated_proxies = public_positioning_proxy_items(
         {
             "as_of_date": deterministic_input.as_of_date,
             "observation_date": deterministic_input.as_of_date,
@@ -429,14 +467,20 @@ def test_elevated_finra_proxy_changes_context_not_scorecard(
         and item["source"] == "FINRA"
         for item in provider.context["public_positioning_proxies"]
     )
-    assert provider.context["retrieved_evidence"] == [
-        item.to_dict() for item in deterministic_input.retrieved_evidence
-    ]
     assert provider.context["structural_unwind"] == structural
     assert provider.context["mechanical_unwind"]["unwind_state"] == "NORMAL"
     assert "public_positioning_proxies" in provider.instructions
     assert "structured_public_proxy" in INTERPRETATION_INSTRUCTIONS
-    assert INTERPRETATION_PROMPT_VERSION.endswith("v4")
+    assert INTERPRETATION_PROMPT_VERSION.endswith("v8")
+    assert all("value" not in item for item in provider.context["public_positioning_proxies"])
+    assert provider.context["retrieved_evidence"][0]["evidence_id"] == (
+        deterministic_input.retrieved_evidence[0].evidence_id
+    )
+    assert provider.context["retrieved_evidence"][0]["citation_or_locator"] is None
+    assert "current_value" not in provider.context["quantitative_signals"][0]
+    assert set(provider.context["historical_context"][0]).issubset(
+        {"state", "note", "latest_label_available_date"}
+    )
     assert with_proxy.use_llm is True
     assert "short-side crowding as a hypothesis" in with_proxy.pm_interpretation
     assert "do not identify the underlying investors" in with_proxy.pm_interpretation
