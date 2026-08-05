@@ -366,7 +366,7 @@
       cutoff: "2026-05-29T16:00:00-04:00",
       scenarioType: "Frozen historical replay",
       freshness: "Frozen as of date",
-      headlineState: "Fragility building",
+      headlineState: "Potential momentum tail risk",
       headlineTone: "warn",
       headlineSub: "Crowding pressure in a theme cluster · book scorecard still clear · not a confirmed crash",
       universe: "S&P 500 · 12-1 momentum · 10 long / 10 short",
@@ -374,7 +374,7 @@
         { label: "Market regime", value: "Normal", sub: "Public momentum backdrop — not your book score" },
         { label: "Book scorecard", value: "0 / 4", sub: "All book monitors clear", calm: true },
         { label: "What looks active", value: "Crowded theme", sub: "Theme unwind flagged · recovery crash still on watch" },
-        { label: "Unwind stress", value: "Fragility building", sub: "Separate from the book scorecard", warn: true }
+        { label: "Tail-risk watch", value: "Potential momentum tail risk", sub: "Separate from the book scorecard", warn: true }
       ],
       scorecard: [
         {
@@ -423,7 +423,7 @@
         }
       ],
       mechanical: {
-        state: "Fragility building",
+        state: "Potential momentum tail risk",
         stateRaw: "FRAGILITY_BUILDING",
         factorFootprint: "Not elevated",
         alignedTurnover: "Elevated",
@@ -478,7 +478,7 @@
         { label: "Market regime", value: "Panic elevated", sub: "Public momentum backdrop — not your book score", warn: true },
         { label: "Book scorecard", value: "3 / 4", sub: "Recovery · beta · short loss", warn: true },
         { label: "What looks active", value: "Bear recovery", sub: "Recovery crash flagged · crowded theme not confirmed" },
-        { label: "Unwind stress", value: "Fragility building", sub: "Factor stress up · liquidity still holding", warn: true }
+        { label: "Tail-risk watch", value: "Potential momentum tail risk", sub: "Factor stress up · liquidity still holding", warn: true }
       ],
       scorecard: [
         {
@@ -527,7 +527,7 @@
         }
       ],
       mechanical: {
-        state: "Fragility building",
+        state: "Potential momentum tail risk",
         stateRaw: "FRAGILITY_BUILDING",
         factorFootprint: "Elevated",
         alignedTurnover: "Not elevated",
@@ -849,7 +849,7 @@
           label + "</span>";
       }
       var raw = String(v);
-      var stress = /elevated|fragility|active|triggered/i.test(raw) && !/^not /i.test(raw) && !/^normal$/i.test(raw);
+      var stress = /elevated|fragility|tail[- ]risk|active|triggered/i.test(raw) && !/^not /i.test(raw) && !/^normal$/i.test(raw);
       var color = stress ? "var(--text-danger)" : "var(--text-ok)";
       return '<span style="color:' + color + '; font-weight:500;">' + esc(v) + "</span>";
     }

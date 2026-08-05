@@ -79,6 +79,8 @@ class DeepSeekEvidenceInterpreter:
             "characters. monitoring_questions and invalidation_conditions "
             "must not include numbers, percentages, or threshold literals. "
             "Do not say low-risk state or mechanical unwind is normal; "
+            "Never expose FRAGILITY_BUILDING or say fragility building; use "
+            "'potential momentum tail risk' instead. "
             "narrative_state must be short analyst prose."
         )
         messages: list[dict[str, str]] = [

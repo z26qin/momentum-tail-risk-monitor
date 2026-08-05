@@ -184,7 +184,7 @@ The recommended review order is:
 |---|---|
 | Where is the risk? | Concentrated, correlated long-side cluster (`CIEN`–`COHR`–`LITE`); economic theme attribution is unavailable |
 | Risk horizon | 20 trading days |
-| Monitoring severity | Elevated review / `FRAGILITY_BUILDING`; not a crash probability |
+| Monitoring severity | Potential momentum tail risk; focused review, not a crash probability |
 | Recovery-crash mechanism? | Weak / incomplete |
 | Crowded-unwind mechanism? | Partially supported |
 | What is not confirmed? | Broad propagation, liquidity failure, forced deleveraging |

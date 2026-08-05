@@ -105,7 +105,7 @@ def _fallback_narrative_state(context: dict[str, Any]) -> str:
             "confirmed crash regime."
         )
     return (
-        f"No deterministic fragility warning is active in the '{state}' macro "
+        f"No deterministic momentum tail-risk warning is active in the '{state}' macro "
         f"state: none of {context['total_signals']} monitored conditions is "
         "triggered. This reading does not rule out risks outside the monitored "
         "signal set."
@@ -138,7 +138,7 @@ def _fallback_pm_interpretation(context: dict[str, Any]) -> str:
     evidence = context["evidence_quality"]
     if triggered:
         lead = (
-            "Treat this as a fragility watch, not a trade instruction or crash "
+            "Treat this as a potential momentum tail-risk watch, not a trade instruction or crash "
             "forecast. The deterministic rules identify conditions under which "
             "a momentum rebound could squeeze the recent-loser leg."
         )

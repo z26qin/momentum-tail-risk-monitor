@@ -74,7 +74,7 @@ flow — invisible to prices alone.
 - Observed order-flow or execution toxicity around losers/winners
 - Cross-asset de-risking coincidence (equity + credit + FX carry)
 
-**Imagination:** A “fragility surface” that asks: *if the book is tight and
+**Imagination:** A “potential momentum tail-risk surface” that asks: *if the book is tight and
 the street is crowded, is there also a financing reason someone must sell?*
 
 ---

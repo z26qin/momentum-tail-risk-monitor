@@ -29,7 +29,7 @@ uplift result.
 
 | Layer | What the PM sees | What changes? |
 |---|---|---|
-| **Deterministic-only monitoring** | Scorecard triggers inactive; `crowded_theme_unwind` triggered; concentration triggered; mechanical state `FRAGILITY_BUILDING`; absorption failure absent; DM recovery crash incomplete | Source of truth for risk state |
+| **Deterministic-only monitoring** | Scorecard triggers inactive; `crowded_theme_unwind` triggered; concentration triggered; trading footprint indicates potential momentum tail risk while selling is still being absorbed; DM recovery crash incomplete | Source of truth for risk state |
 | **Evidence-assisted interpretation** | Same quantitative state, plus stance-labeled text: recovery backdrop (`CSU-2026-015`), contradicting operating strength (`CSU-2026-008`), and explicit missing items (forced deleveraging, absorption failure, loser rebound) | Narrative organization only |
 | **What the evidence / AI layer added** | Separated DM vs Khandani–Lo vs fundamental lenses; located risk in long-side crowding rather than short-leg recovery pain; listed inspect-next / invalidation checks | Interpretation richness |
 | **Unsupported inference avoided** | Did **not** rewrite inactive scorecard triggers into a crash call; did **not** treat contextual Prime Book / capex items as stance-confirmed support; did **not** claim forced deleveraging | Safety |

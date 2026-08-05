@@ -26,7 +26,7 @@ DM is stronger here than in the May 29, 2026 semi case because structured panic,
 - **Beta gap:** `short_minus_long_beta_gap` triggered.
 - **Broader momentum drawdown:** portfolio drawdown worsened but remained not triggered.
 - **Structural unwind:** active scenario `bear_market_recovery_crash`; `crowded_theme_unwind` not confirmed.
-- **Mechanical stress:** `FRAGILITY_BUILDING`; factor footprint elevated; aligned turnover not elevated; liquidity-absorption failure absent.
+- **Trading footprint:** potential momentum tail risk; factor stress is elevated, but aligned turnover is not and selling is still being absorbed.
 
 ## What is supported
 
@@ -59,4 +59,4 @@ DM is stronger here than in the May 29, 2026 semi case because structured panic,
 
 ## Comparison with the current semi case
 
-March 2020 is primarily a panic-to-recovery / short-basket reference: DM structural and quant channels are active, while KL remains unconfirmed. By contrast, the May 29, 2026 semi case is more closely associated with long-side crowding, mechanical fragility without absorption failure, and unresolved sector-versus-factor propagation, with DM incomplete.
+March 2020 is primarily a panic-to-recovery / short-basket reference: DM structural and quant channels are active, while KL remains unconfirmed. By contrast, the May 29, 2026 semi case is more closely associated with long-side crowding and potential momentum tail risk, while selling is still being absorbed and broader factor spread remains unresolved; DM is incomplete.

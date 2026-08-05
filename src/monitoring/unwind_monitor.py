@@ -893,7 +893,8 @@ def _state_interpretation(state: UnwindState) -> str:
             "Factor footprint and momentum-aligned turnover are not elevated."
         ),
         "FRAGILITY_BUILDING": (
-            "Multiple vulnerability indicators are elevated; watch for "
+            "Potential momentum tail risk: multiple vulnerability indicators "
+            "are elevated; watch for "
             "factor-aligned flow without confirmed portfolio losses."
         ),
         "ACTIVE_UNWIND": (

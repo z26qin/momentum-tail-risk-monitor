@@ -4,7 +4,7 @@
 
 **Risk horizon:** 20 trading days
 
-**Monitoring severity:** Elevated review / `FRAGILITY_BUILDING`; not a crash probability
+**Monitoring severity:** Potential momentum tail risk; focused review, not a crash probability
 
 This is the primary example for the assignment: market backdrop + PM portfolio
 risk + positioning/crowding proxies + timestamped evidence + mechanism

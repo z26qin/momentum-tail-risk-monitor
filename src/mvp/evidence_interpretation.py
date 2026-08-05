@@ -797,7 +797,7 @@ def _deterministic_interpretation(
     elif triggered:
         narrative_state = (
             "The deterministic state warrants elevated monitoring because at "
-            "least one implemented quantitative fragility condition is "
+            "least one implemented momentum tail-risk condition is "
             "triggered. This is not a confirmed crash forecast."
         )
     elif channel_active:
@@ -808,7 +808,7 @@ def _deterministic_interpretation(
         )
     else:
         narrative_state = (
-            "No quantitative scorecard fragility condition is currently "
+            "No quantitative scorecard momentum tail-risk condition is currently "
             "triggered, and no active structural or mechanical unwind channel "
             "was supplied. This does not rule out risks outside the monitored "
             "set."
@@ -818,6 +818,9 @@ def _deterministic_interpretation(
     short_status = mechanism_statuses.get("short_book_reversal_crash", "unavailable")
     kl_status = mechanism_statuses.get("crowded_theme_unwind", "unavailable")
     mechanical_state = mechanical.get("unwind_state") or "unavailable"
+    mechanical_state_label = {
+        "FRAGILITY_BUILDING": "potential momentum tail risk",
+    }.get(mechanical_state, mechanical_state.replace("_", " ").lower())
     absorption = mechanical.get("liquidity_absorption_failure")
 
     if not evidence:
@@ -852,7 +855,7 @@ def _deterministic_interpretation(
         f"{short_status.replace('_', ' ')} for short-book reversal; "
         f"Khandani-Lo crowded unwind is {kl_status.replace('_', ' ')}; "
         f"fundamental repricing stays unconfirmed without a structured "
-        f"fundamental anchor. Mechanical state is {mechanical_state}, with "
+        f"fundamental anchor. Momentum tail-risk state is {mechanical_state_label}, with "
         f"liquidity absorption failure "
         f"{'present' if absorption is True else 'absent' if absorption is False else 'unavailable'}."
     )

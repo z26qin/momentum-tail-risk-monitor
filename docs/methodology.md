@@ -120,7 +120,7 @@ Daily diagnostics (all controls / membership lagged one session):
 Rule-based states use rolling historical percentiles:
 
 - `NORMAL`
-- `FRAGILITY_BUILDING` (≥2 elevated vulnerability indicators)
+- Potential momentum tail risk (internal state: `FRAGILITY_BUILDING`; ≥2 elevated vulnerability indicators)
 - `ACTIVE_UNWIND` (portfolio losses with elevated footprint, aligned turnover,
   and continuation / failed absorption)
 - `STABILIZING_REVERSAL` (recent active-unwind window followed by rebound and
