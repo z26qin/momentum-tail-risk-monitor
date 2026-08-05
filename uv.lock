@@ -653,7 +653,7 @@ wheels = [
 ]
 
 [[package]]
-name = "momentum-tail-risk"
+name = "momentum-crash"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

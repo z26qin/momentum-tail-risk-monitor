@@ -25,7 +25,7 @@ from src.utils.io import (
 )
 
 
-USER_AGENT = "momentum-tail-risk/0.1 research pipeline"
+USER_AGENT = "momentum-crash/0.1 research pipeline"
 
 # Set to False by the offline verification run so that any attempted network
 # call becomes a loud failure instead of a silent refetch.
