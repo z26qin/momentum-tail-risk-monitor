@@ -44,6 +44,15 @@
         "bls-2024-01-11-cpi-future"
       ],
       "purpose": "Low-risk recent control case plus duplicate, uncertain-version, and future-document controls."
+    },
+    {
+      "case": "2026-06-30",
+      "document_ids": [
+        "bls-2026-06-05-employment",
+        "fed-2026-06-17-fomc",
+        "bls-2026-06-05-employment-ted"
+      ],
+      "purpose": "Minimal exact-date evidence fixture so the 2026-06-30 MVP evidence replay path is non-empty."
     }
   ],
   "schema_version": "1.0"

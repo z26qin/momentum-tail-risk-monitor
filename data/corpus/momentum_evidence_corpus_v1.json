@@ -6,7 +6,9 @@
       "document_id": "fed-2009-02-23-bank-support",
       "publication_timestamp": "2009-02-23T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official joint agency release cached as a short research passage.",
         "timestamp_evidence": "Federal Reserve page records 8:30 a.m. EST."
       },
@@ -22,7 +24,9 @@
       "document_id": "fed-2009-02-25-stress-tests",
       "publication_timestamp": "2009-02-26T00:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Date-only official release assigned to next-day midnight for conservative availability.",
         "timestamp_evidence": "Federal Reserve page gives February 25, 2009 but no time."
       },
@@ -38,7 +42,9 @@
       "document_id": "fed-2009-03-02-aig",
       "publication_timestamp": "2009-03-02T06:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official Federal Reserve release.",
         "timestamp_evidence": "Federal Reserve page records 6:00 a.m. EST."
       },
@@ -54,7 +60,9 @@
       "document_id": "fed-2009-03-03-talf",
       "publication_timestamp": "2009-03-03T09:15:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official Federal Reserve and Treasury release.",
         "timestamp_evidence": "Federal Reserve page records 9:15 a.m. EST."
       },
@@ -70,7 +78,9 @@
       "document_id": "fed-2009-03-03-bernanke",
       "publication_timestamp": "2009-03-04T00:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Date-only testimony assigned to next-day midnight for conservative availability.",
         "timestamp_evidence": "Federal Reserve page gives March 3, 2009 but no time."
       },
@@ -86,7 +96,9 @@
       "document_id": "fed-2009-03-05-kohn-aig",
       "publication_timestamp": "2009-03-06T00:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Date-only testimony assigned to next-day midnight for conservative availability.",
         "timestamp_evidence": "Federal Reserve page gives March 5, 2009 but no time."
       },
@@ -102,7 +114,9 @@
       "document_id": "fed-2009-03-05-h41",
       "publication_timestamp": "2009-03-05T16:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official weekly balance-sheet release.",
         "timestamp_evidence": "H.4.1 regular publication schedule was 4:30 p.m. Eastern."
       },
@@ -118,7 +132,9 @@
       "document_id": "fed-2009-03-05-h3",
       "publication_timestamp": "2009-03-05T16:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official statistical release.",
         "timestamp_evidence": "Federal Reserve page records 4:30 p.m. Eastern."
       },
@@ -134,7 +150,9 @@
       "document_id": "fed-2009-03-05-h6",
       "publication_timestamp": "2009-03-05T16:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official statistical release.",
         "timestamp_evidence": "Federal Reserve page records 4:30 p.m. Eastern."
       },
@@ -150,7 +168,9 @@
       "document_id": "bls-2009-03-06-employment",
       "publication_timestamp": "2009-03-06T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06"],
+        "case_tags": [
+          "2009-03-06"
+        ],
         "provenance_note": "Official archived employment release.",
         "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
       },
@@ -166,7 +186,10 @@
       "document_id": "fed-2009-03-18-fomc-future",
       "publication_timestamp": "2009-03-18T14:15:00-04:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06", "future_exclusion_fixture"],
+        "case_tags": [
+          "2009-03-06",
+          "future_exclusion_fixture"
+        ],
         "provenance_note": "Official later release included only to exercise cutoff exclusion.",
         "timestamp_evidence": "Federal Reserve page records 2:15 p.m. EDT."
       },
@@ -182,7 +205,10 @@
       "document_id": "nyfed-2009-03-18-treasury-future",
       "publication_timestamp": "2009-03-18T15:30:00-04:00",
       "raw_metadata": {
-        "case_tags": ["2009-03-06", "future_exclusion_fixture"],
+        "case_tags": [
+          "2009-03-06",
+          "future_exclusion_fixture"
+        ],
         "provenance_note": "Official later operational announcement included only for cutoff testing.",
         "timestamp_evidence": "New York Fed page is dated March 18, 2009."
       },
@@ -198,7 +224,9 @@
       "document_id": "fed-2023-12-13-fomc",
       "publication_timestamp": "2023-12-13T14:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official FOMC statement.",
         "timestamp_evidence": "Federal Reserve page records 2:00 p.m. EST."
       },
@@ -214,7 +242,9 @@
       "document_id": "bea-2023-12-21-gdp",
       "publication_timestamp": "2023-12-21T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official GDP release.",
         "timestamp_evidence": "BEA page records 8:30 a.m. EST."
       },
@@ -230,7 +260,9 @@
       "document_id": "bea-2023-12-22-income-outlays",
       "publication_timestamp": "2023-12-22T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official personal income and outlays release.",
         "timestamp_evidence": "BEA release records 8:30 a.m. EST."
       },
@@ -246,7 +278,9 @@
       "document_id": "bls-2024-01-03-jolts",
       "publication_timestamp": "2024-01-03T10:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official archived JOLTS release.",
         "timestamp_evidence": "BLS archive records 10:00 a.m. EST."
       },
@@ -262,7 +296,9 @@
       "document_id": "fed-2024-01-03-minutes",
       "publication_timestamp": "2024-01-03T14:00:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official release announcing FOMC minutes.",
         "timestamp_evidence": "Federal Reserve page records 2:00 p.m. EST."
       },
@@ -278,7 +314,9 @@
       "document_id": "fed-2024-01-04-h41",
       "publication_timestamp": "2024-01-04T16:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official weekly Federal Reserve balance-sheet release.",
         "timestamp_evidence": "H.4.1 regular publication schedule was 4:30 p.m. Eastern."
       },
@@ -294,7 +332,9 @@
       "document_id": "bls-2024-01-05-employment",
       "publication_timestamp": "2024-01-05T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Official archived employment release.",
         "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
       },
@@ -310,7 +350,9 @@
       "document_id": "reuters-2024-01-05-wall-street",
       "publication_timestamp": "2024-01-05T09:08:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05"],
+        "case_tags": [
+          "2024-01-05"
+        ],
         "provenance_note": "Reuters report retained through a public syndication page.",
         "timestamp_evidence": "Syndication page records January 5, 2024 at 9:08 a.m. EST."
       },
@@ -326,7 +368,10 @@
       "document_id": "reuters-2024-01-05-wall-street-duplicate",
       "publication_timestamp": "2024-01-05T09:08:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05", "duplicate_fixture"],
+        "case_tags": [
+          "2024-01-05",
+          "duplicate_fixture"
+        ],
         "provenance_note": "Intentional duplicate for deterministic deduplication testing.",
         "timestamp_evidence": "Same syndication page and timestamp as the canonical record."
       },
@@ -342,7 +387,10 @@
       "document_id": "ap-2024-01-05-market-update-uncertain",
       "publication_timestamp": "2024-01-05T09:53:43+00:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05", "uncertain_fixture"],
+        "case_tags": [
+          "2024-01-05",
+          "uncertain_fixture"
+        ],
         "provenance_note": "The accessible page includes later market-close material, so the visible passage cannot be proven available at the initial timestamp.",
         "timestamp_evidence": "Initial page timestamp is visible but the update history is not reliably recoverable."
       },
@@ -358,7 +406,10 @@
       "document_id": "bls-2024-01-11-cpi-future",
       "publication_timestamp": "2024-01-11T08:30:00-05:00",
       "raw_metadata": {
-        "case_tags": ["2024-01-05", "future_exclusion_fixture"],
+        "case_tags": [
+          "2024-01-05",
+          "future_exclusion_fixture"
+        ],
         "provenance_note": "Official later release included only to exercise cutoff exclusion.",
         "timestamp_evidence": "BLS archive records 8:30 a.m. EST."
       },
@@ -368,6 +419,60 @@
       "timestamp_status": "verified_exact",
       "title": "Consumer Price Index, December 2023",
       "url_or_source_id": "https://www.bls.gov/news.release/archives/cpi_01112024.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2026-06-05-employment",
+      "publication_timestamp": "2026-06-05T08:30:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-06-30"
+        ],
+        "provenance_note": "Official BLS Employment Situation release cached as a short research passage.",
+        "timestamp_evidence": "BLS release header records 8:30 a.m. (ET) Friday, June 5, 2026."
+      },
+      "snippet_or_passage": "Total nonfarm payroll employment increased by 172,000 in May, and the unemployment rate was unchanged at 4.3 percent. Job gains occurred in leisure and hospitality, local government, and health care.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Employment Situation, May 2026",
+      "url_or_source_id": "https://www.bls.gov/news.release/archives/empsit_06052026.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "fed-2026-06-17-fomc",
+      "publication_timestamp": "2026-06-17T14:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-06-30"
+        ],
+        "provenance_note": "Official FOMC statement cached as a short research passage.",
+        "timestamp_evidence": "Federal Reserve release records 2:00 p.m. EDT on June 17, 2026."
+      },
+      "snippet_or_passage": "The Committee decided to maintain the target range for the federal funds rate at 3-1/2 to 3-3/4 percent. Economic activity is expanding at a solid pace despite elevated uncertainty. Inflation remains elevated relative to the Committee's 2 percent goal, in part reflecting supply shocks.",
+      "source": "Federal Reserve Board",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "FOMC statement, June 17, 2026",
+      "url_or_source_id": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260617a.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "bls-2026-06-05-employment-ted",
+      "publication_timestamp": "2026-06-05T08:30:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-06-30"
+        ],
+        "provenance_note": "BLS Economics Daily summary of the May 2026 employment release.",
+        "timestamp_evidence": "Same-day BLS employment release cycle on June 5, 2026."
+      },
+      "snippet_or_passage": "Total nonfarm payroll employment increased by 172,000 in May 2026, similar to the gain of 179,000 in April. Employment in financial activities declined.",
+      "source": "US Bureau of Labor Statistics",
+      "source_category": "official",
+      "timestamp_status": "verified_exact",
+      "title": "Payroll employment increased by 172,000 in May 2026",
+      "url_or_source_id": "https://www.bls.gov/opub/ted/2026/total-nonfarm-payroll-employment-increased-by-172000-in-may-2026.htm"
     }
   ],
   "schema_version": "1.0"
