@@ -74,7 +74,7 @@ class _FixedPMInterpreter:
 def _valid_pm_payload(context) -> dict:
     selected = list(context.allowed_categories[:3]) or ["maintain_and_monitor"]
     return {
-        "current_posture": (
+        "current_state": (
             "Maintain and monitor. The setup warrants attention but is not "
             "confirmed."
         ),
@@ -135,7 +135,7 @@ def test_short_side_stress_prioritizes_short_basket(demo_run) -> None:
     assert "run_loser_rally_stress" in pm.response_categories
     assert "consider_reducing_short_exposure" in pm.response_categories
     assert "short basket" in pm.main_vulnerability.lower()
-    assert "escalate" in pm.current_posture.lower()
+    assert "escalate" in pm.current_state.lower()
     assert card.to_dict() == before_card
     assert unwind.to_dict() == before_unwind
 
@@ -165,7 +165,7 @@ def test_unknown_response_categories_are_rejected(demo_run) -> None:
 def test_bare_enum_slug_posture_is_rejected(demo_run) -> None:
     context = derive_pm_context(demo_run.deterministic_input, demo_run.unwind)
     payload = _valid_pm_payload(context)
-    payload["current_posture"] = "monitor_more_closely"
+    payload["current_state"] = "monitor_more_closely"
     payload["main_vulnerability"] = "broader_strategy_drawdown"
     result = build_pm_response(
         demo_run.deterministic_input,
@@ -260,7 +260,7 @@ def test_offline_mode_remains_usable(demo_run) -> None:
     assert offline.use_llm is False
     assert no_creds.use_llm is False
     assert provider.calls == 0
-    assert offline.current_posture
+    assert offline.current_state
     assert offline.conditional_response
     assert "premature" in offline.why_not_act_yet.lower() or offline.why_not_act_yet
 
@@ -272,7 +272,7 @@ def test_ai_cannot_change_deterministic_states_or_triggers(demo_run) -> None:
     before_unwind = unwind.to_dict()
     context = derive_pm_context(card, unwind)
     payload = _valid_pm_payload(context)
-    payload["current_posture"] = (
+    payload["current_state"] = (
         "Escalate for PM review even though nothing triggered."
     )
 
@@ -298,7 +298,7 @@ def test_presentation_includes_pm_response_section(demo_run) -> None:
     html = render_pm_card_html(demo_run)
     markdown = render_pm_risk_markdown(demo_run)
 
-    assert "Current posture" in html
+    assert "Current state" in html
     assert "Main vulnerability" in html
     assert "What would change the reading" in html
     assert "Conditional portfolio response" in html
@@ -310,7 +310,7 @@ def test_presentation_includes_pm_response_section(demo_run) -> None:
 def test_pm_response_schema_rejects_unknown_category() -> None:
     with pytest.raises(ValueError, match="unknown response categories"):
         PMResponse(
-            current_posture="Maintain and monitor.",
+            current_state="Maintain and monitor.",
             main_vulnerability="Market backdrop only.",
             what_would_change_the_reading=("Watch for confirmation.",),
             conditional_response=("Maintain and monitor.",),

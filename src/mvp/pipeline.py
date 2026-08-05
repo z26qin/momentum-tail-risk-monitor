@@ -158,21 +158,21 @@ def run_mvp(
         context_elevated=bool(deterministic_input.triggered_quant_signals),
         processed_dir=config.processed_dir,
     )
+    positioning_proxies = public_positioning_proxy_items(positioning)
     interpretation = interpret_evidence_card(
         deterministic_input,
         use_llm=config.use_llm,
         interpreter=interpreter,
         structural_unwind=structural_unwind_summary(unwind),
         mechanical_unwind=mechanical_unwind_summary(mechanical_unwind),
-        public_positioning_proxies=public_positioning_proxy_items(
-            positioning
-        ),
+        public_positioning_proxies=positioning_proxies,
     )
     pm_response = build_pm_response(
         deterministic_input,
         unwind,
         use_llm=config.use_llm,
         interpreter=pm_interpreter,
+        public_positioning_proxies=positioning_proxies,
     )
     fingerprint = _full_run_fingerprint(
         config=config,
