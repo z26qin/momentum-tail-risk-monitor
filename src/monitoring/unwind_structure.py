@@ -217,7 +217,7 @@ class PriorOnlyThreshold:
 
 @dataclass(frozen=True)
 class UnwindScorecardRow:
-    """One validated row in the separate Phase 5 unwind scorecard."""
+    """One validated row in the unwind scorecard."""
 
     as_of_date: str
     monitor_family: str
@@ -332,7 +332,7 @@ class MechanismScenario:
 
 @dataclass(frozen=True)
 class UnwindAssessment:
-    """Validated six-row Phase 5 assessment plus independent mechanisms."""
+    """Validated six-row unwind assessment plus independent mechanisms."""
 
     schema_version: str
     as_of_date: str
@@ -2034,7 +2034,7 @@ def build_unwind_assessment(
     config: UnwindMonitorConfig = DEFAULT_UNWIND_CONFIG,
     theme_config: ThemeConcentrationConfig = DEFAULT_THEME_CONFIG,
 ) -> UnwindAssessment:
-    """Build the complete six-row Phase 5 assessment for one exact date.
+    """Build the complete six-row unwind assessment for one exact date.
 
     The default path is intentionally read-only and demo-safe: the fundamental
     row is unavailable unless exact-date ``company_coverage`` is supplied.

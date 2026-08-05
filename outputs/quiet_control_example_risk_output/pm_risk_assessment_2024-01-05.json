@@ -3,6 +3,21 @@
     "as_of_date": "2024-01-05",
     "compare_to_date": "2023-12-01",
     "horizon_days": 20,
+    "mechanical_unwind_config": {
+      "absorption_window": 1,
+      "active_lookback": 10,
+      "elevated_percentile": 0.8,
+      "fragility_min_signals": 2,
+      "history_window": 252,
+      "loss_window": 5,
+      "min_cross_section": 30,
+      "min_size_coverage": 0.5,
+      "percentile_min_observations": 60,
+      "rebound_window": 5,
+      "signal_lookback_months": 14,
+      "volatility_window": 21,
+      "volume_median_window": 21
+    },
     "output_dir": "outputs",
     "processed_dir": "data/processed",
     "scorecard_config": {
@@ -243,16 +258,18 @@
   "display_labels": {
     "header_state_label": "UMD comparison benchmark (Ken French / Daniel\u2013Moskowitz context)",
     "historical_context_label": "UMD comparison outcomes by market state (not analog retrieval; not the PM book)",
+    "mechanical_unwind_label": "Liquidity / mechanical unwind (factor footprint \u00b7 aligned turnover \u00b7 absorption proxy)",
     "scorecard_label": "PM momentum portfolio scorecard (default customization: S&P 500 12-1 long 10 / short 10)",
     "tail_loss_label": "UMD comparison: state-conditioned tail-loss frequency (matured labels)"
   },
-  "full_run_fingerprint": "750f22225b7d9592",
+  "full_run_fingerprint": "240fa2bb30fabdf4",
   "interpretation": {
     "contradicting_evidence_ids": [
       "reuters-2024-01-05-wall-street"
     ],
     "invalidation_conditions": [
-      "Triggered conditions return to non-triggered states.",
+      "Active structural mechanisms return to not_confirmed and mechanical state normalizes.",
+      "Liquidity absorption remains healthy while breadth stays confined.",
       "Supplied contradicting evidence materially weakens the monitored interpretation."
     ],
     "missing_or_uncertain_evidence": [
@@ -260,13 +277,15 @@
       "Generic macro context does not establish momentum-specific causality.",
       "Evidence cannot change deterministic metrics, thresholds, triggered states, or create a risk score.",
       "No composite deterministic score is defined; the adapter preserves the four indicator states and leaves deterministic_score null.",
-      "The legacy Phase 6 adapter contract contains Phase 5A feasibility metadata only and does not embed the separate Phase 5 unwind scorecard; the notebook renders that deterministic assessment alongside this card. Its fundamental row remains unavailable unless exact-date company coverage is supplied."
+      "The legacy Phase 6 adapter contract contains Phase 5A feasibility metadata only and does not embed the separate Phase 5 unwind scorecard; the notebook renders that deterministic assessment alongside this card. Its fundamental row remains unavailable unless exact-date company coverage is supplied.",
+      "Liquidity-absorption failure is not confirmed; factor propagation remains uncertain.",
+      "Broad crowded-unwind confirmation beyond the supplied structural channel is incomplete."
     ],
-    "model_or_prompt_version": "deterministic-evidence-interpretation-v1",
+    "model_or_prompt_version": "deterministic-evidence-interpretation-v2",
     "monitoring_questions": [
-      "Do currently triggered conditions remain beyond their thresholds?",
-      "Do other monitored signals begin deteriorating together?",
-      "Does newly retrieved evidence support or contradict the monitored mechanism?"
+      "Does factor footprint or aligned turnover broaden beyond the active structural channel?",
+      "Does liquidity absorption fail while losses remain synchronized?",
+      "Do retrieved evidence stances shift from contextual or mixed toward clearer support or contradiction?"
     ],
     "narrative_changes": [
       "high volatility recovery was unchanged and is currently not triggered.",
@@ -274,8 +293,8 @@
       "portfolio drawdown increased and is currently not triggered.",
       "short loss in recovery decreased and is currently not triggered."
     ],
-    "narrative_state": "No implemented fragility condition is currently triggered. This does not rule out risks outside the monitored signal set.",
-    "pm_interpretation": "The supplied point-in-time evidence is mixed and should be treated as context rather than a causal conclusion.",
+    "narrative_state": "Quantitative scorecard triggers are inactive, but structural or mechanical unwind channels are active and warrant elevated monitoring. This is not a confirmed crash forecast.",
+    "pm_interpretation": "The supplied point-in-time evidence is mixed and should be treated as context rather than a causal conclusion. Lens read: DM recovery crash remains watch on structural channels and not confirmed for short-book reversal; Khandani-Lo crowded unwind is not confirmed; fundamental repricing stays unconfirmed without a structured fundamental anchor. Mechanical state is NORMAL, with liquidity absorption failure absent.",
     "supporting_evidence_ids": [
       "bls-2024-01-05-employment",
       "bea-2023-12-22-income-outlays",
@@ -284,7 +303,65 @@
     "use_llm": false,
     "warnings": []
   },
-  "schema_version": "mvp-run-v1",
+  "mechanical_unwind": {
+    "absorption_percentile": 0.7410358565737052,
+    "as_of_date": "2024-01-05",
+    "continuation_pressure": 0.011004643910682598,
+    "control_spec": "mom_vol",
+    "extreme_turnover_percentile": 0.450199203187251,
+    "extreme_turnover_ratio": 0.987505226604063,
+    "factor_footprint_percentile": 0.10756972111553785,
+    "factor_footprint_r2": 0.011881610212604143,
+    "history_rows": 252,
+    "interpretation": "Factor footprint and momentum-aligned turnover are not elevated.",
+    "liquidity_absorption_failure": false,
+    "momentum_beta": -0.0005551755609159406,
+    "momentum_beta_abs": 0.0005551755609159406,
+    "schema_version": "mechanical-unwind-v1",
+    "short_horizon_reversal": -0.011004643910682598,
+    "unwind_state": "NORMAL",
+    "warnings": [
+      "Mechanical-unwind diagnostics are public-data proxies, not observed hedge-fund liquidations or dealer inventory.",
+      "size control degraded to mom_vol; SEC\u00d7price coverage below gate"
+    ]
+  },
+  "pm_response": {
+    "conditional_response": [
+      "Run a loser-rally stress scenario",
+      "Consider a temporary beta hedge if the recovery signal confirms, subject to PM review",
+      "Consider reducing short exposure if losses broaden across the basket, subject to PM review",
+      "Consider reducing gross if stress moves from one leg to the overall strategy, subject to PM review",
+      "Maintain the current posture and monitor the short basket",
+      "Review rebound-sensitive shorts if a recovery move confirms",
+      "Identify the largest short-side loss contributors",
+      "Check whether short concentration is amplifying the move"
+    ],
+    "current_posture": "Monitor more closely. Watch channels are active, but portfolio stress is not yet confirmed.",
+    "main_vulnerability": "The clearest risk is broader strategy drawdown rather than a single isolated channel.",
+    "model_or_prompt_version": "deterministic-pm-response-v1",
+    "response_categories": [
+      "maintain_and_monitor",
+      "review_rebound_sensitive_shorts",
+      "run_loser_rally_stress",
+      "review_short_loss_contributors",
+      "review_short_concentration",
+      "review_unintended_beta",
+      "consider_temporary_beta_hedge",
+      "consider_reducing_short_exposure",
+      "consider_reducing_gross_subject_to_pm_review",
+      "pause_incremental_risk_subject_to_pm_review"
+    ],
+    "use_llm": false,
+    "warnings": [],
+    "what_would_change_the_reading": [
+      "The setup would become more fragile if a recovery regime is accompanied by rising short-leg losses, adverse beta movement, or broader portfolio drawdown.",
+      "Watch for: short_book_reversal_crash moves from watch/not_confirmed to triggered.",
+      "Watch for: short_loss_in_recovery triggers during a recovery regime.",
+      "Watch for: short_minus_long_beta_gap widens into a triggered state."
+    ],
+    "why_not_act_yet": "Broad de-risking would be premature because the relevant PM-book stress channels remain unconfirmed."
+  },
+  "schema_version": "mvp-run-v2",
   "unwind": {
     "active_scenarios": [],
     "as_of_date": "2024-01-05",

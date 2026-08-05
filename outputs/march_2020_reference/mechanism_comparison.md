@@ -5,6 +5,11 @@
 **Interpretation layer:** `deterministic-evidence-interpretation-v2` / prompt `evidence-interpretation-prompt-v2`  
 **Scope:** Small historical reference pack. Not a full March 2020 research study.
 
+**Evidence-layer note:** `M20-*` records come from the separately curated,
+cutoff-valid historical reference pack. Exact-date classification-cache replay
+is unavailable on this date, and the curated text cannot change deterministic
+metrics or mechanism states.
+
 | Lens | Structured support | Text support | Missing evidence | Current read |
 | --- | --- | --- | --- | --- |
 | Daniel–Moskowitz | Market state `panic_elevated`. Severe prior drawdown met (`≈-34%` vs `-20%` gate), high realized volatility met, rapid recovery-from-trough met. `bear_market_recovery_crash` **triggered**. Quant triggers: `high_volatility_recovery`, `short_loss_in_recovery`, `short_minus_long_beta_gap`. `short_book_reversal_crash` is **watch**. Scenario class: `panic_recovery_momentum_crash`. | Fed credit-market support and FOMC-linked actions (`M20-2020-001`); Fed pandemic-hardship package aimed at limiting losses and promoting recovery (`M20-2020-005`). Liquidity/market-functioning facilities are contextual (`M20-2020-002`, `003`, `007`). | No contemporaneous desk report of named loser-leg rebound or short covering in this pack; short-book reversal remains watch rather than triggered. | **supported** (partial on short-book completion) |

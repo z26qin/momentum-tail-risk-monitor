@@ -3,7 +3,7 @@
   "bytes": 590694,
   "cached_path": "data/raw/6_Portfolios_ME_Prior_12_2_Daily.zip",
   "conversion_applied": "divide numeric observations by 100 to decimal return",
-  "offline_import_path": "/Users/v/Documents/Codex/2026-07-24/files-mentioned-by-the-user-codex/work/french-audit.0vW6fQ/6_Portfolios_ME_Prior_12_2_Daily.zip",
+  "offline_import_path": "data/raw/6_Portfolios_ME_Prior_12_2_Daily.zip",
   "offline_source_file_mtime_utc": "2026-07-24T14:41:23+00:00",
   "processed_as_of_date": "2026-05-29",
   "processed_first_observation": "1926-11-03",

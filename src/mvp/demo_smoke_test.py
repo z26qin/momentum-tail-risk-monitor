@@ -139,7 +139,7 @@ def run_smoke_test() -> dict[str, object]:
         "march_2020_reference",
         "quiet_control_2024",
         "cross_case_comparison.md",
-        "Future_To_DO.md",
+        "docs/production_path.md",
         "Daniel–Moskowitz",
         "Khandani–Lo",
     ):

@@ -11,13 +11,12 @@ dist/
 .env
 .env.*
 
-# Optional DeepSeek explanation cache (regenerable).
+# Optional DeepSeek explanation cache (regenerable; not part of the frozen demo).
 outputs/gdelt_evidence_cache/
 
 # Alternative-data raw caches.
-# These are cached to disk so later sessions make zero network calls, but they
-# are too large for the git tree. Provenance is preserved in the committed
-# manifests under data/raw/*/ and in the processed extracts.
+# Cached locally so later sessions make zero network calls; too large for git.
+# Provenance remains in committed manifests under data/raw/*/ and processed extracts.
 data/raw/finra/daily/
 data/raw/prices/
 data/raw/sp500/prices/
@@ -27,11 +26,8 @@ data/raw/gdelt/*.json
 !data/raw/gdelt/acquisition_report.json
 data/raw/sec/company_facts_CIK*.json
 
-# Phase 5A issuer-level diagnostic extracts remain local. The compact
-# aggregate feasibility audit under outputs/fundamental_alignment is tracked.
-outputs/fundamental_alignment/phase_5a_acquisition_status.csv
-outputs/fundamental_alignment/phase_5a_company_coverage.csv
-outputs/fundamental_alignment/phase_5a_taxonomy_diagnostics.csv
+# Local SEC feasibility extracts (not part of the PM-facing submission path).
+outputs/fundamental_alignment/
 
 # Reference papers. Read locally, cited by number in the memo, never
 # redistributed: this repository is public and the working papers are not

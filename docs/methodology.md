@@ -6,8 +6,8 @@ The monitor is descriptive and deterministic. It keeps these objects separate:
 
 1. **PM momentum portfolio (primary object)** — default implementation is an
    equal-weight S&P 500 12-1 long-10 / short-10 book. This stands in for a
-   **customizable** PM momentum portfolio: the monitoring framework is built
-   around named holdings, leg risk, scorecard triggers, and unwind structure.
+   **customizable** PM momentum portfolio: monitoring is built around named
+   holdings, leg risk, scorecard triggers, and unwind structure.
 2. **UMD comparison benchmark** — Ken French UMD / market factors and a
    Daniel–Moskowitz-inspired state. Used only as literature-aligned context and
    state-conditioned comparison statistics, not as the PM’s book.
@@ -15,9 +15,9 @@ The monitor is descriptive and deterministic. It keeps these objects separate:
    for factor-aligned flow and short-horizon absorption stress. It does not
    merge into the macro state or the four-row PM scorecard.
 
-Phase 1–4 scorecard values and triggers are the source of truth for the PM
-portfolio layer. The Phase 5 unwind monitor and mechanism scenarios are a
-separate deterministic layer on that same book. Evidence and interpretation can
+Phase scorecard values and triggers are the source of truth for the PM
+portfolio layer. The unwind monitor and mechanism scenarios are a separate
+deterministic layer on that same book. Evidence and interpretation can
 organize supporting material but cannot change a value, threshold, trigger, or
 risk state.
 
@@ -101,7 +101,7 @@ Theme membership uses 63 trading days of benchmark-demeaned returns ending at
 A separate lightweight layer (`src/monitoring/unwind_monitor.py`) adds
 Khandani–Lo-inspired diagnostics that distinguish economic momentum reversal
 from possible mechanical / factor-aligned unwind pressure. It does **not**
-merge into the four-row PM scorecard or the six-row Phase 5 unwind triggers.
+merge into the four-row PM scorecard or the six-row unwind triggers.
 
 Daily diagnostics (all controls / membership lagged one session):
 
@@ -142,6 +142,12 @@ cached classification already marked schema-valid, provenance agreement,
 publication no later than the cutoff, and grounded passages. No live retrieval
 in the default demo.
 
+**Labeling note:** frozen case packs under `outputs/*/` and curated evidence
+under `data/evaluation/` and `data/corpus/` are manually curated or
+exact-date cached artifacts. Exact-date classification caches live in
+`outputs/evidence_cache/` and are labeled there. They are not live
+institutional news feeds.
+
 ## Assumptions
 
 - A transparent long-10 / short-10 S&P book is a useful default customization
@@ -152,6 +158,16 @@ in the default demo.
   crash model.
 - AI may organize evidence but must not become an independent risk signal
   without validation.
+
+## Rejected probability baseline
+
+An earlier fitted-probability prototype was deliberately retired rather than
+carried into the final product. Its development calibration slopes were about
+0.17, development log loss was worse than a constant baseline, and the
+20-trading-day holdout contained only one independent event episode. Those
+results were insufficient for a defensible PM-book crash probability. The
+final MVP therefore reports transparent mechanism states and descriptive
+severity while explicitly declining to publish a calibrated crash probability.
 
 ## Principal limitations
 
