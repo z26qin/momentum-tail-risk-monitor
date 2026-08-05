@@ -2,7 +2,7 @@
 
 The quantitative input is immutable and remains the source of truth. An
 injected provider receives only an allow-listed copy of deterministic signals,
-retrieved evidence, historical context, compact structural/mechanical unwind
+retrieved evidence, historical context, structural/mechanical unwind
 summaries, and optional typed public positioning proxies. It may return only
 narrative fields plus evidence IDs. The module has no model SDK dependency and
 always falls back to calibrated deterministic text when credentials, a provider,
@@ -34,7 +34,7 @@ Compare these three lenses separately and allow mixed or unresolved results:
 3) Fundamental or sector-specific repricing
 
 Use only the supplied quantitative signals, retrieved evidence, historical
-context, the compact structural_unwind and mechanical_unwind summaries, and
+context, the structural_unwind and mechanical_unwind summaries, and
 public_positioning_proxies when present. Distinguish quantitative scorecard
 state from structural and mechanical state. State where structured and textual
 evidence agree or conflict. Identify missing evidence for factor propagation or
@@ -324,8 +324,8 @@ def _mechanical_history_row(mechanical: Any) -> Any | None:
     return history.iloc[-1]
 
 
-def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
-    """Project an UnwindAssessment into the compact interpretation context."""
+def structural_unwind_summary(unwind: Any) -> dict[str, Any]:
+    """Project an UnwindAssessment into the interpretation summary context."""
 
     return {
         "scenario_classification": getattr(unwind, "scenario_classification", None),
@@ -337,8 +337,8 @@ def compact_structural_unwind_context(unwind: Any) -> dict[str, Any]:
     }
 
 
-def compact_mechanical_unwind_context(mechanical: Any) -> dict[str, Any]:
-    """Project a MechanicalUnwindAssessment into compact status fields.
+def mechanical_unwind_summary(mechanical: Any) -> dict[str, Any]:
+    """Project a MechanicalUnwindAssessment into interpretation status fields.
 
     Copies elevation statuses already computed during mechanical classification.
     Does not re-apply ``DEFAULT_MECHANICAL_UNWIND_CONFIG`` thresholds.
@@ -431,12 +431,12 @@ def _normalize_public_proxy_item(item: Mapping[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def compact_public_positioning_proxies(
+def public_positioning_proxy_items(
     positioning: Any | None = None,
     *,
     items: Sequence[Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Build typed public positioning proxies for LLM context only.
+    """Build typed public positioning proxies for interpretation context only.
 
     Accepts an optional FINRA ``PositioningSnapshot`` (or mapping with the same
     fields) and/or already-shaped proxy items such as future CFTC rows. Output
@@ -509,7 +509,7 @@ def _normalize_public_positioning_proxies(
 ) -> list[dict[str, Any]]:
     if not public_positioning_proxies:
         return []
-    return compact_public_positioning_proxies(items=public_positioning_proxies)
+    return public_positioning_proxy_items(items=public_positioning_proxies)
 
 
 def _normalize_structural_unwind(

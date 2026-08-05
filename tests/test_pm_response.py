@@ -162,6 +162,23 @@ def test_unknown_response_categories_are_rejected(demo_run) -> None:
     assert "invented_category" not in result.response_categories
 
 
+def test_bare_enum_slug_posture_is_rejected(demo_run) -> None:
+    context = derive_pm_context(demo_run.deterministic_input, demo_run.unwind)
+    payload = _valid_pm_payload(context)
+    payload["current_posture"] = "monitor_more_closely"
+    payload["main_vulnerability"] = "broader_strategy_drawdown"
+    result = build_pm_response(
+        demo_run.deterministic_input,
+        demo_run.unwind,
+        use_llm=True,
+        interpreter=_FixedPMInterpreter(payload),
+        environment={"DEEPSEEK_API_KEY": "test-only"},
+    )
+
+    assert result.use_llm is False
+    assert any("schema or safety validation" in warning for warning in result.warnings)
+
+
 def test_security_specific_and_sized_advice_rejected(demo_run) -> None:
     context = derive_pm_context(demo_run.deterministic_input, demo_run.unwind)
     payload = _valid_pm_payload(context)

@@ -13,7 +13,7 @@ from src.mvp.evidence_interpretation import (
     INTERPRETATION_PROMPT_VERSION,
     MODEL_CONTEXT_FIELDS,
     EvidenceInterpretation,
-    compact_public_positioning_proxies,
+    public_positioning_proxy_items,
     interpret_evidence_card,
 )
 
@@ -378,7 +378,7 @@ def test_elevated_finra_proxy_changes_context_not_scorecard(
         "factor_footprint_status": "not_elevated",
         "aligned_turnover_status": "not_elevated",
     }
-    elevated_proxies = compact_public_positioning_proxies(
+    elevated_proxies = public_positioning_proxy_items(
         {
             "as_of_date": deterministic_input.as_of_date,
             "observation_date": deterministic_input.as_of_date,
