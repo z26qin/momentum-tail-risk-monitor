@@ -24,7 +24,7 @@ def demo_run():
 def _valid_pm_payload(context) -> dict:
     selected = list(context.allowed_categories[:3]) or ["maintain_and_monitor"]
     return {
-        "current_posture": (
+        "current_state": (
             "Maintain and monitor. The setup warrants attention but is not "
             "confirmed."
         ),

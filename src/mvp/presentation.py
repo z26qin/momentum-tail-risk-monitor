@@ -618,8 +618,8 @@ def _render_pm_response_html(result: MVPRunResult) -> str:
     return f"""
   <h3>PM Response <span class="eyebrow">DECISION SUPPORT · LLM {escape(llm_status.upper())}</span></h3>
   <div class="panel">
-    <h4>Current posture</h4>
-    <p>{escape(pm.current_posture)}</p>
+    <h4>Current state</h4>
+    <p>{escape(pm.current_state)}</p>
     <h4>Main vulnerability</h4>
     <p>{escape(pm.main_vulnerability)}</p>
     <h4>What would change the reading</h4>
@@ -850,7 +850,7 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             "",
             "## PM response (decision support)",
             "",
-            f"**Current posture:** {pm.current_posture}",
+            f"**Current state:** {pm.current_state}",
             "",
             f"**Main vulnerability:** {pm.main_vulnerability}",
             "",

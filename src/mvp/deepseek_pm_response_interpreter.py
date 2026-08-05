@@ -74,9 +74,13 @@ class DeepSeekPMResponseInterpreter:
             f"{', '.join(sorted(PM_MODEL_OUTPUT_FIELDS))}. "
             "what_would_change_the_reading, conditional_response, and "
             "selected_categories must be JSON arrays of strings. "
-            "current_posture, main_vulnerability, what_would_change_the_reading, "
+            "current_state, main_vulnerability, what_would_change_the_reading, "
             "conditional_response, and why_not_act_yet must be analyst prose "
-            "sentences for a PM/quant reader — never bare enum/slug tokens."
+            "sentences for a PM/quant reader — never bare enum/slug tokens. "
+            "Select at most three selected_categories. Prefer rebound-sensitive "
+            "short-basket vulnerability language over vague broader drawdown; "
+            "when a short-interest proxy is elevated, mention it as contextual "
+            "support in main_vulnerability."
         )
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system},

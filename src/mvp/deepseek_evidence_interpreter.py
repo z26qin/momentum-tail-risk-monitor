@@ -75,7 +75,11 @@ class DeepSeekEvidenceInterpreter:
             "narrative_changes, supporting_evidence_ids, "
             "contradicting_evidence_ids, missing_or_uncertain_evidence, "
             "monitoring_questions, and invalidation_conditions must be JSON "
-            "arrays of strings."
+            "arrays of strings. Keep pm_interpretation to at most 1000 "
+            "characters. monitoring_questions and invalidation_conditions "
+            "must not include numbers, percentages, or threshold literals. "
+            "Do not say low-risk state or mechanical unwind is normal; "
+            "narrative_state must be short analyst prose."
         )
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system},

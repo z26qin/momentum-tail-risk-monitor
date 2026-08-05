@@ -17,7 +17,7 @@ import dataclasses
 import json
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
@@ -26,7 +26,7 @@ from src.mvp.evidence_card import DeterministicEvidenceInput
 
 
 PM_RESPONSE_SCHEMA_VERSION = "pm-response-v1"
-PM_RESPONSE_PROMPT_VERSION = "pm-response-prompt-v2"
+PM_RESPONSE_PROMPT_VERSION = "pm-response-prompt-v5"
 DETERMINISTIC_PM_RESPONSE_VERSION = "deterministic-pm-response-v1"
 
 ALLOWED_RESPONSE_CATEGORIES = frozenset(
@@ -144,7 +144,7 @@ VULNERABILITY_LABELS: dict[str, str] = {
 
 PM_MODEL_OUTPUT_FIELDS = frozenset(
     {
-        "current_posture",
+        "current_state",
         "main_vulnerability",
         "what_would_change_the_reading",
         "conditional_response",
@@ -156,25 +156,43 @@ PM_MODEL_OUTPUT_FIELDS = frozenset(
 PM_RESPONSE_INSTRUCTIONS = """\
 Write a short decision-support read as a risk analyst speaking to a portfolio
 manager and quant researcher. Return only the six PMResponse fields as JSON.
+Sound like a morning risk note, not a taxonomy dump.
 
 Tone and style:
-- Use plain analyst prose in complete sentences. Sound like a desk note, not a
-  schema dump or API log.
-- current_posture and main_vulnerability must be human-readable sentences.
+- Use plain analyst prose in complete sentences.
+- current_state and main_vulnerability must be human-readable sentences.
   Never return bare enum/slug tokens such as monitor_more_closely,
   escalate_for_pm_review, broader_strategy_drawdown, or short_basket.
-- what_would_change_the_reading and why_not_act_yet should also be prose. You
-  may name mechanisms or signals in words, but do not reply with snake_case
+- Do not call an untriggered book a "low-risk state". Prefer: no deterministic
+  escalation signals are active; maintain posture and monitor.
+- Do not say "mechanical unwind is normal". Prefer: no evidence of a broad
+  mechanical unwind / no broad momentum unwind is confirmed.
+- main_vulnerability must name the concrete book risk, not a vague
+  "broader strategy drawdown". When short-side recovery risk or elevated
+  short-interest proxies are relevant, point to rebound-sensitive / potentially
+  crowded shorts as the first review area, cite the elevated short-interest
+  proxy as contextual support for that vulnerability, and state whether that
+  path is active today.
+- what_would_change_the_reading and why_not_act_yet should be prose. You may
+  name mechanisms or signals in words, but do not reply with snake_case
   identifiers alone.
 - Prefer category_labels language when discussing actions; selected_categories
   alone may use the allowed machine keys.
+- public_positioning_proxies are contextual only (state labels, no magnitudes).
+  An elevated short-interest proxy supports a short-basket crowding hypothesis;
+  it must not be treated as proof of covering or forced deleveraging.
 
 Content rules:
 - Use only the supplied deterministic signals, mechanism statuses, and allowed
-  response categories. Rank and select a short subset of allowed categories
-  (typically 2-5); do not dump the full allow-list. Do not invent categories.
+  response categories. Select only 2 or 3 categories that change the PM
+  decision; do not dump overlapping short-side taxonomy items. Prefer a
+  compact set such as: maintain_and_monitor; one short-basket review category
+  (review_rebound_sensitive_shorts or review_short_concentration); and
+  run_loser_rally_stress only as a conditional next step if recovery signals
+  strengthen. Do not invent categories.
 - Use conditional PM language (if confirmed, would become relevant, worth
-  reviewing, consider, subject to PM review).
+  reviewing, consider, subject to PM review). Distinguish vulnerability from
+  active unwind: identify what to watch without implying immediate de-risking.
 - Do not recommend securities, position sizes, option strikes, or execution
   instructions. Do not alter trigger states or invent thresholds. Do not
   estimate crash probability."""
@@ -312,7 +330,7 @@ def _category_tuple(value: Any, name: str) -> tuple[str, ...]:
 class PMResponse:
     """Validated PM decision-support readout tied to bounded categories."""
 
-    current_posture: str
+    current_state: str
     main_vulnerability: str
     what_would_change_the_reading: tuple[str, ...]
     conditional_response: tuple[str, ...]
@@ -324,7 +342,7 @@ class PMResponse:
 
     def __post_init__(self) -> None:
         object.__setattr__(
-            self, "current_posture", _text(self.current_posture, "current_posture")
+            self, "current_state", _text(self.current_state, "current_state")
         )
         object.__setattr__(
             self,
@@ -649,7 +667,7 @@ def _deterministic_conditional_lines(
         ]
     )
     # Drop maintain from the conditional list when posture is already maintain;
-    # it is expressed in current_posture instead.
+    # it is expressed in current_state instead.
     display_ids = [
         item
         for item in ordered
@@ -674,7 +692,7 @@ def _deterministic_pm_response(
     if context.posture == "maintain_and_monitor" and "maintain_and_monitor" not in categories:
         categories = ("maintain_and_monitor", *categories)
     return PMResponse(
-        current_posture=POSTURE_LABELS[context.posture],
+        current_state=POSTURE_LABELS[context.posture],
         main_vulnerability=VULNERABILITY_LABELS[context.vulnerability],
         what_would_change_the_reading=_deterministic_change_lines(context),
         conditional_response=_deterministic_conditional_lines(context),
@@ -690,7 +708,22 @@ def _model_context(
     deterministic_input: DeterministicEvidenceInput,
     unwind: UnwindAssessment,
     context: PMResponseContext,
+    *,
+    public_positioning_proxies: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    proxies: list[dict[str, Any]] = []
+    for item in public_positioning_proxies or ():
+        proxies.append(
+            {
+                "source": item.get("source"),
+                "metric": item.get("metric"),
+                "state": item.get("state"),
+                "evidence_class": item.get("evidence_class"),
+                "relevant_asset_or_portfolio_scope": item.get(
+                    "relevant_asset_or_portfolio_scope"
+                ),
+            }
+        )
     payload = {
         "as_of_date": deterministic_input.as_of_date,
         "overall_risk_state": deterministic_input.overall_risk_state,
@@ -719,6 +752,7 @@ def _model_context(
             {"metric": row.metric, "triggered": row.triggered, "status": row.status}
             for row in unwind.scorecard
         ],
+        "public_positioning_proxies": proxies,
         "pm_response_context": context.to_dict(),
         "allowed_response_categories": list(context.allowed_categories),
         "category_labels": {
@@ -737,14 +771,14 @@ def _is_bare_enum_slug(text: str) -> bool:
 
 
 def _validate_pm_llm_text(response: PMResponse) -> None:
-    for field_name in ("current_posture", "main_vulnerability"):
+    for field_name in ("current_state", "main_vulnerability"):
         value = getattr(response, field_name)
         if _is_bare_enum_slug(value):
             raise ValueError(
                 f"{field_name} must be analyst prose, not an enum/slug token"
             )
     narrative_fields = (
-        response.current_posture,
+        response.current_state,
         response.main_vulnerability,
         *response.what_would_change_the_reading,
         *response.conditional_response,
@@ -798,9 +832,14 @@ def _validated_provider_result(
         )
     if not selected:
         raise ValueError("selected_categories cannot be empty")
+    if len(selected) > 3:
+        raise ValueError(
+            "selected_categories must contain at most 3 items for a compact "
+            "PM readout"
+        )
 
     candidate = PMResponse(
-        current_posture=_text(payload["current_posture"], "current_posture"),
+        current_state=_text(payload["current_state"], "current_state"),
         main_vulnerability=_text(
             payload["main_vulnerability"], "main_vulnerability"
         ),
@@ -836,6 +875,7 @@ def build_pm_response(
     use_llm: bool = True,
     interpreter: PMResponseInterpreter | None = None,
     environment: Mapping[str, str] | None = None,
+    public_positioning_proxies: Sequence[Mapping[str, Any]] | None = None,
 ) -> PMResponse:
     """Build a bounded PM response without mutating quant or unwind outputs."""
 
@@ -879,7 +919,12 @@ def build_pm_response(
         else:
             try:
                 raw = interpreter.interpret_pm_response(
-                    context=_model_context(deterministic_input, unwind, context),
+                    context=_model_context(
+                        deterministic_input,
+                        unwind,
+                        context,
+                        public_positioning_proxies=public_positioning_proxies,
+                    ),
                     instructions=PM_RESPONSE_INSTRUCTIONS,
                 )
                 result = _validated_provider_result(raw, context)

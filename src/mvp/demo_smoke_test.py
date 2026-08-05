@@ -146,7 +146,7 @@ def run_smoke_test() -> dict[str, object]:
         if marker not in notebook_source:
             raise AssertionError(f"final notebook is missing {marker!r}")
     pm_response = primary.pm_response
-    if not pm_response.current_posture or not pm_response.response_categories:
+    if not pm_response.current_state or not pm_response.response_categories:
         raise AssertionError("PM response readout is incomplete")
     return {
         "status": "ready",
