@@ -22,8 +22,8 @@ from src.monitoring.unwind_structure import DEFAULT_UNWIND_CONFIG, UnwindMonitor
 from src.risk.theme_concentration import DEFAULT_THEME_CONFIG, ThemeConcentrationConfig
 from src.utils.io import DEFAULT_OUTPUT_DIR, DEFAULT_PROCESSED_DIR, REPO_ROOT
 
-DEFAULT_AS_OF_DATE = "2024-01-05"
-DEFAULT_COMPARE_TO_DATE = "2023-12-01"
+DEFAULT_AS_OF_DATE = "2026-06-30"
+DEFAULT_COMPARE_TO_DATE = "2026-05-29"
 DEFAULT_THRESHOLD_PROFILE = "default"
 DEFAULT_HORIZON_DAYS = 20
 DEFAULT_USE_LLM = False

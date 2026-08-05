@@ -130,7 +130,7 @@ def run_smoke_test() -> dict[str, object]:
         "MVPConfig",
         "run_mvp",
         "Two momentum-crash mechanisms",
-        "Current semiconductor case",
+        "Primary correlated-cluster case",
         "AI evidence view",
         "2020 historical validation",
         "2024 quiet control",
