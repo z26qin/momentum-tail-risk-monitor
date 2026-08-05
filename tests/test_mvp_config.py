@@ -1,4 +1,4 @@
-"""Config boundary checks for the MVP orchestration layer."""
+"""Config boundary checks for the MVP assessment entry point."""
 
 from __future__ import annotations
 

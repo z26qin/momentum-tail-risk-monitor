@@ -671,7 +671,7 @@ def build_evidence_card(
         evidence = builder(
             deterministic_summary=facts_seed,
             evidence_case_date=as_of_date,
-            classification_dir=output_dir / "debug",
+            classification_dir=output_dir / "evidence_cache",
         )
     except Exception as exc:  # noqa: BLE001 - retrieval must fail closed
         evidence = {

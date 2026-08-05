@@ -1,4 +1,5 @@
 {
+  "evidence_layer_note": "M20 evidence IDs come from the separate manually curated cutoff-valid historical reference pack. Active exact-date classification-cache replay is unavailable for 2020-03-24, and curated evidence cannot change deterministic fields.",
   "interpretation": {
     "contradicting_evidence_ids": [
       "M20-2020-004"
@@ -9,10 +10,8 @@
       "Supplied contradicting evidence materially weakens the monitored interpretation."
     ],
     "missing_or_uncertain_evidence": [
-      "Reliable evidence unavailable: no exact-date validated classification cache.",
-      "Evidence status is unavailable because no reliable date-matched validated cache exists; no evidence conclusion is produced.",
       "The evidence layer cannot change deterministic metrics, thresholds, triggered states, or create a risk score.",
-      "no date-matched evidence for 2020-03-24; the card shows deterministic quantitative facts only",
+      "Active exact-date classification-cache replay is unavailable for 2020-03-24; cited M20 records come from the separate manually curated cutoff-valid reference pack.",
       "No composite deterministic score is defined; the adapter preserves the four indicator states and leaves deterministic_score null.",
       "The legacy Phase 6 adapter contract contains Phase 5A feasibility metadata only and does not embed the separate Phase 5 unwind scorecard; the notebook renders that deterministic assessment alongside this card. Its fundamental row remains unavailable unless exact-date company coverage is supplied.",
       "Liquidity-absorption failure is not confirmed; factor propagation remains uncertain.",

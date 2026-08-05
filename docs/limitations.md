@@ -33,7 +33,7 @@ This document lists what the MVP deliberately does **not** claim.
 - Crowding monitoring uses book-structure proxies (concentration, breadth,
   correlated-theme unwind) plus optional FINRA / GDELT side notes. It does not
   observe ownership, leverage, financing, or forced selling. See
-  `Future_To_DO.md` for T2–T4 production imagination.
+  `docs/production_path.md` for T2–T4 production path.
 - The mechanical-unwind / market-absorption layer infers possible crowding from
   factor footprints, momentum-extreme abnormal turnover, and short-horizon
   price absorption. It uses daily public data only. Size control depends on
@@ -67,7 +67,7 @@ This document lists what the MVP deliberately does **not** claim.
   retune thresholds after the table is seen.
 - There is not yet a persisted historical mechanism/scorecard state series, so
   a descriptive PM-book forward-outcome table is deferred (see
-  `pm_book_outcomes.md` and `Future_To_DO.md`).
+  `pm_book_outcomes.md` and `docs/production_path.md`).
 
 ## Interpretation
 
@@ -75,3 +75,6 @@ This document lists what the MVP deliberately does **not** claim.
 - Without credentials or an injected interpreter, the path falls back to a
   deterministic narrative and records that LLM was not used.
 - Interpretation cannot change values, thresholds, triggers, or risk state.
+- The retained AI-value worksheet has no completed live-LLM arm or human model
+  scores for the primary May 29 case. It validates immutability and fallback
+  behavior, not incremental LLM usefulness or alpha.

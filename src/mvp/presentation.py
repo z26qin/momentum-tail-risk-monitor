@@ -439,7 +439,7 @@ def build_unwind_summary_html(unwind: UnwindAssessment) -> str:
   {mechanism_table_html}
   <small>{escape(theme_detail)}. This is a return-correlation proxy, not observed ownership.</small>
   <h4>Retained six-row deterministic inputs</h4>
-  <small>Legacy single-label compatibility view: {escape(unwind.scenario_classification.replace('_', ' ').title())} · {escape(unwind.scenario_rule)}</small>
+  <small>Compatibility classification: {escape(unwind.scenario_classification.replace('_', ' ').title())} · {escape(unwind.scenario_rule)}</small>
   <strong>Completeness:</strong> {escape(unwind.completeness_confidence)}<br>
   {unwind_scorecard_html}
   <div style='display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px'>
@@ -761,6 +761,11 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
     card = result.deterministic_input
     interpretation = result.interpretation
     unwind = result.unwind
+    interpretation_heading = (
+        "AI-assisted, evidence-constrained"
+        if interpretation.use_llm
+        else "Evidence-assisted, deterministic fallback"
+    )
     signals = card.triggered_quant_signals + card.non_triggered_relevant_signals
     tail_loss = card.audit_metadata.get("tail_loss_frequency")
     horizon = card.audit_metadata.get(
@@ -806,7 +811,7 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
             "## Dominant monitoring channels",
             "",
             f"- **Unwind completeness:** {unwind.completeness_confidence}",
-            f"- **Legacy scenario label:** {unwind.scenario_classification}",
+            f"- **Scenario classification:** {unwind.scenario_classification}",
             "",
             "## Crowding monitor (book-structure proxies)",
             "",
@@ -839,7 +844,7 @@ def render_pm_risk_markdown(result: MVPRunResult) -> str:
     lines.extend(
         [
             "",
-            "## PM interpretation (AI-assisted, evidence-constrained)",
+            f"## PM interpretation ({interpretation_heading})",
             "",
             interpretation.pm_interpretation,
             "",
@@ -902,7 +907,7 @@ def save_pm_outputs(
 ) -> dict[str, Path]:
     """Write example PM-facing HTML and Markdown outputs."""
 
-    root = output_dir or (REPO_ROOT / "outputs" / "example_risk_output")
+    root = output_dir or (REPO_ROOT / "outputs" / "quiet_control_example_risk_output")
     root.mkdir(parents=True, exist_ok=True)
     stem = f"pm_risk_assessment_{result.config.as_of_date}"
     html_path = root / f"{stem}.html"

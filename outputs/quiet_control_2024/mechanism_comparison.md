@@ -13,7 +13,7 @@
 
 ## Cross-lens conclusion
 
-Classification is `normal_drawdown`. The framework sees a soft backdrop and an incomplete recovery precondition, then **stops short of escalation**. That selectivity is the point of the quiet-control case.
+Classification is `normal_drawdown`. The monitor sees a soft backdrop and an incomplete recovery precondition, then **stops short of escalation**. That selectivity is the point of the quiet-control case.
 
 ## Explicit non-findings
 
