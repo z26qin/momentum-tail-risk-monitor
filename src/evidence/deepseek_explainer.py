@@ -12,6 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+import time
 import urllib.error
 import urllib.request
 from datetime import date, datetime
@@ -31,6 +33,9 @@ LLM_UNAVAILABLE_MESSAGE = (
     "LLM synthesis was unavailable. Retrieved GDELT evidence is shown without "
     "model narrative synthesis."
 )
+_CHAT_COMPLETION_ATTEMPTS = 3
+_CHAT_COMPLETION_BACKOFF_SECONDS = (1.0, 2.0)
+_TRANSIENT_HTTP_STATUS = frozenset({408, 429, 500, 502, 503, 504})
 
 _REQUIRED_RESULT_KEYS = (
     "trigger_summary",
@@ -188,6 +193,23 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     return parsed
 
 
+def _coerce_singleton_list_fields(
+    payload: Mapping[str, Any], fields: Sequence[str]
+) -> dict[str, Any]:
+    """Normalize a model's prose string into list entries for array fields."""
+
+    normalized = dict(payload)
+    for field in fields:
+        value = normalized.get(field)
+        if isinstance(value, str) and value.strip():
+            normalized[field] = [
+                part.strip()
+                for part in re.split(r"(?<=[.;?!])\s+", value.strip())
+                if part.strip()
+            ]
+    return normalized
+
+
 def _post_chat_completion(
     *,
     api_key: str,
@@ -214,16 +236,37 @@ def _post_chat_completion(
         },
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    choices = payload.get("choices") or []
-    if not choices:
-        raise ValueError("LLM response contained no choices")
-    message = choices[0].get("message") or {}
-    content = message.get("content")
-    if not content:
-        raise ValueError("LLM response contained empty content")
-    return str(content)
+    last_error: Exception | None = None
+    for attempt in range(_CHAT_COMPLETION_ATTEMPTS):
+        try:
+            with urllib.request.urlopen(
+                request, timeout=timeout_seconds
+            ) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            choices = payload.get("choices") or []
+            if not choices:
+                raise ValueError("LLM response contained no choices")
+            message = choices[0].get("message") or {}
+            content = message.get("content")
+            if not content:
+                raise ValueError("LLM response contained empty content")
+            return str(content)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in _TRANSIENT_HTTP_STATUS:
+                raise
+            last_error = exc
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last_error = exc
+        if attempt + 1 < _CHAT_COMPLETION_ATTEMPTS:
+            time.sleep(
+                _CHAT_COMPLETION_BACKOFF_SECONDS[
+                    min(attempt, len(_CHAT_COMPLETION_BACKOFF_SECONDS) - 1)
+                ]
+            )
+    raise RuntimeError(
+        f"LLM chat completion failed after {_CHAT_COMPLETION_ATTEMPTS} attempts: "
+        f"{last_error}"
+    ) from last_error
 
 
 def explain_risk_with_llm(
@@ -373,6 +416,7 @@ def explain_risk_with_llm(
         urllib.error.URLError,
         urllib.error.HTTPError,
         TimeoutError,
+        RuntimeError,
         ValueError,
         TypeError,
         json.JSONDecodeError,

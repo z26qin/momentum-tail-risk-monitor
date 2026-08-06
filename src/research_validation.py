@@ -16,6 +16,7 @@ from typing import Any, Mapping
 import pandas as pd
 
 from src.mvp.config import (
+    DEFAULT_AS_OF_DATE,
     DEFAULT_COMPARE_TO_DATE,
     HISTORICAL_EXAMPLE_DATE,
     MVPConfig,
@@ -92,7 +93,7 @@ EPISODES: tuple[Episode, ...] = (
     Episode(
         episode_id="demo_control",
         display_name="Default demo negative control",
-        assessment_date=date.fromisoformat("2024-01-05"),
+        assessment_date=date.fromisoformat(DEFAULT_AS_OF_DATE),
         expected_mechanism=None,
         notes="Repository default demo date; expected quiet fingerprint.",
         compare_to_date=date.fromisoformat(DEFAULT_COMPARE_TO_DATE),

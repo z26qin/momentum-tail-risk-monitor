@@ -10,11 +10,19 @@ from typing import Any
 from src.evidence.deepseek_explainer import (
     DEFAULT_DEEPSEEK_BASE_URL,
     DEFAULT_DEEPSEEK_MODEL,
+    _coerce_singleton_list_fields,
     _extract_json_object,
     _load_dotenv_if_present,
     _post_chat_completion,
 )
 from src.mvp.pm_response import PM_MODEL_OUTPUT_FIELDS
+
+
+_LIST_FIELDS = (
+    "what_would_change_the_reading",
+    "conditional_response",
+    "selected_categories",
+)
 
 
 class DeepSeekPMResponseInterpreter:
@@ -111,7 +119,9 @@ class DeepSeekPMResponseInterpreter:
                 temperature=0.2,
                 timeout_seconds=self._timeout_seconds,
             )
-        parsed = _extract_json_object(content)
+        parsed = _coerce_singleton_list_fields(
+            _extract_json_object(content), _LIST_FIELDS
+        )
         missing = PM_MODEL_OUTPUT_FIELDS.difference(parsed)
         extra = set(parsed).difference(PM_MODEL_OUTPUT_FIELDS)
         if missing or extra:

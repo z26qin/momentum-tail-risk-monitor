@@ -12,8 +12,8 @@ from src.risk.theme_concentration import DEFAULT_THEME_CONFIG
 
 def test_default_demo_config_is_frozen_and_scoped() -> None:
     config = default_demo_config()
-    assert config.as_of_date == "2024-01-05"
-    assert config.compare_to_date == "2023-12-01"
+    assert config.as_of_date == "2026-06-30"
+    assert config.compare_to_date == "2026-05-29"
     assert config.threshold_profile == "default"
     assert config.horizon_days == 20
     assert config.use_llm is False

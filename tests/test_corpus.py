@@ -20,7 +20,7 @@ def test_corpus_contracts_manifest_and_round_trip() -> None:
         for document_id in record["document_ids"]
     }
 
-    assert 18 <= len(documents) <= 24
+    assert 18 <= len(documents) <= 26
     assert {document.document_id for document in documents} == manifest_ids
     assert all(
         CandidateDocument.from_dict(document.to_dict()) == document

@@ -2,77 +2,43 @@
   <a href="docs/methodology.md"><img src="https://img.shields.io/badge/Docs-methodology-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="docs/demo_walkthrough.md"><img src="https://img.shields.io/badge/Demo-15--20%20min-0A7A3E?style=for-the-badge" alt="Demo walkthrough"></a>
   <a href="notebooks/final_mvp_demo.ipynb"><img src="https://img.shields.io/badge/Notebook-final__mvp__demo-1f6feb?style=for-the-badge" alt="Demo notebook"></a>
-  <a href="#limitations"><img src="https://img.shields.io/badge/Status-Research%20MVP-orange?style=for-the-badge" alt="Research MVP"></a>
+  <a href="#what-we-refuse-to-claim"><img src="https://img.shields.io/badge/Status-Research%20MVP-orange?style=for-the-badge" alt="Research MVP"></a>
 </p>
 
-# Momentum Crash Monitor
+# Momentum Tail-Risk Monitor
 
-**An AI-assisted monitoring workflow that helps a PM recognize a fragile momentum setup, locate the risk in the book, and challenge the read with timestamp-valid evidence before acting.**
+**An AI-assisted monitor that helps a PM recognize fragile momentum setups, locate risk in the book, and challenge the read with timestamp-valid evidence — before acting.**
 
-This MVP is **not** trying to predict the exact timing of a momentum crash. It is designed to help the PM recognize a fragile setup, locate the risk in the book, identify the plausible mechanism, and challenge the signal with timestamp-valid evidence before acting.
-
-The prototype answers six questions:
-
-1. **What is the momentum outlook on the selected day? Is there momentum tail risk?**
-2. **Where is the risk: the long leg, short leg, or a concentrated cluster?**
-3. **Does the setup resemble a recovery-driven momentum crash or a crowded-position unwind?**
-4. **Which signals are active, incomplete, or absent?**
-5. **What timestamp-valid evidence supports or contradicts the read?**
-6. **How do known episodes (2020 recovery; 2024 quiet control) look under the same rules?**
-
-```text
-Quant metrics → PM book risk → mechanism read (DM vs KL)
-→ evidence challenge (optional LLM) → next checks
-```
-
-This is an approximately **20-hour research MVP**. It does **not** predict an exact crash date, produce a crash probability, optimize a portfolio, or issue a trade instruction.
+This is an approximately **20-hour research MVP**. It does **not** predict crash timing, publish a calibrated crash probability, optimize a portfolio, or issue a trade instruction.
 
 ### Start here
 
-```text
-README
-→ notebooks/final_mvp_demo.ipynb
-→ outputs/current_semi_unwind/              (PRIMARY example PM output, 2026-05-29)
-→ outputs/march_2020_reference/             (historical mechanism validation)
-→ outputs/quiet_control_example_risk_output/ (quiet control / selectivity)
-→ outputs/research_validation/ai_value_summary.md
-→ docs/methodology.md
-→ docs/limitations.md
-→ docs/production_path.md
-```
-
-Artifact hierarchy:
-
-| Role | Path |
-|---|---|
-| **Primary example PM output** | `outputs/current_semi_unwind/` (2026-05-29) |
-| Historical mechanism validation | `outputs/march_2020_reference/` (2020-03-24) |
-| Quiet control (selectivity) | `outputs/quiet_control_2024/` + `outputs/quiet_control_example_risk_output/` |
-| AI-value comparison | `outputs/research_validation/ai_value_summary.md` |
+1. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — product walkthrough  
+2. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — primary example (2026-05-29)  
+3. [`docs/demo_walkthrough.md`](docs/demo_walkthrough.md) — 15–20 min review path  
+4. [`docs/methodology.md`](docs/methodology.md) · [`docs/limitations.md`](docs/limitations.md) · [`docs/production_path.md`](docs/production_path.md)
 
 ---
 
-## PM workflow prototype
+## The problem
 
-Interactive prototype of how frozen research outputs can enter an auditable PM workflow. Snapshot below shows the Semi-unwind case (as of 2026-05-29) — not a live market call.
+Momentum reversal risk is ambiguous. The same drawdown can be:
 
-<p align="center">
-  <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum crash risk monitor — PM workflow prototype" width="920">
-</p>
+- ordinary noise(volatility mean reversion);
+- a **recovery-driven reversal** (losers rebound harder than winners after a deep selloff);
+- a **crowded-position unwind** (similar books exit the same names for liquidity).
 
-Open [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html) in a browser (offline, no build step). Switch cases, drill into scorecard rows, and use the inspect-next actions.
+The PM question is not “will momentum crash tomorrow?” It is:
 
-Prototype only · frozen research outputs · not production investment advice.
+> Where is the pressure, which mechanism is supported, what evidence challenges that read, and what should we check next?
+
+Default monitored book: equal-weight S&P 500 **12-1 long-10 / short-10** (inspectable demo proxy, not a production portfolio). Ken French UMD / Daniel–Moskowitz market state is **comparison context only**. Construction, beta, and crowding proxy detail: [`docs/methodology.md`](docs/methodology.md).
 
 ---
 
-## Momentum-crash logic
+## Two mechanisms
 
-A momentum portfolio is generally long recent winners and short recent losers. It can become fragile through two different mechanisms.
-
-### 1. Recovery-driven momentum crash
-
-In a bear market, recent winners may become relatively defensive, while recent losers are often distressed, cyclical, or higher beta.
+### 1. Recovery-driven momentum crash (Daniel–Moskowitz)
 
 ```text
 Severe market drawdown
@@ -89,22 +55,9 @@ The short leg loses heavily
 Momentum reverses sharply
 ```
 
-This is the Daniel–Moskowitz mechanism.
+Dangerous condition is not “the market is rising.” It is **deep prior drawdown → rapid recovery → loser rebound → short-leg pain**.
 
-The dangerous condition is not simply “the market is rising.” It is a **deep prior drawdown followed by a rapid recovery, strong loser rebound, and short-leg pain**.
-
-The monitor therefore checks:
-
-- market drawdown and recovery state;
-- realized volatility;
-- long-versus-short beta;
-- short-leg losses;
-- portfolio drawdown;
-- breadth of the loser-stock rebound.
-
-### 2. Crowded-position unwind
-
-Momentum can also become fragile when similar portfolios own the same winners, short the same losers, or concentrate in the same themes.
+### 2. Crowded-position unwind (Khandani–Lo)
 
 ```text
 Concentrated positions / narrow breadth / shared themes
@@ -118,28 +71,11 @@ Weak liquidity absorption
 Correlated losses propagate across books
 ```
 
-This is the Khandani–Lo mechanism.
-
-Crowding is treated as a **risk amplifier**, not proof of forced deleveraging. The system only escalates the interpretation when concentration, correlated selling, weak absorption, and supporting positioning evidence begin to line up.
+Crowding is a **risk amplifier**, not proof of forced deleveraging. Escalate only when concentration, correlated selling, weak absorption, and positioning evidence begin to line up.
 
 ---
 
-## What the system monitors
-
-| PM question | Current monitor | Interpretation |
-|---|---|---|
-| Is the market in a dangerous recovery state? | Prior drawdown, volatility, recovery speed, UMD context | Recovery crashes are state-dependent |
-| Is the short leg vulnerable? | Short-leg return, loser rebound, short-versus-long beta | The short basket may behave like a high-beta recovery trade |
-| Is the book concentrated? | HHI, effective number of bets, theme clusters | Fewer independent bets increase correlated-exit risk |
-| Is momentum becoming narrow? | Signal breadth across the universe | A narrow trade is easier to crowd and reverse |
-| Is weakness spreading? | Correlated selloff, turnover and absorption proxies | Separates local pressure from broader propagation |
-| Does outside evidence agree? | Timestamped news and public positioning context | Supports, contradicts, or leaves the mechanism unconfirmed |
-
-The outputs remain separate and auditable. They are **not merged into one opaque risk score**.
-
----
-
-## One PM decision workflow
+## Decision workflow
 
 ```text
 1. Locate the pressure
@@ -156,33 +92,31 @@ The outputs remain separate and auditable. They are **not merged into one opaque
    or discuss whether risk escalation deserves review.
 ```
 
-The PM book is the primary object. Ken French UMD and the Daniel–Moskowitz market state provide **historical context only**; they are never treated as the PM book’s risk score or loss probability.
+Outputs stay separate and auditable. They are **not merged into one opaque risk score**. Deterministic metrics are the source of truth; AI organizes evidence only.
 
 ---
 
-## Product demo
+## Example reads
 
-Open [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb).
+Interactive prototype of frozen research outputs in a PM workflow (Semi-unwind case as of 2026-05-29 — not a live market call):
 
-The `CONFIG` cell near the top is the PM sandbox: change its assessment date,
-comparison date, horizon, or LLM flag and run all cells to recompute a dated
-assessment. The May 29 correlated-cluster, March 2020, January 2024, and
-cross-case sections are explicitly labeled frozen product packs and do not
-change with `CONFIG`.
+<p align="center">
+  <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum tail-risk monitor — PM workflow prototype" width="920">
+</p>
 
-The recommended review order is:
+Open [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html) offline. Prototype only — not production investment advice.
 
-1. **Primary correlated-cluster case (frozen 2026-05-29 assessment)**
-2. **March 2020 historical validation**
-3. **January 2024 quiet control**
+Recommended order: **2026-05-29 primary → 2020 validation → 2024 quiet control**.
 
-### Primary correlated-cluster case — example PM output (2026-05-29, frozen)
+Frozen packs do not change with the notebook `CONFIG`. The live `run_mvp` cell recomputes a dated assessment when you change date / horizon / LLM flag.
 
-> The evidence supports localized crowding and structural pressure, but does not confirm a broad recovery-driven momentum crash or forced deleveraging.
+### Primary Example — 2026-05-29 correlated cluster
+
+> Localized crowding and structural pressure are supported; a broad recovery-driven crash or forced deleveraging is **not** confirmed.
 
 | PM question | Current read |
 |---|---|
-| Where is the risk? | Concentrated, correlated long-side cluster (`CIEN`–`COHR`–`LITE`); economic theme attribution is unavailable |
+| Where is the risk? | Concentrated long-side cluster (`CIEN`–`COHR`–`LITE`); economic theme attribution unavailable |
 | Risk horizon | 20 trading days |
 | Monitoring severity | Potential momentum tail risk; focused review, not a crash probability |
 | Recovery-crash mechanism? | Weak / incomplete |
@@ -190,109 +124,40 @@ The recommended review order is:
 | What is not confirmed? | Broad propagation, liquidity failure, forced deleveraging |
 | What next? | Monitor breadth, selling propagation, absorption, and stronger positioning evidence |
 
-Official primary example: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
+**Evidence note:** Quantitative fields come from the deterministic pipeline. `CSU-*` text is a separately curated, cutoff-valid pack. Exact-date classification-cache replay is unavailable for 2026-05-29 — curated text challenges the snapshot but does not alter triggers or risk state.
 
-### Historical validation — 2020-03-24 Covid
+Full read: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
 
-A known reversal episode produces a coherent recovery-crash footprint:
+### 2020-03-24 — historical validation
 
-- severe prior market drawdown;
-- panic-elevated state;
-- rapid recovery;
-- short-leg and beta-gap pressure;
-- recovery-crash mechanism triggered.
+- Panic-recovery footprint: severe prior drawdown, elevated volatility, rapid recovery.
+- Short-leg and beta-gap pressure active in the PM book.
+- Recovery-crash mechanism triggered — interpretability check, not a forecast claim.
 
-This is an interpretability check: the implemented signals behave consistently with the economic mechanism during a known episode.
+[`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md)
 
-Full case: [`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md)
+### 2024-01-05 — quiet control
 
-### Quiet control — 2024-01-05
+- Soft bear / low-vol context; zero PM scorecard triggers.
+- No confirmed crowded unwind; recovery mechanism incomplete.
+- Same rules stay selective — not every soft momentum period escalates.
 
-The same rules produce no escalation:
+[`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md) · secondary card: [`outputs/quiet_control_example_risk_output/`](outputs/quiet_control_example_risk_output/)
 
-- soft bear / low-volatility context;
-- zero PM scorecard triggers;
-- no confirmed crowded unwind;
-- recovery mechanism incomplete.
-
-This shows that the same rules do not classify every weak momentum period as a crash setup.
-
-Quiet-control case pack: [`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md)  
-Generated quiet-control card (secondary): [`outputs/quiet_control_example_risk_output/`](outputs/quiet_control_example_risk_output/)
+Cross-case table: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md)
 
 ---
 
-## Portfolio construction
+## What we refuse to claim
 
-The default demo book is an equal-weight S&P 500 **12-1 momentum long-10 / short-10** portfolio.
+- Exact crash timing or a calibrated crash probability  
+- Trade instructions or automatic de-risking  
+- Forced deleveraging without direct evidence  
+- That public crowding / turnover / FINRA–GDELT proxies equal ownership, leverage, or financing stress  
+- That the L10/S10 demo book is an institutional production portfolio  
+- That historical case coherence equals out-of-sample predictive skill  
 
-**Heads up:** Currently this is a proxy-like test portfolio, not a recommendation that an institutional momentum strategy should hold only 20 names.
-
-A production quant portfolio would more commonly:
-
-- rank a larger investable universe;
-- use percentile or decile ranks to construct the portfolio;
-- hold many more names, either across the ranked universe or in larger long/short baskets;
-- neutralize market, industry, size, country, and other factor exposures;
-- apply liquidity, borrow, turnover, and risk constraints;
-- optimize weights rather than use equal weighting.
-
-The MVP uses L10/S10 because every name, weight, cluster, and source of P&L can be inspected during a short demo.
-
-```text
-Current demo:
-S&P 500 → 12-1 rank → top 10 / bottom 10 → equal weight
-
-Intended future production path:
-PM universe → momentum signal → percentile selection
-→ risk neutralization → portfolio constraints
-→ optimized weights → same monitoring workflow
-```
-
-The monitoring layer is designed to accept a different universe, portfolio size, and weight vector later.
-
----
-
-## Beta logic
-
-Beta is not a fixed company attribute. It depends on the estimation window, return frequency, market regime, outliers, and risk model.
-
-The MVP uses a transparent historical realized market beta for each stock and aggregates it using portfolio weights.
-
-Its purpose is narrow:
-
-> **Does the short basket behave materially more like a high-beta recovery trade than the long basket?**
-
-That comparison maps directly to the recovery-crash mechanism. It is not intended to replace a production risk model or prove that the portfolio is factor neutral.
-
-Because raw historical beta can be unstable, a production version should use robust outlier treatment, shrinkage, multi-factor exposures, actual PM weights, and a formal portfolio-neutralization process.
-
----
-
-## Crowding logic
-
-Crowding is monitored as a chain rather than a single number:
-
-```text
-Concentration
-+ narrow breadth
-+ shared clusters
-+ one-sided flow
-+ weak liquidity absorption
-= greater unwind risk
-```
-
-| Channel | Current MVP | Stronger production input |
-|---|---|---|
-| Concentration | HHI and effective number of bets | Actual PM and cross-manager holdings |
-| Breadth / clustering | Signal breadth and correlated themes | Prime-broker position overlap |
-| Short crowding | Public short-interest context where available | Borrow utilization and stock-loan cost |
-| Flow | Turnover and timestamped narrative context | Leveraged ETF positions, retail flow, and institutional flows |
-| Liquidity | Absorption and price-impact-style proxies | Order-book and market-impact data |
-| Options | TBD| Options positioning and dealer gamma |
-| Financing | TBD | Leverage, margin, and financing pressure |
-
-Public proxies identify where crowding may be plausible. They cannot confirm true ownership overlap, leverage, or forced selling.
+Full list: [`docs/limitations.md`](docs/limitations.md).
 
 ---
 
@@ -325,40 +190,25 @@ Public proxies identify where crowding may be plausible. They cannot confirm tru
                                           │
                            ┌──────────────┴──────────────┐
                            ▼                             ▼
-                 exact-date evidence            optional constrained
-                 replay and retrieval           LLM interpretation
+                 exact-date evidence            LLM interpretation
+                 cache replay                 OpenAI/Deepseek/Claude
                            └──────────────┬──────────────┘
                                           ▼
                                PM-facing evidence card
                                           │
                                           ▼
-                               charts · JSON · Markdown
+                    notebook views · Markdown case packs · optional HTML/JSON
 ```
 
-### Design principles
-
-1. **PM book first.** UMD is context, not a substitute for the actual portfolio.
-2. **Mechanisms stay separate.** Recovery risk and crowded unwind are not collapsed into one score.
-3. **AI cannot change the numbers.** It organizes and challenges evidence only.
-4. **Missing evidence stays missing.** Ownership, leverage, and forced selling are not inferred without data. NO HALLUCINATIONS.
-5. **Point-in-time discipline.** Features and evidence must have been available by the selected date.
-
-```text
-deterministic metrics
-        ↓
-mechanism interpretation
-        ↓
-timestamp-valid evidence
-        ↓
-    LLM summary
-
-The LLM cannot rewrite:
-metric | threshold | trigger | risk state
-```
+1. **Macro risk state and PM book first.**  
+2. **Mechanisms stay separate.** Recovery risk and crowded unwind are not one score.  
+3. **AI cannot change the numbers.** It organizes and challenges evidence only.  
+4. **Missing evidence stays missing.** No hallucinated ownership, leverage, or forced selling.  
+5. **Point-in-time discipline.** Features and evidence must have been available by the selected date (complete PIT membership remains a limitation).
 
 ---
 
-## Quick start
+## How to run
 
 Requirements: Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 
@@ -366,15 +216,8 @@ Requirements: Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test
 uv run python -m pytest -q
-```
-
-Open the notebook:
-
-```bash
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
 ```
-
-Run the pipeline:
 
 ```python
 from src.mvp.config import MVPConfig
@@ -385,18 +228,38 @@ config = MVPConfig(
     compare_to_date="2023-12-01",
     threshold_profile="default",
     horizon_days=20,
-    use_llm=False,
+    use_llm=False,  # library default; notebook demo uses True (below)
 )
-
 result = run_mvp(config)
 ```
 
+**Date note:** the primary frozen product pack is **2026-05-29**. `demo_smoke_test` / `default_demo_config()` currently use **2026-06-30** (bundled panel coverage).
+
+---
+
+## LLM interpretation (DeepSeek)
+
+Deterministic metrics, thresholds, triggers, and risk state are always computed first. The LLM is an interpretation layer only.
+
+| Mode | How to run | Behavior |
+|---|---|---|
+| **Offline deterministic** | `use_llm=False` (`MVPConfig` library default) | No API call. Evidence Card + PM narrative use calibrated deterministic text. |
+| **Live DeepSeek-assisted** | Notebook `CONFIG.use_llm=True` + `DEEPSEEK_API_KEY` in `.env` | `final_mvp_demo.ipynb` injects `DeepSeekEvidenceInterpreter` and `DeepSeekPMResponseInterpreter` into `run_mvp`. Missing key, HTTP failure, or schema validation fails closed to deterministic text. |
+
+The final demo notebook is configured for the live path (`use_llm=True`). Without a key it still runs via fail-closed deterministic fallback and never rewrites metrics.
+
+The LLM cannot rewrite: metric · threshold · trigger · risk state.
+
+To enable the live path, create `.env` in the repository root with:
+
+    DEEPSEEK_API_KEY=sk-your-key
+    ANTHROPIC_API_KEY=xxxx
 ---
 
 ## Repository map
 
 ```text
-momentum_crash/
+momentum-tail-risk-monitor/
 ├── README.md
 ├── docs/
 │   ├── methodology.md           # technical methodology
@@ -434,40 +297,18 @@ momentum_crash/
 
 ---
 
-## Limitations
-
-The current repository does **not** yet provide:
-
-- a percentile-based, fully optimized and factor-neutral institutional portfolio;
-- actual PM holdings, weights, constraints, or transaction costs;
-- a production multi-factor vendor risk model;
-- complete point-in-time index and industry membership;
-- direct institutional ownership, prime-broker overlap, leverage, or financing data;
-- ETF, retail, options, dealer-gamma, and order-book flow data;
-- proof of forced deleveraging;
-- a full out-of-sample predictive backtest of the mechanism rules.
-
-Historical cases test whether the mechanism read is economically coherent. They do not establish a crash forecast.
-
-See [`docs/limitations.md`](docs/limitations.md) for the full list.
-
----
-
 ## Production extensions
 
-The most useful next steps are:
+If extending beyond the 20-hour research MVP:
 
-1. plug in actual PM holdings, weights, and constraints;
-2. replace L10/S10 with percentile-based, risk-neutralized construction;
-3. add point-in-time universe and industry history;
-4. add robust multi-factor risk exposures;
-5. add institutional holdings, borrow, ETF flow, options, dealer gamma, and liquidity data;
-6. persist daily mechanism states for out-of-sample outcome analysis;
-7. extend the same monitoring workflow to industry, country, and index-futures momentum.
+1. Plug in actual PM holdings, weights, and constraints.  
+2. Replace L10/S10 with percentile-based, risk-neutralized construction.  
+3. Harden point-in-time universe / industry history and live data adapters.  
+4. Add institutional holdings, borrow, ETF/options flow, and liquidity inputs — then reuse the same monitoring workflow (including industry / country / index-futures momentum).
 
-For industry momentum, the same workflow would rank point-in-time industry portfolios, neutralize market and industry-level risks, and monitor beta asymmetry, breadth, crowding, and reversal. Country or index momentum would use liquid index futures or ETFs with explicit controls for global equity beta, region, currency, and futures rolls.
+Also retained for a fuller build-out: multi-factor risk exposures and a service layer to serve the PM front end (e.g. FastAPI + SSE).
 
-See [`docs/production_path.md`](docs/production_path.md) for the broader production path.
+Broader path: [`docs/production_path.md`](docs/production_path.md).
 
 ---
 
