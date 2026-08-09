@@ -1,7 +1,8 @@
 # Architecture to PM value
 
-Internal map from MVP components to PM questions. For the product narrative and
-three-case demo, start with `README.md` and `notebooks/final_mvp_demo.ipynb`.
+Internal map from MVP components to PM questions. For the PPT-backed product
+demo, start with `README.md` and `notebooks/final_mvp_demo.ipynb` (the
+step-by-step 2026-05-29 runbook).
 
 | Existing component | PM question | Implemented value | Current evidence | Remaining limitation |
 | --- | --- | --- | --- | --- |

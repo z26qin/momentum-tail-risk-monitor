@@ -13,7 +13,7 @@ This is an approximately **20-hour research MVP**. It does **not** predict crash
 
 ### Start here
 
-1. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — product walkthrough  
+1. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — step-by-step runbook for the PPT demo  
 2. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — primary example (2026-05-29)  
 3. [`docs/demo_walkthrough.md`](docs/demo_walkthrough.md) — 15–20 min review path  
 4. [`docs/methodology.md`](docs/methodology.md) · [`docs/limitations.md`](docs/limitations.md) · [`docs/production_path.md`](docs/production_path.md)
@@ -269,7 +269,7 @@ momentum-tail-risk-monitor/
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
 ├── notebooks/
-│   └── final_mvp_demo.ipynb     # final demo
+│   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
 ├── src/
 │   ├── mvp/                     # config, run_mvp, evidence card, PM response
 │   ├── monitoring/              # scorecard, unwind, crowding proxies
