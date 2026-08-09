@@ -244,9 +244,9 @@ Deterministic metrics, thresholds, triggers, and risk state are always computed 
 | Mode | How to run | Behavior |
 |---|---|---|
 | **Offline deterministic** | `use_llm=False` (`MVPConfig` library default) | No API call. Evidence Card + PM narrative use calibrated deterministic text. |
-| **Live DeepSeek-assisted** | Notebook `CONFIG.use_llm=True` + `DEEPSEEK_API_KEY` in `.env` | `final_mvp_demo.ipynb` injects `DeepSeekEvidenceInterpreter` and `DeepSeekPMResponseInterpreter` into `run_mvp`. Missing key, HTTP failure, or schema validation fails closed to deterministic text. |
+| **Live DeepSeek-assisted** | `notebooks/demo_setup.py` sets `USE_LLM=True` + `DEEPSEEK_API_KEY` in `.env` | `final_mvp_demo.ipynb` injects `DeepSeekEvidenceInterpreter` and `DeepSeekPMResponseInterpreter` into `run_mvp`. Missing key, HTTP failure, or schema validation fails closed to deterministic text. |
 
-The final demo notebook is configured for the live path (`use_llm=True`). Without a key it still runs via fail-closed deterministic fallback and never rewrites metrics.
+The demo runbook is configured for the live path (`USE_LLM=True` in `notebooks/demo_setup.py`). Without a key it still runs via fail-closed deterministic fallback and never rewrites metrics.
 
 The LLM cannot rewrite: metric · threshold · trigger · risk state.
 
