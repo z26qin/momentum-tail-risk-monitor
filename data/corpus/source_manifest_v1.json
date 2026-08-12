@@ -53,6 +53,27 @@
         "bls-2026-06-05-employment-ted"
       ],
       "purpose": "Minimal exact-date evidence fixture so the 2026-06-30 MVP evidence replay path is non-empty."
+    },
+    {
+      "case": "2026-05-29",
+      "document_ids": [
+        "csu-2026-05-29-001",
+        "csu-2026-05-29-002",
+        "csu-2026-05-29-003",
+        "csu-2026-05-29-004",
+        "csu-2026-05-29-005",
+        "csu-2026-05-29-006",
+        "csu-2026-05-29-007",
+        "csu-2026-05-29-008",
+        "csu-2026-05-29-009",
+        "csu-2026-05-29-010",
+        "csu-2026-05-29-011",
+        "csu-2026-05-29-012",
+        "csu-2026-05-29-013",
+        "csu-2026-05-29-014",
+        "csu-2026-05-29-015"
+      ],
+      "purpose": "Current semi-unwind human-reviewed evidence pack replayed through the pipeline (15 cutoff-valid records)."
     }
   ],
   "schema_version": "1.0"

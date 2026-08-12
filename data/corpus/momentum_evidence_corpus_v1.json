@@ -473,6 +473,291 @@
       "timestamp_status": "verified_exact",
       "title": "Payroll employment increased by 172,000 in May 2026",
       "url_or_source_id": "https://www.bls.gov/opub/ted/2026/total-nonfarm-payroll-employment-increased-by-172000-in-may-2026.htm"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-001",
+      "publication_timestamp": "2026-05-20T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-001",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "NVIDIA reported record quarterly revenue of $81.6 billion and record Data Center revenue of $75.2 billion, up 85% and 92% year over year.",
+      "source": "NVIDIA Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "NVIDIA Announces Financial Results for First Quarter Fiscal 2027",
+      "url_or_source_id": "https://investor.nvidia.com/financial-info/financial-reports/default.aspx"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-002",
+      "publication_timestamp": "2026-04-29T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-002",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Microsoft said quarterly capex was $31.9 billion, AI demand continued to exceed supply, and calendar-2026 capex was expected near $190 billion.",
+      "source": "Microsoft Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Microsoft Fiscal Year 2026 Third Quarter Earnings Conference Call",
+      "url_or_source_id": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q3"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-003",
+      "publication_timestamp": "2026-04-29T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-003",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Meta raised 2026 capex guidance to $125\u2013145 billion, citing higher component pricing and additional data-center costs, while reporting 33% revenue growth.",
+      "source": "Meta Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Meta Reports First Quarter 2026 Results",
+      "url_or_source_id": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-Reports-First-Quarter-2026-Results/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-004",
+      "publication_timestamp": "2026-04-29T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-004",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Amazon said trailing free cash flow fell to $1.2 billion as AI property-and-equipment investment rose; AWS revenue nevertheless grew 28%.",
+      "source": "Amazon Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Amazon.com Announces First Quarter Results",
+      "url_or_source_id": "https://ir.aboutamazon.com/news-release/news-release-details/2026/Amazon-com-Announces-First-Quarter-Results/"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-005",
+      "publication_timestamp": "2026-05-14T13:02:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-005",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "S&P estimated five large cloud providers would spend about $750 billion in 2026, pressuring free cash flow even as first-quarter revenue and earnings accelerated.",
+      "source": "S&P Global Ratings",
+      "source_category": "research",
+      "timestamp_status": "verified_exact",
+      "title": "Will Rising Capex Test Hyperscalers\u2019 Credit Strength?",
+      "url_or_source_id": "https://www.spglobal.com/ratings/en/regulatory/article/creditweek-will-rising-capex-test-hyperscalers-credit-strength-s101685676"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-006",
+      "publication_timestamp": "2026-05-13T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-006",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Cisco raised expected FY26 hyperscaler AI-infrastructure orders to $9 billion; data-center switching orders grew more than 40% year over year.",
+      "source": "Cisco Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Cisco Reports Third Quarter Earnings",
+      "url_or_source_id": "https://investor.cisco.com/financials/quarterly-results/default.aspx"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-007",
+      "publication_timestamp": "2026-05-05T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-007",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Arista reported first-quarter revenue of $2.709 billion, up 35.1% year over year, and described continued positioning in AI and data-center networking.",
+      "source": "Arista Networks Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Arista Networks Reports First Quarter 2026 Financial Results",
+      "url_or_source_id": "https://investors.arista.com/Communications/Press-Releases-and-Events/Press-Release-Detail/2026/Arista-Networks-Inc--Reports-First-Quarter-2026-Financial-Results/default.aspx"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-008",
+      "publication_timestamp": "2026-05-06T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-008",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Coherent reported 21% year-over-year revenue growth and said exceptionally strong datacenter and communications demand was driving capacity expansion.",
+      "source": "Coherent Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Coherent Reports Third Quarter Fiscal 2026 Results",
+      "url_or_source_id": "https://www.coherent.com/content/dam/coherent/site/en/documents/investors/financial-releases/2026/may-6/earnings-release-fy26-q3.pdf"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-009",
+      "publication_timestamp": "2026-05-05T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-009",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Lumentum reported record revenue of $808.4 million, up 90% year over year, with strength in laser chips and scale-across optical components.",
+      "source": "Lumentum Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Lumentum Announces Third Quarter Fiscal 2026 Financial Results",
+      "url_or_source_id": "https://investor.lumentum.com/financial-news-releases/news-details/2026/Lumentum-Announces-Third-Quarter-of-Fiscal-Year-2026-Financial-Results/default.aspx"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-010",
+      "publication_timestamp": "2026-05-14T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-010",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Applied Materials reported record quarterly performance and expected its semiconductor-equipment business to grow more than 30%, citing AI-driven demand.",
+      "source": "Applied Materials Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Applied Materials Announces Second Quarter 2026 Results",
+      "url_or_source_id": "https://ir.appliedmaterials.com/news-releases/news-release-details/applied-materials-announces-second-quarter-2026-results"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-011",
+      "publication_timestamp": "2026-04-22T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-011",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "Lam Research reported record March-quarter revenue and EPS and said AI-driven demand was reshaping the semiconductor industry.",
+      "source": "Lam Research Investor Relations",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "Lam Research Reports Financial Results for Quarter Ended March 29, 2026",
+      "url_or_source_id": "https://investor.lamresearch.com/2026-04-22-Lam-Research-Corporation-Reports-Financial-Results-for-the-Quarter-Ended-March-29%2C-2026?asPDF="
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-012",
+      "publication_timestamp": "2026-05-08T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-012",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "TSMC reported April revenue of NT$410.73 billion, down 1.1% sequentially but up 17.5% from April 2025.",
+      "source": "TSMC",
+      "source_category": "official",
+      "timestamp_status": "conservative_date_only",
+      "title": "TSMC April 2026 Revenue Report",
+      "url_or_source_id": "https://pr.tsmc.com/english/news/3305"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-013",
+      "publication_timestamp": "2026-05-04T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-013",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "The report said hedge funds made their largest decade-scale technology reduction, led by long sales; semiconductors and equipment were among the heaviest-sold groups.",
+      "source": "Investing.com reporting Goldman Sachs Prime Book data",
+      "source_category": "secondary",
+      "timestamp_status": "conservative_date_only",
+      "title": "Tech stocks see largest hedge fund selloff in decade: Goldman Sachs",
+      "url_or_source_id": "https://www.investing.com/news/stock-market-news/tech-stocks-see-largest-hedge-fund-selloff-in-decade-goldman-sachs-93CH-4655112"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-014",
+      "publication_timestamp": "2026-05-26T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-014",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "The report said hedge funds rebuilt technology exposure rapidly, with global IT positions near record highs and buying focused on AI-linked semiconductor and infrastructure names.",
+      "source": "HedgeCo Insights reporting Goldman Sachs Prime Brokerage data",
+      "source_category": "secondary",
+      "timestamp_status": "conservative_date_only",
+      "title": "Hedge Funds Pile Back Into AI and Tech Stocks",
+      "url_or_source_id": "https://hedgeco.net/news/05/2026/hedge-funds-pile-back-into-ai-and-tech-stocks.html"
+    },
+    {
+      "availability_status": "publicly_available_at_publication_timestamp",
+      "document_id": "csu-2026-05-29-015",
+      "publication_timestamp": "2026-05-25T00:00:00-04:00",
+      "raw_metadata": {
+        "case_tags": [
+          "2026-05-29"
+        ],
+        "csu_evidence_id": "CSU-2026-015",
+        "provenance_note": "Converted from the human-reviewed current-semi-unwind CSU pack for pipeline replay; passage and locator verified in the pack.",
+        "timestamp_evidence": "CSU pack publication timestamp; date-only records use the corpus conservative next-day-midnight convention."
+      },
+      "snippet_or_passage": "RBC described a broad recovery from the March selloff and explosive semiconductor gains, while warning that SOX valuations and technical measures were historically stretched.",
+      "source": "RBC Global Asset Management",
+      "source_category": "asset_manager",
+      "timestamp_status": "conservative_date_only",
+      "title": "MacroMemo \u2014 May 5\u201325, 2026",
+      "url_or_source_id": "https://usmutualfunds.rbcgam.com/us/article/macromemo-may-5-25-2026-us/detail"
     }
   ],
   "schema_version": "1.0"
