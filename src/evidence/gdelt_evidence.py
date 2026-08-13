@@ -76,14 +76,53 @@ TRIGGER_KEYWORDS: dict[str, list[str]] = {
         "small-cap rally",
         "shorted",
     ],
+    # Mechanism-gated triggers (structural state can activate the evidence layer).
+    "bear_market_recovery_crash": [
+        "market crash",
+        "market panic",
+        "forced selling",
+        "margin call",
+        "bear market",
+        "recession",
+        "selloff",
+    ],
+    "short_book_reversal_crash": [
+        "short squeeze",
+        "short covering",
+        "heavily shorted",
+        "junk rally",
+        "small-cap rally",
+        "shorted",
+    ],
+    "crowded_theme_unwind": [
+        "crowded trade",
+        "forced deleveraging",
+        "quant unwind",
+        "hedge fund selling",
+        "position unwinding",
+        "deleveraging",
+        "crowded positioning",
+    ],
 }
+
+#: Title-level exclusions for non-equity/commodity/crypto noise in the
+#: lightweight GDELT evidence layer. Applied before keyword matching.
+EXCLUDED_TITLE_TERMS = re.compile(
+    r"\b(?:crypto|bitcoin|ethereum|blockchain|altcoin|dogecoin|nft|token|"
+    r"stablecoin|forex|commodity|gold|oil|crude)\b",
+    re.IGNORECASE,
+)
 
 # Soft prior: which frozen GDELT query bucket is most related to each trigger.
 QUERY_TRIGGER_AFFINITY: dict[str, frozenset[str]] = {
-    "panic": frozenset({"high_volatility_recovery", "portfolio_drawdown"}),
+    "panic": frozenset(
+        {"high_volatility_recovery", "portfolio_drawdown", "bear_market_recovery_crash"}
+    ),
     "rotation": frozenset({"short_minus_long_beta_gap"}),
-    "policy": frozenset({"high_volatility_recovery"}),
-    "crowding": frozenset({"short_loss_in_recovery"}),
+    "policy": frozenset({"high_volatility_recovery", "bear_market_recovery_crash"}),
+    "crowding": frozenset(
+        {"short_loss_in_recovery", "short_book_reversal_crash", "crowded_theme_unwind"}
+    ),
     "riskoff": frozenset({"portfolio_drawdown", "high_volatility_recovery"}),
 }
 
@@ -331,6 +370,64 @@ def active_triggers_from_signals(
     return active
 
 
+def active_triggers_from_mechanisms(
+    mechanisms: Sequence[Any],
+) -> list[dict[str, Any]]:
+    """Extract evidence-layer triggers from structural mechanism statuses.
+
+    ``triggered`` maps to a full activation and ``watch`` maps to a partial
+    activation, so the GDELT layer can be gated by the structural unwind state
+    as well as by the quantitative scorecard. Deterministic mechanism states
+    are never modified.
+    """
+
+    active: list[dict[str, Any]] = []
+    for item in mechanisms:
+        if isinstance(item, Mapping):
+            name = str(item.get("scenario") or item.get("name") or "").strip()
+            status = str(item.get("status") or "").strip()
+        else:
+            name = str(getattr(item, "scenario", "") or "").strip()
+            status = str(getattr(item, "status", "") or "").strip()
+        if not name:
+            continue
+        if status == "triggered":
+            activation = "triggered"
+        elif status == "watch":
+            activation = "partial"
+        else:
+            continue
+        active.append(
+            {
+                "trigger": name,
+                "observed_value": None,
+                "threshold": None,
+                "status": activation,
+                "direction": None,
+                "progress_to_threshold": None,
+            }
+        )
+    return active
+
+
+def active_triggers_from_state(
+    signals: Sequence[Any],
+    mechanisms: Sequence[Any],
+    *,
+    include_partial: bool = True,
+    partial_ratio: float = DEFAULT_PARTIAL_RATIO,
+) -> list[dict[str, Any]]:
+    """Combine quantitative-scorecard triggers with structural mechanism gates."""
+
+    combined = active_triggers_from_signals(
+        signals,
+        include_partial=include_partial,
+        partial_ratio=partial_ratio,
+    )
+    combined.extend(active_triggers_from_mechanisms(mechanisms))
+    return combined
+
+
 def _match_keywords(text: str, keywords: Iterable[str]) -> list[str]:
     lowered = text.lower()
     matched: list[str] = []
@@ -436,6 +533,8 @@ def retrieve_gdelt_evidence(
     ranked_rows: list[dict[str, Any]] = []
     for _, row in in_window.iterrows():
         title = str(row.get("title") or "")
+        if EXCLUDED_TITLE_TERMS.search(title):
+            continue
         source = str(row.get("source") or "")
         query = str(row.get("gdelt_query") or "")
         haystack = f"{title} {source} {query}"

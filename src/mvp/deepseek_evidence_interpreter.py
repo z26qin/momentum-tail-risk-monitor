@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 from src.evidence.deepseek_explainer import (
@@ -16,6 +18,7 @@ from src.evidence.deepseek_explainer import (
     _post_chat_completion,
 )
 from src.mvp.evidence_interpretation import MODEL_OUTPUT_FIELDS
+from src.utils.io import read_json, write_json
 
 
 _LIST_FIELDS = (
@@ -40,6 +43,7 @@ class DeepSeekEvidenceInterpreter:
         model: str | None = None,
         base_url: str | None = None,
         timeout_seconds: float = 45.0,
+        cache_dir: Path | None = None,
     ) -> None:
         self._environment = environment
         self._load_dotenv = load_dotenv
@@ -47,6 +51,7 @@ class DeepSeekEvidenceInterpreter:
         self._model = model
         self._base_url = base_url
         self._timeout_seconds = timeout_seconds
+        self._cache_dir = cache_dir
         self.last_context: dict[str, Any] | None = None
         self.last_instructions: str | None = None
 
@@ -78,6 +83,31 @@ class DeepSeekEvidenceInterpreter:
         )
         self.last_context = dict(context)
         self.last_instructions = instructions
+
+        if self._cache_dir is not None:
+            key = hashlib.sha256(
+                json.dumps(
+                    {
+                        "context": dict(context),
+                        "instructions": instructions,
+                        "model": model,
+                        "base_url": base_url,
+                        "provider": "deepseek",
+                    },
+                    sort_keys=True,
+                    default=str,
+                ).encode("utf-8")
+            ).hexdigest()[:24]
+            cache_path = self._cache_dir / f"evidence_{key}.json"
+            if cache_path.exists():
+                try:
+                    cached = read_json(cache_path)
+                    if isinstance(cached, dict) and set(cached).issuperset(
+                        MODEL_OUTPUT_FIELDS
+                    ):
+                        return cached
+                except (OSError, ValueError, TypeError):
+                    pass
 
         system = (
             f"{instructions}\n\n"
@@ -133,4 +163,7 @@ class DeepSeekEvidenceInterpreter:
                 "DeepSeek response fields do not match the schema "
                 f"(missing={sorted(missing)}, extra={sorted(extra)})"
             )
+        if self._cache_dir is not None:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            write_json(cache_path, parsed)
         return parsed

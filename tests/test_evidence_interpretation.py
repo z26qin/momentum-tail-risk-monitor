@@ -48,8 +48,8 @@ def _valid_payload(deterministic_input) -> dict:
     )
     return {
         "narrative_state": (
-            "The supplied state warrants monitoring, but it is not a confirmed "
-            "crash forecast."
+            "Crowded theme unwind triggered; the setup warrants monitoring but "
+            "is not a confirmed crash forecast."
         ),
         "narrative_changes": (
             "Implemented signals changed relative to the supplied comparison.",
