@@ -80,6 +80,8 @@ Applied to the PM momentum portfolio:
 The first row is a Boolean macro gate shared as market context. Other
 thresholds use strictly prior observations when enough history exists,
 otherwise labeled demonstration fallbacks. Missing inputs remain unavailable.
+Per-metric rationale, cutoff provenance, and how to read a move:
+[docs/wiki/README.md](wiki/README.md).
 
 ## Unwind monitor and mechanism scenarios
 
