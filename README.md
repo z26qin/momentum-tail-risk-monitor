@@ -16,7 +16,7 @@ This is an approximately **20-hour research MVP**. It does **not** predict crash
 1. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — step-by-step runbook for the PPT demo  
 2. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — primary example (2026-05-29)  
 3. [`docs/demo_walkthrough.md`](docs/demo_walkthrough.md) — 15–20 min review path  
-4. [`docs/methodology.md`](docs/methodology.md) · [`docs/limitations.md`](docs/limitations.md) · [`docs/production_path.md`](docs/production_path.md)
+4. [`docs/methodology.md`](docs/methodology.md) · [`docs/wiki/README.md`](docs/wiki/README.md) · [`docs/limitations.md`](docs/limitations.md) · [`docs/production_path.md`](docs/production_path.md)
 
 ---
 
@@ -263,6 +263,7 @@ momentum-tail-risk-monitor/
 ├── README.md
 ├── docs/
 │   ├── methodology.md           # technical methodology
+│   ├── wiki/                    # per-metric threshold wiki (why / cutoff / what a move means)
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
 │   ├── production_path.md       # production path (not an internal todo list)

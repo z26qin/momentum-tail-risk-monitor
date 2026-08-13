@@ -2,7 +2,9 @@
 
 Internal map from MVP components to PM questions. For the PPT-backed product
 demo, start with `README.md` and `notebooks/final_mvp_demo.ipynb` (the
-step-by-step 2026-05-29 runbook).
+step-by-step 2026-05-29 runbook). For why each risk metric exists, why its
+threshold is set that way, and what a numerical move means, see
+[`docs/wiki/README.md`](wiki/README.md).
 
 | Existing component | PM question | Implemented value | Current evidence | Remaining limitation |
 | --- | --- | --- | --- | --- |
