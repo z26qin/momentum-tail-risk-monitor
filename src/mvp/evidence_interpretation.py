@@ -56,6 +56,10 @@ Critical wording (do not over-infer):
 - When a short-interest proxy is elevated, say short-side crowding is plausible
   and that the short basket is the first area to review, while stating clearly
   that this does not establish active covering or forced deleveraging.
+- If any structural mechanism is triggered (active_scenarios is non-empty),
+  narrative_state must lead with that mechanism and must not say "normal
+  drawdown", "no confirmed escalation", or describe a triggered mechanism as
+  "watch".
 
 public_positioning_proxies are a separate typed field of class
 structured_public_proxy (FINRA, CFTC, or similar). Use them only as contextual
@@ -983,6 +987,7 @@ def _validate_llm_text(interpretation: EvidenceInterpretation) -> None:
 def _validated_provider_result(
     raw: Any,
     deterministic_input: DeterministicEvidenceInput,
+    structural_unwind: Mapping[str, Any] | None = None,
 ) -> EvidenceInterpretation:
     payload = _provider_payload(raw)
     candidate = EvidenceInterpretation(
@@ -1004,6 +1009,43 @@ def _validated_provider_result(
             "invalidation conditions"
         )
     _validate_llm_text(candidate)
+
+    active_scenarios = (
+        list((structural_unwind or {}).get("active_scenarios") or [])
+        if structural_unwind
+        else []
+    )
+    if active_scenarios:
+        narrative = candidate.narrative_state.lower()
+        if "normal drawdown" in narrative or "no confirmed escalation" in narrative:
+            raise ValueError(
+                "LLM narrative_state contradicts an active structural mechanism"
+            )
+        phrase_map = {
+            "bear_market_recovery_crash": [
+                "bear market recovery",
+                "recovery crash",
+            ],
+            "short_book_reversal_crash": [
+                "short book reversal",
+                "short-book reversal",
+            ],
+            "crowded_theme_unwind": [
+                "crowded theme unwind",
+                "crowded momentum unwind",
+                "crowded unwind",
+            ],
+        }
+        for scenario in active_scenarios:
+            for phrase in phrase_map.get(str(scenario), [str(scenario)]):
+                phrase_l = phrase.lower()
+                if phrase_l in narrative and re.search(
+                    re.escape(phrase_l) + r"\s+watch\b", narrative
+                ):
+                    raise ValueError(
+                        "LLM narrative_state describes a triggered mechanism "
+                        "as watch"
+                    )
 
     evidence_by_id = {
         item.evidence_id: item for item in deterministic_input.retrieved_evidence
@@ -1124,7 +1166,11 @@ def interpret_evidence_card(
             ),
             instructions=INTERPRETATION_INSTRUCTIONS,
         )
-        result = _validated_provider_result(raw, deterministic_input)
+        result = _validated_provider_result(
+            raw,
+            deterministic_input,
+            structural_unwind=structural,
+        )
     except Exception as exc:  # noqa: BLE001 - interpretation must fail closed
         result = _deterministic_interpretation(
             deterministic_input,

@@ -13,6 +13,7 @@ dist/
 
 # Optional DeepSeek explanation cache (regenerable; not part of the frozen demo).
 outputs/gdelt_evidence_cache/
+outputs/llm_cache/
 
 # Alternative-data raw caches.
 # Cached locally so later sessions make zero network calls; too large for git.
