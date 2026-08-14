@@ -82,7 +82,7 @@ Watch for a loser-leg rebound, wider prime-book deleveraging, and deterioration 
 
 ## Follow-up: “Why is this not a Khandani–Lo unwind?”
 
-Answer the question. Do not rerun the monitor unless asked.
+Answer from `outputs/latest_assessment.json` (and the frozen case pack if needed). Do not open `src/` or rerun the monitor unless asked. Keep the WhatsApp reply under ~12 lines.
 
 1. Restate what *is* observed (cluster, structural flag, any prime-book item).
 2. State what a Khandani–Lo confirmation would require (breadth, absorption failure, financing/forced selling).

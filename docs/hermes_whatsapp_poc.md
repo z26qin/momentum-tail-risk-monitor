@@ -87,6 +87,40 @@ Scan the QR code from a **dedicated** WhatsApp number (Settings → Linked Devic
 
 Then set access control in `~/.hermes/.env` (local only): `WHATSAPP_ENABLED=true`, a mode (`bot` or `self-chat`), and an allowlist. See the [Hermes WhatsApp docs](https://hermes-agent.nousresearch.com/docs/user-guide/messaging/whatsapp).
 
+## 4b. Hide tool-progress noise on WhatsApp
+
+Hermes will otherwise post `read_file` / `execute_code` / `search_files` bubbles into the chat. That is a **local gateway display setting**, not this repository.
+
+In the WhatsApp thread, send:
+
+```text
+/verbose off
+```
+
+And in `~/.hermes/config.yaml` (quote `"off"`; a bare `off` is parsed as boolean false and ignored):
+
+```yaml
+display:
+  tool_progress: "off"
+  show_reasoning: false
+  platforms:
+    whatsapp:
+      tool_progress: "off"
+      show_reasoning: false
+      streaming: false
+
+whatsapp:
+  reply_prefix: ""
+```
+
+Restart the gateway:
+
+```bash
+hermes gateway
+```
+
+If this repo skill is installed via symlink, pull the latest `SKILL.md` so follow-ups read `outputs/latest_assessment.json` instead of grepping `src/`.
+
 ## 5. Start the Hermes gateway
 
 ```bash

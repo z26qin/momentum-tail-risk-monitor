@@ -61,6 +61,36 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 
 Preserve the latest assessment as context. If the user asks `Why is this not a Khandani–Lo unwind?`, challenge the crowded-unwind hypothesis with the investigation policy. Do not rerun numbers unless the user asks for a fresh date. Never change `risk_state`, triggers, or flags in your reply.
 
+On follow-ups, read only:
+
+- `outputs/latest_assessment.json`
+- `outputs/latest_comparison.json` if present
+- `outputs/current_semi_unwind/pm_case_read.md` when `as_of_date` is `2026-05-29`
+
+Do **not** search `src/`, open Python modules, or re-derive thresholds from code. The compact JSON already contains the authoritative states.
+
+## WhatsApp delivery
+
+Send **one** final user-visible message. Do not narrate tool use. Do not paste:
+
+- `read_file` / `search_files` / `execute_code` / paths
+- Python snippets
+- JSON dumps
+- “Self-improvement review” or skill-created notices
+
+Keep follow-ups under ~12 short lines so WhatsApp does not truncate. Use the six-step investigation pattern, compressed:
+
+```text
+Observed: …
+Inferred: …
+Against: …
+Not confirmed: …
+State unchanged: …
+Next: …
+```
+
+Do not create, edit, or “improve” skills during a WhatsApp session.
+
 ## Hard rules
 
 - Never change the deterministic risk state.
