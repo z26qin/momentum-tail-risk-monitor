@@ -137,7 +137,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
     assert text.startswith("🟠 MOMENTUM RISK — ELEVATED")
     assert "Severity: 🟠 78/100" in text
     assert "Primary driver: Crowded unwind" in text
-    assert "Deterministic triggers: 0/4" in text
+    assert "Deterministic Macro State Change triggers: 0/4" in text
     assert "What argues against escalation:" in text
     assert "Next check:" in text
     assert "Not a crash probability." in text
@@ -153,7 +153,7 @@ def test_score_card_uses_band_emoji_and_disclaimer() -> None:
     assert "Crowded unwind: 🟠 78" in text
     assert "Fundamental repricing: Not available" in text
     assert "Book vulnerability: 🟡 55" in text
-    assert "Deterministic triggers: 0/4" in text
+    assert "Deterministic Macro State Change triggers: 0/4" in text
     assert "not a 78% crash probability" in text
 
 

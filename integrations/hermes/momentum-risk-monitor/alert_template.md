@@ -8,7 +8,7 @@ If there is no material change, do **not** use this template. Reply with exactly
 [SILENT]
 ```
 
-Use the 🟢 🟡 🟠 🔴 band emoji next to **every 0–100 score**, including the headline and each mechanism number. Do not add decorative emojis. `Not available` lines and `Deterministic triggers: n/4` have no score, so they get no band emoji. Always include the text label and numeric score so meaning does not depend on color.
+Use the 🟢 🟡 🟠 🔴 band emoji next to **every 0–100 score**, including the headline and each mechanism number. Do not add decorative emojis. `Not available` lines and `Deterministic Macro State Change triggers: n/4` have no score, so they get no band emoji. Always include the text label and numeric score so meaning does not depend on color.
 
 Copy `monitoring_severity_score`, `score_label`, `severity_emoji`, `primary_driver`, and `mechanism_scores` from the compact JSON. Do not recalculate them.
 
@@ -27,7 +27,7 @@ DM recovery: {band emoji} {mechanism_scores.dm_recovery}
 Crowded unwind: {band emoji} {mechanism_scores.crowded_unwind}
 Fundamental repricing: Not available
 Book vulnerability: {band emoji} {mechanism_scores.book_vulnerability}
-Deterministic triggers: {deterministic_trigger_count}/4
+Deterministic Macro State Change triggers: {deterministic_trigger_count}/4
 This is a relative monitoring score based on prior-only percentiles, not a {monitoring_severity_score}% crash probability.
 ```
 
@@ -42,7 +42,7 @@ DM recovery: 🟢 25
 Crowded unwind: 🟠 78
 Fundamental repricing: Not available
 Book vulnerability: 🟡 55
-Deterministic triggers: 0/4
+Deterministic Macro State Change triggers: 0/4
 This is a relative monitoring score based on prior-only percentiles, not a 78% crash probability.
 ```
 
@@ -62,7 +62,7 @@ Send **two** consecutive short messages. No extra chatter between them.
 {severity_emoji} MOMENTUM RISK — {SCORE LABEL UPPERCASE}
 Severity: {severity_emoji} {monitoring_severity_score}/100
 Primary driver: {Primary driver label}
-Deterministic triggers: {deterministic_trigger_count}/4
+Deterministic Macro State Change triggers: {deterministic_trigger_count}/4
 ```
 
 ### Message 2
@@ -89,7 +89,7 @@ Not a crash probability.
 | Emoji / band | `severity_emoji` and `score_label` (🟢 0–39 Low, 🟡 40–59 Watch, 🟠 60–79 Elevated, 🔴 80–100 High) |
 | Severity | `monitoring_severity_score` out of 100; not a probability (`score_is_probability` is always false) |
 | Primary driver | `primary_driver` |
-| Deterministic triggers | `deterministic_trigger_count` out of 4 book scorecard channels |
+| Deterministic Macro State Change triggers | `deterministic_trigger_count` out of 4 book scorecard channels |
 | What changed | Discrete comparison changes, including a severity-band or primary-driver change; not raw integer drift |
 | Against | Untriggered book channels, healthy absorption, or contradicting evidence |
 | Next check | `next_checks[0]` (and optionally `[1]`) |
@@ -115,7 +115,7 @@ Message 1:
 🟠 MOMENTUM RISK — ELEVATED
 Severity: 🟠 78/100
 Primary driver: Crowded unwind
-Deterministic triggers: 0/4
+Deterministic Macro State Change triggers: 0/4
 ```
 
 Message 2:

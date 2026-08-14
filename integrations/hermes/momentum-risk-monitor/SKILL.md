@@ -88,7 +88,7 @@ DM recovery: {band emoji} {dm_recovery}
 Crowded unwind: {band emoji} {crowded_unwind}
 Fundamental repricing: Not available
 Book vulnerability: {band emoji} {book_vulnerability}
-Deterministic triggers: {deterministic_trigger_count}/4
+Deterministic Macro State Change triggers: {deterministic_trigger_count}/4
 This is a relative monitoring score based on prior-only percentiles, not a {monitoring_severity_score}% crash probability.
 ```
 
@@ -101,7 +101,7 @@ DM recovery: 🟢 25
 Crowded unwind: 🟠 78
 Fundamental repricing: Not available
 Book vulnerability: 🟡 55
-Deterministic triggers: 0/4
+Deterministic Macro State Change triggers: 0/4
 This is a relative monitoring score based on prior-only percentiles, not a 78% crash probability.
 ```
 
@@ -114,13 +114,13 @@ Do not recompute. Name `primary_driver`, then the input in `mechanism_score_comp
 Shape:
 
 ```text
-The {N} headline is the max of available mechanism scores. {Primary driver} is {band emoji} {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {band emoji} {x}; fundamental Not available; book {band emoji} {y}. Deterministic book triggers remain {n}/4. Not a crash probability.
+The {N} headline is the max of available mechanism scores. {Primary driver} is {band emoji} {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {band emoji} {x}; fundamental Not available; book {band emoji} {y}. Deterministic Macro State Change triggers remain {n}/4. Not a crash probability.
 ```
 
 ### Is {N} the probability of a crash?
 
 ```text
-No. {N} is a relative monitoring score from prior-only percentiles, not a {N}% crash probability. score_is_probability is false. Deterministic book triggers are {deterministic_trigger_count}/4.
+No. {N} is a relative monitoring score from prior-only percentiles, not a {N}% crash probability. score_is_probability is false. Deterministic Macro State Change triggers are {deterministic_trigger_count}/4.
 ```
 
 ### Which mechanism is driving the score?

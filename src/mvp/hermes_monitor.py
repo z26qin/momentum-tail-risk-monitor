@@ -487,7 +487,7 @@ def format_whatsapp_score_card(assessment: dict[str, Any]) -> str:
         lines.append(
             f"{mechanism_label(key)}: {format_score_value(scores.get(key))}"
         )
-    lines.append(f"Deterministic triggers: {trigger_count}/4")
+    lines.append(f"Deterministic Macro State Change triggers: {trigger_count}/4")
     if score is None:
         lines.append(
             "This is a relative monitoring score based on prior-only "
@@ -555,7 +555,7 @@ def format_whatsapp_alert(
             header,
             severity_line,
             f"Primary driver: {mechanism_label(assessment.get('primary_driver'))}",
-            f"Deterministic triggers: {trigger_count}/4",
+            f"Deterministic Macro State Change triggers: {trigger_count}/4",
         ]
     )
     message_2 = "\n".join(
