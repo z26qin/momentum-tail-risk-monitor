@@ -217,7 +217,10 @@ uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test
 uv run python -m pytest -q
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
+uv run python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "2026-05-29 16:00 ET"
 ```
+
+Hermes Agent + WhatsApp POC (skill, `[SILENT]` compare, unofficial Baileys bridge): [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ```python
 from src.mvp.config import MVPConfig
@@ -266,11 +269,16 @@ momentum-tail-risk-monitor/
 │   ├── wiki/                    # per-metric threshold wiki (why / cutoff / what a move means)
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
+│   ├── hermes_whatsapp_poc.md   # Hermes + unofficial WhatsApp Baileys setup
 │   ├── production_path.md       # production path (not an internal todo list)
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
 ├── notebooks/
 │   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
+├── scripts/
+│   ├── run_monitor.py           # compact JSON CLI over run_mvp()
+│   └── compare_monitor_state.py # previous-state compare → [SILENT] or diff
+├── integrations/hermes/         # Hermes skill (copy/symlink into ~/.hermes/skills)
 ├── src/
 │   ├── mvp/                     # config, run_mvp, evidence card, PM response
 │   ├── monitoring/              # scorecard, unwind, crowding proxies
