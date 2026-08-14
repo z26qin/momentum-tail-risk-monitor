@@ -224,3 +224,12 @@ Small numeric moves that do not cross a threshold or severity band are ignored. 
 4. Pair WhatsApp locally with `hermes gateway setup` / `hermes whatsapp` (phone required)
 5. Send the monitor request from the allowlisted chat
 6. Confirm a silent tick produces no WhatsApp message, and a material change produces only the short alert
+
+## Live WhatsApp test (2026-05-29)
+
+Frozen-case score card and crowding follow-up from the Hermes WhatsApp skill:
+
+![Momentum monitoring severity score on WhatsApp](whatsapp/score_card.png)
+
+![Crowding support, contradiction, and next checks on WhatsApp](whatsapp/crowding_followup.png)
+
