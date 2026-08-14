@@ -17,6 +17,7 @@ from src.mvp.hermes_monitor import (
 )
 from src.mvp.monitoring_severity import (
     SCORE_FORMULA,
+    format_score_value,
     prior_only_risk_score,
     severity_band,
 )
@@ -134,7 +135,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
     )
     text = format_whatsapp_alert(_assessment(), comparison)
     assert text.startswith("🟠 MOMENTUM RISK — ELEVATED")
-    assert "Severity: 78/100" in text
+    assert "Severity: 🟠 78/100" in text
     assert "Primary driver: Crowded unwind" in text
     assert "Deterministic triggers: 0/4" in text
     assert "What argues against escalation:" in text
@@ -142,15 +143,16 @@ def test_draft_alert_is_whatsapp_short() -> None:
     assert "Not a crash probability." in text
     assert "buy" not in text.lower()
     assert "trade" not in text.lower()
-    assert text.count("🟠") == 1
 
 
 def test_score_card_uses_band_emoji_and_disclaimer() -> None:
     text = format_whatsapp_score_card(_assessment())
     assert text.startswith("🟠 Momentum monitoring severity: 78/100 — Elevated")
     assert "Primary driver: Crowded unwind" in text
-    assert "DM recovery: 25" in text
+    assert "DM recovery: 🟢 25" in text
+    assert "Crowded unwind: 🟠 78" in text
     assert "Fundamental repricing: Not available" in text
+    assert "Book vulnerability: 🟡 55" in text
     assert "Deterministic triggers: 0/4" in text
     assert "not a 78% crash probability" in text
 
@@ -175,6 +177,9 @@ def test_severity_bands_and_max_null_rules() -> None:
     assert prior_only_risk_score(values, pd.Timestamp("2026-05-28"), invert=True) == 100
     assert prior_only_risk_score(values, pd.Timestamp("2026-05-26"), invert=False) is None
     assert "not a crash probability" in SCORE_FORMULA.lower()
+    assert format_score_value(25) == "🟢 25"
+    assert format_score_value(78, over_100=True) == "🟠 78/100"
+    assert format_score_value(None) == "Not available"
 
 
 def test_compact_schema_fields_are_stable() -> None:

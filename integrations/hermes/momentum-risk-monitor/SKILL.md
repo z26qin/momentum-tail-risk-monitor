@@ -71,7 +71,7 @@ Bands (emoji is presentation-only; always also send the text label and number):
 - 🟠 60–79 Elevated
 - 🔴 80–100 High
 
-Use only that one severity emoji. No decorative emojis.
+Use only the 🟢 🟡 🟠 🔴 band emojis, and put one next to **every 0–100 score** (headline and each mechanism number). No decorative emojis. `Not available` and `n/4` triggers get no band emoji.
 
 ## Follow-up questions
 
@@ -79,17 +79,30 @@ A PM is reading this on a phone. Answer first, then at most five supporting line
 
 ### What is the current momentum risk score?
 
-If `outputs/latest_assessment.json` is missing, run `scripts/run_monitor.py` silently first. Then send only this card. Fill every number from JSON. The opening emoji must be `severity_emoji`.
+If `outputs/latest_assessment.json` is missing, run `scripts/run_monitor.py` silently first. Then send only this card. Fill every number from JSON. The opening emoji must be `severity_emoji`. Each mechanism that has a number must also show **its own** band emoji immediately before the number.
 
 ```text
 {severity_emoji} Momentum monitoring severity: {monitoring_severity_score}/100 — {Score label}
 Primary driver: {Primary driver label}
-DM recovery: {dm_recovery or Not available}
-Crowded unwind: {crowded_unwind or Not available}
-Fundamental repricing: {fundamental_repricing or Not available}
-Book vulnerability: {book_vulnerability or Not available}
+DM recovery: {band emoji} {dm_recovery}
+Crowded unwind: {band emoji} {crowded_unwind}
+Fundamental repricing: Not available
+Book vulnerability: {band emoji} {book_vulnerability}
 Deterministic triggers: {deterministic_trigger_count}/4
 This is a relative monitoring score based on prior-only percentiles, not a {monitoring_severity_score}% crash probability.
+```
+
+Example shape (numbers are format only):
+
+```text
+🟠 Momentum monitoring severity: 78/100 — Elevated
+Primary driver: Crowded unwind
+DM recovery: 🟢 25
+Crowded unwind: 🟠 78
+Fundamental repricing: Not available
+Book vulnerability: 🟡 55
+Deterministic triggers: 0/4
+This is a relative monitoring score based on prior-only percentiles, not a 78% crash probability.
 ```
 
 Driver labels: `dm_recovery` → DM recovery; `crowded_unwind` → Crowded unwind; `fundamental_repricing` → Fundamental repricing; `book_vulnerability` → Book vulnerability.
@@ -101,7 +114,7 @@ Do not recompute. Name `primary_driver`, then the input in `mechanism_score_comp
 Shape:
 
 ```text
-The {N} headline is the max of available mechanism scores. {Primary driver} is {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {x}; fundamental {Not available or n}; book {y}. Deterministic book triggers remain {n}/4. Not a crash probability.
+The {N} headline is the max of available mechanism scores. {Primary driver} is {band emoji} {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {band emoji} {x}; fundamental Not available; book {band emoji} {y}. Deterministic book triggers remain {n}/4. Not a crash probability.
 ```
 
 ### Is {N} the probability of a crash?
@@ -160,7 +173,7 @@ Never send:
 - "it IS the KL channel" — say **not confirmed** first
 - Self-improvement / skill-created notices
 - **book 4/4** unless `deterministic_trigger_count` is actually 4
-- extra emojis beyond the single severity-band emoji
+- extra emojis beyond the 🟢 🟡 🟠 🔴 band marks next to 0–100 scores
 - a homemade score that is not in the JSON
 
 Do not create, edit, or “improve” skills during a WhatsApp session.
@@ -180,4 +193,4 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
-- Alerts fit a phone screen, use one severity emoji, and include contrary evidence plus a next check.
+- Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.

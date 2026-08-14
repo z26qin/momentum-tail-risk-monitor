@@ -8,7 +8,7 @@ If there is no material change, do **not** use this template. Reply with exactly
 [SILENT]
 ```
 
-Use **one** severity-band emoji (🟢 🟡 🟠 🔴) in each message. No decorative emojis. Always include the text label and numeric score so meaning does not depend on color.
+Use the 🟢 🟡 🟠 🔴 band emoji next to **every 0–100 score**, including the headline and each mechanism number. Do not add decorative emojis. `Not available` lines and `Deterministic triggers: n/4` have no score, so they get no band emoji. Always include the text label and numeric score so meaning does not depend on color.
 
 Copy `monitoring_severity_score`, `score_label`, `severity_emoji`, `primary_driver`, and `mechanism_scores` from the compact JSON. Do not recalculate them.
 
@@ -23,12 +23,27 @@ Send **one** message. Fill from JSON. `{severity_emoji}` must match the current 
 ```text
 {severity_emoji} Momentum monitoring severity: {monitoring_severity_score}/100 — {Score label}
 Primary driver: {Primary driver label}
-DM recovery: {mechanism_scores.dm_recovery or Not available}
-Crowded unwind: {mechanism_scores.crowded_unwind or Not available}
-Fundamental repricing: {mechanism_scores.fundamental_repricing or Not available}
-Book vulnerability: {mechanism_scores.book_vulnerability or Not available}
+DM recovery: {band emoji} {mechanism_scores.dm_recovery}
+Crowded unwind: {band emoji} {mechanism_scores.crowded_unwind}
+Fundamental repricing: Not available
+Book vulnerability: {band emoji} {mechanism_scores.book_vulnerability}
 Deterministic triggers: {deterministic_trigger_count}/4
 This is a relative monitoring score based on prior-only percentiles, not a {monitoring_severity_score}% crash probability.
+```
+
+Put each mechanism's own band emoji immediately before its number (`🟢 25`, `🟡 55`, `🟠 78`, `🔴 96`). If that mechanism is null, write `Not available` with no emoji.
+
+Filled score-card example (numbers are format only):
+
+```text
+🟠 Momentum monitoring severity: 78/100 — Elevated
+Primary driver: Crowded unwind
+DM recovery: 🟢 25
+Crowded unwind: 🟠 78
+Fundamental repricing: Not available
+Book vulnerability: 🟡 55
+Deterministic triggers: 0/4
+This is a relative monitoring score based on prior-only percentiles, not a 78% crash probability.
 ```
 
 Score labels: `low` → Low, `watch` → Watch, `elevated` → Elevated, `high` → High.
@@ -45,7 +60,7 @@ Send **two** consecutive short messages. No extra chatter between them.
 
 ```text
 {severity_emoji} MOMENTUM RISK — {SCORE LABEL UPPERCASE}
-Severity: {monitoring_severity_score}/100
+Severity: {severity_emoji} {monitoring_severity_score}/100
 Primary driver: {Primary driver label}
 Deterministic triggers: {deterministic_trigger_count}/4
 ```
@@ -90,7 +105,7 @@ Not a crash probability.
 - No trade, hedge, or de-risk orders.
 - No long literature review.
 - Do not paste JSON, fingerprints, or file paths.
-- Do not use a second emoji.
+- Band emojis only next to 0–100 scores; no decorative emojis.
 
 ## Approximate filled example
 
@@ -98,7 +113,7 @@ Message 1:
 
 ```text
 🟠 MOMENTUM RISK — ELEVATED
-Severity: 78/100
+Severity: 🟠 78/100
 Primary driver: Crowded unwind
 Deterministic triggers: 0/4
 ```

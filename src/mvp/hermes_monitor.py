@@ -513,10 +513,7 @@ def format_whatsapp_alert(
     prefix = f"{emoji} " if emoji else ""
     trigger_count = int(assessment.get("deterministic_trigger_count") or 0)
     header = f"{prefix}MOMENTUM RISK — {label.upper()}"
-    if score is None:
-        severity_line = "Severity: Not available"
-    else:
-        severity_line = f"Severity: {int(score)}/100"
+    severity_line = f"Severity: {format_score_value(score, over_100=True)}"
 
     change_lines = _as_list((comparison or {}).get("changes"))
     flag_changes = [item for item in change_lines if "structural flag" in item]

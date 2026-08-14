@@ -448,8 +448,14 @@ def mechanism_label(key: str | None) -> str:
     return MECHANISM_LABELS.get(key, key.replace("_", " "))
 
 
-def format_score_value(value: int | None) -> str:
-    return "Not available" if value is None else str(int(value))
+def format_score_value(value: int | None, *, over_100: bool = False) -> str:
+    """Render a score as ``Not available`` or ``{emoji} {n}`` / ``{emoji} {n}/100``."""
+
+    if value is None:
+        return "Not available"
+    _, emoji = severity_band(int(value))
+    number = f"{int(value)}/100" if over_100 else str(int(value))
+    return f"{emoji} {number}" if emoji else number
 
 
 def score_label_display(label: str | None) -> str:
