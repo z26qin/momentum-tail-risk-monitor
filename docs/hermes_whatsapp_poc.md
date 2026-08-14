@@ -4,6 +4,44 @@ Thin integration around the existing deterministic momentum tail-risk monitor. H
 
 Do not commit credentials, phone numbers, API keys, QR sessions, or anything under `~/.hermes/`.
 
+## Quick setup and run
+
+From this repository root:
+
+```bash
+uv sync --locked --all-groups
+uv run python scripts/run_monitor.py \
+  --as-of-date 2026-05-29 \
+  --evidence-cutoff "2026-05-29 16:00 ET" \
+  --output-json outputs/latest_assessment.json
+
+mkdir -p ~/.hermes/skills
+ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
+  ~/.hermes/skills/momentum-risk-monitor
+```
+
+Hide tool bubbles in `~/.hermes/config.yaml` (quote `"off"`), then start the gateway **without** `-v`:
+
+```bash
+hermes gateway setup    # WhatsApp QR
+hermes gateway run
+```
+
+In WhatsApp:
+
+```text
+/verbose off
+/sethome
+/new now
+/momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
+```
+
+The follow-up should be seven short lines. `book n/4` is `deterministic_trigger_count` (frozen case: **0/4**). If the chat still dumps source-code progress, the skill symlink is pointing at the wrong folder or an old auto-created skill is winning — relink to this repo and send `/new now`.
+
+Demo questions after that: Daniel–Moskowitz short version; crowding evidence short version; next two checks; “Should I cut the longs overnight?” (must refuse a trade).
+
+---
+
 ## 1. Install and validate Hermes
 
 Follow the current [Hermes Agent install](https://hermes-agent.nousresearch.com/docs/getting-started/installation). Then:

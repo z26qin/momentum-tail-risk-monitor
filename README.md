@@ -222,6 +222,54 @@ uv run python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "
 
 Hermes Agent + WhatsApp POC (skill, `[SILENT]` compare, unofficial Baileys bridge): [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
+### Hermes + WhatsApp quick setup
+
+Local Mac only. Do not commit `~/.hermes/`, phone numbers, or QR sessions. Symlink **this repo’s** skill (not a copy under `~/integrations`).
+
+```bash
+uv sync --locked --all-groups
+uv run python scripts/run_monitor.py \
+  --as-of-date 2026-05-29 \
+  --evidence-cutoff "2026-05-29 16:00 ET" \
+  --output-json outputs/latest_assessment.json
+
+mkdir -p ~/.hermes/skills
+ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
+  ~/.hermes/skills/momentum-risk-monitor
+```
+
+In `~/.hermes/config.yaml` (quote `"off"`):
+
+```yaml
+display:
+  tool_progress: "off"
+  show_reasoning: false
+  personality: concise
+  platforms:
+    whatsapp:
+      tool_progress: "off"
+      show_reasoning: false
+      streaming: false
+whatsapp:
+  reply_prefix: ""
+```
+
+```bash
+hermes gateway setup    # pick WhatsApp, scan QR (dedicated number)
+hermes gateway run      # no -v
+```
+
+WhatsApp, in order:
+
+```text
+/verbose off
+/sethome
+/new now
+/momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
+```
+
+Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Unchanged cron ticks return `[SILENT]` and send nothing. Full steps: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
+
 ```python
 from src.mvp.config import MVPConfig
 from src.mvp.pipeline import run_mvp

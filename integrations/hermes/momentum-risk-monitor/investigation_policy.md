@@ -58,36 +58,24 @@ For the frozen 2026-05-29 case, also read `outputs/current_semi_unwind/pm_case_r
 
 ## Output of an investigation
 
-Write the six-step pattern in short PM language, then (if this is an alert) compress it into the WhatsApp template. Example *style* for a crowded-theme monitor day — derive the actual sentences from the JSON and evidence; do not paste this paragraph as a canned answer:
-
-```text
-Initial hypothesis:
-The move may reflect a crowded technology unwind.
-
-Supporting:
-Evidence indicates an unusually large reduction in hedge-fund technology exposure.
-
-Against:
-The portfolio drawdown, short-leg behavior, and beta structure do not confirm broad forced liquidation.
-
-Missing:
-There is no verified evidence of system-wide deleveraging.
-
-Interpretation:
-Localized crowding is supported; a broad Khandani–Lo-style unwind is not confirmed.
-
-Next check:
-Watch for a loser-leg rebound, wider prime-book deleveraging, and deterioration across multiple clusters.
-```
+Reason internally with the six-step pattern. **WhatsApp only gets the compressed answer** (see SKILL.md): one-line verdict, then Observed / Inferred / Against / Not confirmed / State / Next. No metric dump.
 
 ## Follow-up: “Why is this not a Khandani–Lo unwind?”
 
-Answer from `outputs/latest_assessment.json` (and the frozen case pack if needed). Do not open `src/` or rerun the monitor unless asked. Keep the WhatsApp reply under ~12 lines.
+Default WhatsApp reply (fill from compact JSON; do not expand):
 
-1. Restate what *is* observed (cluster, structural flag, any prime-book item).
-2. State what a Khandani–Lo confirmation would require (breadth, absorption failure, financing/forced selling).
-3. Show which of those are missing in the current JSON.
-4. Keep the deterministic state unchanged.
+```text
+Not a confirmed Khandani–Lo unwind.
+
+Observed: CIEN–COHR–LITE crowding; crowded_theme_unwind triggered; book 0/4.
+Inferred: localized theme pressure, not a system-wide unwind.
+Against: absorption still works; no factor-wide footprint; no short-leg squeeze.
+Not confirmed: forced deleveraging / financing stress.
+State unchanged: Escalate for review.
+Next: watch absorption failure or selling outside the cluster.
+```
+
+Only add numbers if the user asks "show the detail".
 
 ## Prohibited behavior
 

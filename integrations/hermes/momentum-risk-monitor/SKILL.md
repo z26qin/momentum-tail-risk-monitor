@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
 description: Run the repository's deterministic momentum tail-risk monitor, compare it with the previous assessment, return [SILENT] when nothing material changed, and otherwise investigate timestamp-valid evidence and send a concise PM-facing WhatsApp alert. Use for monitor runs, cron, and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.0.0
+version: 1.1.0
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -59,35 +59,40 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 
 ## Follow-up questions
 
-Preserve the latest assessment as context. If the user asks `Why is this not a Khandani–Lo unwind?`, challenge the crowded-unwind hypothesis with the investigation policy. Do not rerun numbers unless the user asks for a fresh date. Never change `risk_state`, triggers, or flags in your reply.
+A PM is reading this on a phone. Answer first, then at most five supporting lines. Do not write a research memo.
 
-On follow-ups, read only:
+If the user asks `Why is this not a Khandani–Lo unwind?`, copy this shape. Fill `{cluster}` from `theme_cluster`. Fill `book n/4` from **`deterministic_trigger_count` only** (how many of the 4 book scorecard channels are *triggered*). On the 2026-05-29 frozen case that integer is **0**, so write **book 0/4**. Empty `triggered_channels` means 0. Never use the count of metrics, mechanisms, evidence items, or scorecard rows as `n`.
 
-- `outputs/latest_assessment.json`
-- `outputs/latest_comparison.json` if present
-- `outputs/current_semi_unwind/pm_case_read.md` when `as_of_date` is `2026-05-29`
+```text
+Not a confirmed Khandani–Lo unwind.
 
-Do **not** search `src/`, open Python modules, or re-derive thresholds from code. The compact JSON already contains the authoritative states.
+Observed: CIEN–COHR–LITE crowding; crowded_theme_unwind triggered; book 0/4.
+Inferred: localized theme pressure, not a system-wide unwind.
+Against: absorption still works; no factor-wide footprint; no short-leg squeeze.
+Not confirmed: forced deleveraging / financing stress.
+State unchanged: Escalate for review.
+Next: watch absorption failure or selling outside the cluster.
+```
+
+If `outputs/latest_assessment.json` is missing, run `scripts/run_monitor.py` silently, then send only those seven lines. Do not tell the user the file was missing, that you are checking README, or that the monitor is running.
+
+Do not rerun the monitor if that JSON already exists, unless the user asks for a fresh date. Never change `risk_state`, triggers, or flags.
+
+On follow-ups, read only `outputs/latest_assessment.json`. Do not open `src/`, `pm_case_read.md`, evidence packs, or positioning modules unless the user says "show the detail".
 
 ## WhatsApp delivery
 
-Send **one** final user-visible message. Do not narrate tool use. Do not paste:
+Send **one** final message. Hard cap: **8 lines** and **~700 characters**. If a draft is longer, cut it before sending.
 
-- `read_file` / `search_files` / `execute_code` / paths
-- Python snippets
-- JSON dumps
-- “Self-improvement review” or skill-created notices
+Never send:
 
-Keep follow-ups under ~12 short lines so WhatsApp does not truncate. Use the six-step investigation pattern, compressed:
-
-```text
-Observed: …
-Inferred: …
-Against: …
-Not confirmed: …
-State unchanged: …
-Next: …
-```
+- recap of tools or "what I pulled"
+- progress chatter ("file is missing", "let me check", "monitor ran")
+- `read_file` / `execute_code` / paths / JSON
+- wiki names, R², z-scores, threshold tables, ticker laundry lists
+- "it IS the KL channel" — say **not confirmed** first
+- Self-improvement / skill-created notices
+- **book 4/4** unless `deterministic_trigger_count` is actually 4
 
 Do not create, edit, or “improve” skills during a WhatsApp session.
 
