@@ -15,6 +15,11 @@ dist/
 outputs/gdelt_evidence_cache/
 outputs/llm_cache/
 
+# Hermes / WhatsApp POC runtime (local state, not frozen demo packs).
+runtime_state/
+outputs/latest_assessment.json
+outputs/latest_comparison.json
+
 # Alternative-data raw caches.
 # Cached locally so later sessions make zero network calls; too large for git.
 # Provenance remains in committed manifests under data/raw/*/ and processed extracts.

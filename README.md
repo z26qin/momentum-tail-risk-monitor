@@ -217,7 +217,58 @@ uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test
 uv run python -m pytest -q
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
+uv run python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "2026-05-29 16:00 ET"
 ```
+
+Hermes Agent + WhatsApp POC (skill, `[SILENT]` compare, unofficial Baileys bridge): [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
+
+### Hermes + WhatsApp quick setup
+
+Local Mac only. Do not commit `~/.hermes/`, phone numbers, or QR sessions. Symlink **this repo’s** skill (not a copy under `~/integrations`).
+
+```bash
+uv sync --locked --all-groups
+uv run python scripts/run_monitor.py \
+  --as-of-date 2026-05-29 \
+  --evidence-cutoff "2026-05-29 16:00 ET" \
+  --output-json outputs/latest_assessment.json
+
+mkdir -p ~/.hermes/skills
+ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
+  ~/.hermes/skills/momentum-risk-monitor
+```
+
+In `~/.hermes/config.yaml` (quote `"off"`):
+
+```yaml
+display:
+  tool_progress: "off"
+  show_reasoning: false
+  personality: concise
+  platforms:
+    whatsapp:
+      tool_progress: "off"
+      show_reasoning: false
+      streaming: false
+whatsapp:
+  reply_prefix: ""
+```
+
+```bash
+hermes gateway setup    # pick WhatsApp, scan QR (dedicated number)
+hermes gateway run      # no -v
+```
+
+WhatsApp, in order:
+
+```text
+/verbose off
+/sethome
+/new now
+/momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
+```
+
+Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Score questions (`What is the current momentum risk score?`) copy the JSON 0–100 monitoring score and must not call it a crash probability. Unchanged cron ticks return `[SILENT]` and send nothing. Full steps: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ```python
 from src.mvp.config import MVPConfig
@@ -266,11 +317,16 @@ momentum-tail-risk-monitor/
 │   ├── wiki/                    # per-metric threshold wiki (why / cutoff / what a move means)
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
+│   ├── hermes_whatsapp_poc.md   # Hermes + unofficial WhatsApp Baileys setup
 │   ├── production_path.md       # production path (not an internal todo list)
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
 ├── notebooks/
 │   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
+├── scripts/
+│   ├── run_monitor.py           # compact JSON CLI over run_mvp()
+│   └── compare_monitor_state.py # previous-state compare → [SILENT] or diff
+├── integrations/hermes/         # Hermes skill (copy/symlink into ~/.hermes/skills)
 ├── src/
 │   ├── mvp/                     # config, run_mvp, evidence card, PM response
 │   ├── monitoring/              # scorecard, unwind, crowding proxies
