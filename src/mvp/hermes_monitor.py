@@ -245,9 +245,11 @@ def compact_assessment_from_result(result: MVPRunResult) -> dict[str, Any]:
         "next_checks": list(interpretation.monitoring_questions),
         "supporting_evidence_ids": list(interpretation.supporting_evidence_ids),
         "contradicting_evidence_ids": list(interpretation.contradicting_evidence_ids),
-        "missing_or_uncertain_evidence": list(
-            interpretation.missing_or_uncertain_evidence
-        )[:4],
+        "missing_or_uncertain_evidence": [
+            item
+            for item in interpretation.missing_or_uncertain_evidence
+            if item not in set(card.data_warnings)
+        ][:4],
         "retrieved_evidence": [
             {
                 "evidence_id": item.evidence_id,
@@ -448,22 +450,29 @@ def format_whatsapp_alert(
     else:
         flag_display = flag_name.replace("_", " ")
 
-    change_lines = _as_list((comparison or {}).get("changes"))[:2]
-    if change_lines:
-        what_changed = " ".join(change_lines)
+    change_lines = _as_list((comparison or {}).get("changes"))
+    flag_changes = [item for item in change_lines if "structural flag" in item]
+    if flag_changes:
+        what_changed = (
+            "Crowding evidence strengthened, but portfolio-level forced "
+            "liquidation remains unconfirmed."
+            if any("crowded_theme_unwind" in item for item in flag_changes)
+            else flag_changes[0]
+        )
+    elif change_lines:
+        what_changed = change_lines[0]
     else:
         what_changed = str(
             assessment.get("pm_current_state")
             or "Deterministic state changed; see structural flags."
         )
 
-    against = str(assessment.get("why_not_act_yet") or "").strip()
-    if not against:
-        against = (
-            "Short-leg behavior and drawdown remain below escalation levels."
-            if trigger_count == 0
-            else "Book-level confirmation is still incomplete."
-        )
+    against = (
+        "Short-leg behavior and drawdown remain below escalation levels."
+        if trigger_count == 0
+        else str(assessment.get("why_not_act_yet") or "").strip()
+        or "Book-level confirmation is still incomplete."
+    )
 
     next_checks = _as_list(assessment.get("next_checks"))
     next_check = (
