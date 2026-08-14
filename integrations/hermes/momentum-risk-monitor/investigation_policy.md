@@ -1,6 +1,6 @@
 # Investigation policy
 
-The deterministic layer remains the authority. This policy governs how Hermes reads timestamp-valid evidence around that layer. It does not create a second risk score.
+The deterministic layer remains the authority. This policy governs how Hermes reads timestamp-valid evidence around that layer. It does not create a second risk score. The JSON `monitoring_severity_score` is a PM-facing percentile summary only; copy it, do not recalculate it, and never present it as a crash probability.
 
 ## Reasoning pattern
 
@@ -80,7 +80,7 @@ Only add numbers if the user asks "show the detail".
 ## Prohibited behavior
 
 - Generic news roundup.
-- Recalculating drawdown, beta, or triggers.
-- Overriding `risk_state` / `pm_posture`.
+- Recalculating drawdown, beta, triggers, or the monitoring severity score.
+- Overriding `risk_state` / `pm_posture` or inventing a crash probability from the 0–100 score.
 - Trade, hedge, or de-gross instructions.
 - Claiming forced deleveraging without direct evidence.

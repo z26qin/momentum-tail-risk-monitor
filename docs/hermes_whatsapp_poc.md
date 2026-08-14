@@ -105,7 +105,9 @@ python scripts/compare_monitor_state.py \
   --output-json outputs/latest_comparison.json
 ```
 
-The first compare creates a baseline and prints `[SILENT]`. A second unchanged compare also prints `[SILENT]`.
+The first compare creates a baseline and prints `[SILENT]`. A second unchanged compare also prints `[SILENT]`. Integer moves inside the same severity band are not alerts.
+
+Ask WhatsApp: `What is the current momentum risk score?` Hermes must copy `monitoring_severity_score` from the JSON (emoji + label + 0–100), not invent a probability.
 
 ## 4. Configure the Hermes WhatsApp Baileys bridge
 
@@ -210,9 +212,9 @@ Do not override the deterministic risk state.
 The comparison layer treats these as non-alerts:
 
 - no previous state (initial baseline);
-- unchanged `risk_state` / posture, trigger set, structural flags, and mechanism/evidence IDs.
+- unchanged `risk_state` / posture, trigger set, structural flags, mechanism/evidence IDs, severity band, and primary driver.
 
-Small numeric moves that do not cross a threshold are ignored. Hermes must return exactly `[SILENT]` in those cases.
+Small numeric moves that do not cross a threshold or severity band are ignored. Hermes must return exactly `[SILENT]` in those cases.
 
 ## Manual smoke test (WhatsApp QR is not automated)
 

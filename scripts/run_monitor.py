@@ -106,6 +106,9 @@ def main() -> int:
         (
             f"# wrote {relative} | as_of={assessment['as_of_date']} "
             f"posture={assessment['pm_posture']} "
+            f"score={assessment.get('monitoring_severity_score')}/100 "
+            f"{assessment.get('severity_emoji') or ''} "
+            f"driver={assessment.get('primary_driver')} "
             f"triggers={assessment['deterministic_trigger_count']} "
             f"flags={assessment['structural_flags']}"
         ),

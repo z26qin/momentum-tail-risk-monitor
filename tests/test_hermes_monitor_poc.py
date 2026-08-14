@@ -5,13 +5,20 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from src.mvp.hermes_monitor import (
     REQUIRED_ASSESSMENT_FIELDS,
     compare_assessments,
     format_whatsapp_alert,
+    format_whatsapp_score_card,
     validate_evidence_cutoff,
+)
+from src.mvp.monitoring_severity import (
+    SCORE_FORMULA,
+    prior_only_risk_score,
+    severity_band,
 )
 
 
@@ -24,6 +31,17 @@ def _assessment(**overrides):
         "pm_posture": "escalate_for_pm_review",
         "risk_state": "escalate_for_pm_review",
         "mechanical_unwind_state": "FRAGILITY_BUILDING",
+        "monitoring_severity_score": 78,
+        "score_label": "elevated",
+        "severity_emoji": "🟠",
+        "primary_driver": "crowded_unwind",
+        "mechanism_scores": {
+            "dm_recovery": 25,
+            "crowded_unwind": 78,
+            "fundamental_repricing": None,
+            "book_vulnerability": 55,
+        },
+        "score_is_probability": False,
         "deterministic_trigger_count": 0,
         "triggered_channels": [],
         "structural_flags": ["crowded_theme_unwind", "portfolio_concentration"],
@@ -73,10 +91,32 @@ def test_unchanged_compare_is_silent() -> None:
 
 
 def test_numeric_drift_is_not_material() -> None:
-    previous = _assessment(book_read={"portfolio_drawdown": -0.0903})
-    current = _assessment(book_read={"portfolio_drawdown": -0.0911})
+    previous = _assessment(
+        book_read={"portfolio_drawdown": -0.0903},
+        monitoring_severity_score=78,
+    )
+    current = _assessment(
+        book_read={"portfolio_drawdown": -0.0911},
+        monitoring_severity_score=79,
+    )
     result = compare_assessments(current, previous)
     assert result["material_change"] is False
+
+
+def test_severity_band_change_is_material() -> None:
+    previous = _assessment(
+        monitoring_severity_score=78,
+        score_label="elevated",
+        severity_emoji="🟠",
+    )
+    current = _assessment(
+        monitoring_severity_score=81,
+        score_label="high",
+        severity_emoji="🔴",
+    )
+    result = compare_assessments(current, previous)
+    assert result["material_change"] is True
+    assert "Severity band changed: elevated → high" in result["changes"]
 
 
 def test_new_structural_flag_is_material() -> None:
@@ -93,17 +133,53 @@ def test_draft_alert_is_whatsapp_short() -> None:
         _assessment(structural_flags=["portfolio_concentration"]),
     )
     text = format_whatsapp_alert(_assessment(), comparison)
-    assert text.startswith("MOMENTUM RISK — STATE CHANGE")
-    assert "As of: 2026-05-29 16:00 ET" in text
-    assert "Book triggers: 0/4" in text
-    assert "Against the hypothesis:" in text
+    assert text.startswith("🟠 MOMENTUM RISK — ELEVATED")
+    assert "Severity: 78/100" in text
+    assert "Primary driver: Crowded unwind" in text
+    assert "Deterministic triggers: 0/4" in text
+    assert "What argues against escalation:" in text
     assert "Next check:" in text
+    assert "Not a crash probability." in text
     assert "buy" not in text.lower()
     assert "trade" not in text.lower()
+    assert text.count("🟠") == 1
+
+
+def test_score_card_uses_band_emoji_and_disclaimer() -> None:
+    text = format_whatsapp_score_card(_assessment())
+    assert text.startswith("🟠 Momentum monitoring severity: 78/100 — Elevated")
+    assert "Primary driver: Crowded unwind" in text
+    assert "DM recovery: 25" in text
+    assert "Fundamental repricing: Not available" in text
+    assert "Deterministic triggers: 0/4" in text
+    assert "not a 78% crash probability" in text
+
+
+def test_severity_bands_and_max_null_rules() -> None:
+    assert severity_band(0) == ("low", "🟢")
+    assert severity_band(39) == ("low", "🟢")
+    assert severity_band(40) == ("watch", "🟡")
+    assert severity_band(59) == ("watch", "🟡")
+    assert severity_band(60) == ("elevated", "🟠")
+    assert severity_band(79) == ("elevated", "🟠")
+    assert severity_band(80) == ("high", "🔴")
+    assert severity_band(100) == ("high", "🔴")
+    assert severity_band(None) == (None, None)
+    values = pd.Series(
+        [1.0, 2.0, 0.0, 3.0],
+        index=pd.to_datetime(
+            ["2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29"]
+        ),
+    )
+    assert prior_only_risk_score(values, pd.Timestamp("2026-05-29"), invert=False) == 100
+    assert prior_only_risk_score(values, pd.Timestamp("2026-05-28"), invert=True) == 100
+    assert prior_only_risk_score(values, pd.Timestamp("2026-05-26"), invert=False) is None
+    assert "not a crash probability" in SCORE_FORMULA.lower()
 
 
 def test_compact_schema_fields_are_stable() -> None:
     assert "risk_state" in REQUIRED_ASSESSMENT_FIELDS
+    assert "monitoring_severity_score" in REQUIRED_ASSESSMENT_FIELDS
     dumped = json.dumps(_assessment())
     for field in REQUIRED_ASSESSMENT_FIELDS:
         assert field in dumped
@@ -114,3 +190,4 @@ def test_cli_scripts_exist() -> None:
     assert (root / "scripts" / "run_monitor.py").is_file()
     assert (root / "scripts" / "compare_monitor_state.py").is_file()
     assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
+    assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()

@@ -17,6 +17,13 @@ import pandas as pd
 
 from src.mvp.config import HISTORICAL_EXAMPLE_DATE, MVPConfig
 from src.mvp.evidence_card import DATA_VERSION_FILES
+from src.mvp.monitoring_severity import (
+    MECHANISM_KEYS,
+    compute_monitoring_severity,
+    format_score_value,
+    mechanism_label,
+    score_label_display,
+)
 from src.mvp.pipeline import MVPRunResult, run_mvp
 from src.mvp.pm_response import POSTURE_LABELS, derive_pm_context
 from src.utils.io import DEFAULT_PROCESSED_DIR, REPO_ROOT, read_json, write_json
@@ -61,6 +68,12 @@ REQUIRED_ASSESSMENT_FIELDS = (
     "supported_mechanisms",
     "unconfirmed_mechanisms",
     "next_checks",
+    "monitoring_severity_score",
+    "score_label",
+    "severity_emoji",
+    "primary_driver",
+    "mechanism_scores",
+    "score_is_probability",
 )
 
 
@@ -222,6 +235,7 @@ def compact_assessment_from_result(result: MVPRunResult) -> dict[str, Any]:
         or card.retrieved_evidence
     )
     frozen_pack = FROZEN_CASE_PACKS.get(card.as_of_date)
+    severity = compute_monitoring_severity(result)
     return {
         "schema_version": HERMES_MONITOR_SCHEMA_VERSION,
         "as_of_date": card.as_of_date,
@@ -232,6 +246,15 @@ def compact_assessment_from_result(result: MVPRunResult) -> dict[str, Any]:
         "pm_posture": context.posture,
         "risk_state": context.posture,
         "mechanical_unwind_state": result.mechanical_unwind.unwind_state,
+        "monitoring_severity_score": severity["monitoring_severity_score"],
+        "score_label": severity["score_label"],
+        "severity_emoji": severity["severity_emoji"],
+        "primary_driver": severity["primary_driver"],
+        "mechanism_scores": severity["mechanism_scores"],
+        "score_is_probability": False,
+        "score_formula": severity["score_formula"],
+        "mechanism_score_components": severity["mechanism_score_components"],
+        "unavailable_mechanism_reasons": severity["unavailable_mechanism_reasons"],
         "deterministic_trigger_count": len(triggered_channels),
         "triggered_channels": triggered_channels,
         "structural_flags": _structural_flags(result),
@@ -322,7 +345,11 @@ def compare_assessments(
     current: dict[str, Any],
     previous: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """Compare discrete monitor states. Numeric drift alone is not material."""
+    """Compare discrete monitor states. Numeric drift alone is not material.
+
+    Score integers inside the same severity band are ignored. A band change
+    or primary-driver change is material.
+    """
 
     if previous is None:
         return {
@@ -352,6 +379,18 @@ def compare_assessments(
         changes.append(
             f"Deterministic trigger count changed: {old_count} → {new_count}"
         )
+    if "score_label" in previous and "score_label" in current:
+        old_band = previous.get("score_label")
+        new_band = current.get("score_label")
+        if old_band != new_band:
+            changes.append(f"Severity band changed: {old_band} → {new_band}")
+    if "primary_driver" in previous and "primary_driver" in current:
+        old_driver = previous.get("primary_driver")
+        new_driver = current.get("primary_driver")
+        if old_driver != new_driver:
+            changes.append(
+                f"Primary driver changed: {old_driver} → {new_driver}"
+            )
     changes.extend(
         _list_changes(
             "triggered channel",
@@ -425,33 +464,63 @@ def save_assessment(path: Path, assessment: dict[str, Any]) -> Path:
     return path
 
 
+def format_whatsapp_score_card(assessment: dict[str, Any]) -> str:
+    """WhatsApp answer for 'What is the current momentum risk score?'"""
+
+    score = assessment.get("monitoring_severity_score")
+    label = score_label_display(assessment.get("score_label"))
+    emoji = assessment.get("severity_emoji") or ""
+    trigger_count = int(assessment.get("deterministic_trigger_count") or 0)
+    scores = assessment.get("mechanism_scores") or {}
+    prefix = f"{emoji} " if emoji else ""
+    if score is None:
+        headline = f"{prefix}Momentum monitoring severity: Not available"
+    else:
+        headline = (
+            f"{prefix}Momentum monitoring severity: {int(score)}/100 — {label}"
+        )
+    lines = [
+        headline,
+        f"Primary driver: {mechanism_label(assessment.get('primary_driver'))}",
+    ]
+    for key in MECHANISM_KEYS:
+        lines.append(
+            f"{mechanism_label(key)}: {format_score_value(scores.get(key))}"
+        )
+    lines.append(f"Deterministic triggers: {trigger_count}/4")
+    if score is None:
+        lines.append(
+            "This is a relative monitoring score based on prior-only "
+            "percentiles, not a crash probability."
+        )
+    else:
+        lines.append(
+            "This is a relative monitoring score based on prior-only "
+            f"percentiles, not a {int(score)}% crash probability."
+        )
+    return "\n".join(lines)
+
+
 def format_whatsapp_alert(
     assessment: dict[str, Any],
     comparison: dict[str, Any] | None = None,
 ) -> str:
-    """Draft a short PM-facing alert from compact assessment fields."""
+    """Draft a two-message PM-facing alert from compact assessment fields."""
 
-    posture = str(assessment.get("pm_posture") or assessment.get("risk_state") or "")
-    state_label = POSTURE_SHORT_LABELS.get(posture, posture.replace("_", " ").title())
+    score = assessment.get("monitoring_severity_score")
+    label = score_label_display(assessment.get("score_label"))
+    emoji = assessment.get("severity_emoji") or ""
+    prefix = f"{emoji} " if emoji else ""
     trigger_count = int(assessment.get("deterministic_trigger_count") or 0)
-    flags = _as_list(assessment.get("structural_flags"))
-    cluster = _as_list(assessment.get("theme_cluster"))
-    cluster_text = "–".join(cluster[:3]) if cluster else ""
-    new_flags = [
-        item.removeprefix("New structural flag: ")
-        for item in _as_list((comparison or {}).get("changes"))
-        if item.startswith("New structural flag:")
-    ]
-    flag_name = new_flags[0] if new_flags else (flags[0] if flags else "none")
-    if flag_name == "crowded_theme_unwind" and cluster_text:
-        flag_display = f"Technology concentration ({cluster_text})"
-    elif flag_name == "portfolio_concentration":
-        flag_display = "Portfolio concentration"
+    header = f"{prefix}MOMENTUM RISK — {label.upper()}"
+    if score is None:
+        severity_line = "Severity: Not available"
     else:
-        flag_display = flag_name.replace("_", " ")
+        severity_line = f"Severity: {int(score)}/100"
 
     change_lines = _as_list((comparison or {}).get("changes"))
     flag_changes = [item for item in change_lines if "structural flag" in item]
+    band_changes = [item for item in change_lines if "Severity band changed" in item]
     if flag_changes:
         what_changed = (
             "Crowding evidence strengthened, but portfolio-level forced "
@@ -459,6 +528,8 @@ def format_whatsapp_alert(
             if any("crowded_theme_unwind" in item for item in flag_changes)
             else flag_changes[0]
         )
+    elif band_changes:
+        what_changed = band_changes[0]
     elif change_lines:
         what_changed = change_lines[0]
     else:
@@ -475,31 +546,36 @@ def format_whatsapp_alert(
     )
 
     next_checks = _as_list(assessment.get("next_checks"))
-    next_check = (
-        next_checks[0]
-        if next_checks
-        else "Watch for loser-leg rebound and broader prime-book deleveraging."
-    )
+    if not next_checks:
+        next_check = "Watch for loser-leg rebound and broader prime-book deleveraging."
+    elif len(next_checks) == 1:
+        next_check = next_checks[0]
+    else:
+        next_check = f"{next_checks[0]} {next_checks[1]}"
 
-    return "\n".join(
+    message_1 = "\n".join(
         [
-            "MOMENTUM RISK — STATE CHANGE",
-            f"As of: {assessment.get('evidence_cutoff')}",
-            "",
-            f"State: {state_label}",
-            f"Book triggers: {trigger_count}/4",
-            f"New flag: {flag_display}",
-            "",
+            header,
+            severity_line,
+            f"Primary driver: {mechanism_label(assessment.get('primary_driver'))}",
+            f"Deterministic triggers: {trigger_count}/4",
+        ]
+    )
+    message_2 = "\n".join(
+        [
             "What changed:",
             what_changed,
             "",
-            "Against the hypothesis:",
+            "What argues against escalation:",
             against,
             "",
             "Next check:",
             next_check,
+            "",
+            "Not a crash probability.",
         ]
     )
+    return f"{message_1}\n\n{message_2}"
 
 
 def posture_label(posture: str) -> str:
