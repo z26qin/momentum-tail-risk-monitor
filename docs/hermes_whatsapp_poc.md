@@ -185,10 +185,10 @@ Why is this not a Khandani–Lo unwind?
 
 ## 7. Daily post-close brief (weekday cron)
 
-After the 16:00 ET close, one CLI runs the existing monitor and compare. Stdout is **only** `[SILENT]` or the two-message WhatsApp alert. This is not a new model: same score, same discrete compare, push only on a material change (severity band, primary driver, posture, triggers, flags, mechanisms, evidence IDs). Integer drift inside the same band stays silent.
+After the 16:00 ET close, one CLI runs the existing monitor and compare. Stdout is `[SILENT]`, the two-message WhatsApp alert, or a stale-data notice. This is not a new model: same score, same discrete compare, push only on a material change. Integer drift inside the same band stays silent. Stale panels (older than a weekend/holiday gap) are **not** treated as a quiet day.
 
 ```bash
-python scripts/run_daily_brief.py            # last completed US close ∩ last available data
+python scripts/run_daily_brief.py            # last completed US close, if data are fresh
 python scripts/run_daily_brief.py --demo     # frozen 2026-05-29
 ```
 
@@ -201,15 +201,13 @@ hermes cron create "30 16 * * 1-5" --skill momentum-risk-monitor --deliver whats
 Use this prompt (the job runs in a fresh session):
 
 ```text
-Run the daily post-close brief using the momentum-risk-monitor skill.
-
+Run the monitor using the momentum-risk-monitor skill.
 Run only python scripts/run_daily_brief.py from the repository root.
 Send stdout only. If stdout is [SILENT], reply exactly [SILENT].
-If stdout is an alert, send the two WhatsApp messages as-is.
-Do not investigate, rewrite scores, or print JSON.
+Otherwise send stdout as-is. Do not investigate, rewrite scores, or print JSON.
 ```
 
-`[SILENT]` suppresses WhatsApp delivery. Failed runs still deliver. With the bundled processed panels, live mode pins to the last available session (historically 2026-06-30) until newer data are added.
+`[SILENT]` suppresses WhatsApp delivery. Failed runs still deliver. With the bundled processed panels ending 2026-06-30, a live run after that date prints `Data through 2026-06-30, not the YYYY-MM-DD close. Not a daily brief.` Use `--demo` for the frozen case.
 
 ## 8. Using `[SILENT]`
 
@@ -224,10 +222,9 @@ Small numeric moves that do not cross a threshold or severity band are ignored. 
 
 1. `python scripts/run_daily_brief.py --demo` → `[SILENT]` (baseline)
 2. Repeat step 1 → `[SILENT]`
-3. Or the two-step path: `python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "2026-05-29 16:00 ET"` then `python scripts/compare_monitor_state.py`
-4. Pair WhatsApp locally with `hermes gateway setup` / `hermes whatsapp` (phone required)
-5. Send the monitor request from the allowlisted chat
-6. Confirm a silent tick produces no WhatsApp message, and a material change produces only the short alert
+3. Pair WhatsApp locally with `hermes gateway setup` / `hermes whatsapp` (phone required)
+4. Send the monitor request from the allowlisted chat
+5. Confirm a silent tick produces no WhatsApp message, and a material change produces only the short alert
 
 ## Live WhatsApp test (2026-05-29)
 

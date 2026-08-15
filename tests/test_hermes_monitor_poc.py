@@ -11,9 +11,9 @@ import pandas as pd
 import pytest
 
 from src.mvp.daily_brief import (
+    StaleSessionError,
     last_available_session,
     last_completed_us_close,
-    persist_and_render,
     render_daily_brief,
     resolve_brief_as_of_date,
 )
@@ -232,20 +232,37 @@ def test_last_available_session_walks_to_last_data_date(tmp_path: Path) -> None:
         last_available_session(tmp_path, "2026-05-01")
 
 
-def test_resolve_brief_as_of_date_prefers_override_then_demo(tmp_path: Path) -> None:
-    frame = pd.DataFrame({"date": pd.to_datetime(["2026-06-30"])})
-    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
-    ny = ZoneInfo("America/New_York")
+def test_resolve_brief_as_of_date_prefers_override_then_demo() -> None:
     assert (
         resolve_brief_as_of_date(as_of_date="2026-05-29", demo=True) == "2026-05-29"
     )
     assert resolve_brief_as_of_date(demo=True) == "2026-05-29"
-    assert (
+
+
+def test_live_brief_refuses_stale_panels(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"date": pd.to_datetime(["2026-06-30"])})
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    ny = ZoneInfo("America/New_York")
+    with pytest.raises(StaleSessionError, match="2026-06-30") as exc_info:
         resolve_brief_as_of_date(
             now=datetime(2026, 8, 15, 16, 30, tzinfo=ny),
             processed_dir=tmp_path,
         )
-        == "2026-06-30"
+    assert "not the 2026-08-15 close" in str(exc_info.value)
+    assert "[SILENT]" not in str(exc_info.value)
+
+
+def test_live_brief_allows_weekend_gap(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"date": pd.to_datetime(["2026-05-29"])})
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    ny = ZoneInfo("America/New_York")
+    # Friday session, Monday morning: last completed close is Sunday.
+    assert (
+        resolve_brief_as_of_date(
+            now=datetime(2026, 6, 1, 10, 0, tzinfo=ny),
+            processed_dir=tmp_path,
+        )
+        == "2026-05-29"
     )
 
 
@@ -264,36 +281,3 @@ def test_daily_brief_is_silent_until_band_changes() -> None:
     assert text != "[SILENT]"
     assert text.startswith("🔴 MOMENTUM RISK — HIGH")
     assert "Severity band changed: elevated → high" in text
-
-
-def test_persist_and_render_promotes_previous_unless_dry_run(tmp_path: Path) -> None:
-    assessment_path = tmp_path / "latest_assessment.json"
-    comparison_path = tmp_path / "latest_comparison.json"
-    previous_path = tmp_path / "previous_assessment.json"
-    first = persist_and_render(
-        _assessment(),
-        previous_path=previous_path,
-        assessment_path=assessment_path,
-        comparison_path=comparison_path,
-        update_previous=False,
-    )
-    assert first.silent is True
-    assert first.is_baseline is True
-    assert first.text == "[SILENT]"
-    assert not previous_path.is_file()
-    second = persist_and_render(
-        _assessment(),
-        previous_path=previous_path,
-        assessment_path=assessment_path,
-        comparison_path=comparison_path,
-    )
-    assert second.is_baseline is True
-    assert previous_path.is_file()
-    third = persist_and_render(
-        _assessment(),
-        previous_path=previous_path,
-        assessment_path=assessment_path,
-        comparison_path=comparison_path,
-    )
-    assert third.silent is True
-    assert third.is_baseline is False

@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
-description: Run the repository's deterministic momentum tail-risk monitor, compare it with the previous assessment, return [SILENT] when nothing material changed, and otherwise investigate timestamp-valid evidence and send a concise PM-facing WhatsApp alert. Use for monitor runs, the weekday post-close daily brief, cron, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.3.0
+description: Run the repository daily brief CLI after the US close, return [SILENT] when nothing material changed, and otherwise send that CLI's WhatsApp alert as-is. Use for run/cron/daily brief, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
+version: 1.4.0
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -17,65 +17,30 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 
 ## When to use
 
-- A user or cron job asks to run the momentum risk monitor.
-- Weekday post-close daily brief / Hermes cron after the 16:00 ET cutoff.
+- Run / cron / daily brief after the 16:00 ET cutoff.
 - WhatsApp questions about the current momentum risk score.
 - WhatsApp follow-ups about the latest assessment (mechanism, evidence, why not unwind).
 
-## Daily post-close brief (cron)
+## Run / cron
 
-When the request is a weekday cron job, "daily brief", or "post-close brief", do **not** run the interactive investigation path. From the repository root run **only**:
+Any request to run the monitor, send a daily brief, or a weekday cron job uses **one** CLI. Do not investigate on this path. From the repository root:
 
 ```bash
 python scripts/run_daily_brief.py
 ```
 
-For the frozen 2026-05-29 demo, add `--demo`. Do not also run `run_monitor.py` or `compare_monitor_state.py` on this path.
+Frozen 2026-05-29 demo: add `--demo`. Do not run `run_monitor.py` or `compare_monitor_state.py` here.
 
-Read **stdout only**. Ignore stderr metadata.
+Read **stdout only**. Ignore stderr.
 
-- If stdout is exactly `[SILENT]`, respond with exactly `[SILENT]`. Do not investigate. Do not send JSON.
-- Otherwise stdout is the two-message WhatsApp alert (messages separated by a blank line). Send those two messages as-is. Do not rewrite scores, do not add investigation, and do not print JSON.
+- If stdout is exactly `[SILENT]`, respond with exactly `[SILENT]`.
+- Otherwise send stdout as-is (the two-message alert, or a stale-data notice). Do not rewrite scores, do not investigate, and do not print JSON.
 
-The CLI already applies the last completed 16:00 ET close, walks to the last available processed session, compares discrete state, and stays silent on numeric drift inside the same severity band.
+`[SILENT]` means discrete state did not change. Stale processed data is **not** `[SILENT]`.
 
-## Procedure
+## Questions
 
-If this is a cron / daily brief request, follow **Daily post-close brief** above and stop. The steps below are for an interactive monitor run or an explicit user request to investigate.
-
-1. Run the existing monitor CLI (offline, `use_llm=False` inside the adapter):
-
-   ```bash
-   python scripts/run_monitor.py \
-     --as-of-date 2026-05-29 \
-     --evidence-cutoff "2026-05-29 16:00 ET" \
-     --output-json outputs/latest_assessment.json
-   ```
-
-   For a live dated run, pass the configured assessment date instead of the frozen demo date. Do not change thresholds or data sources.
-
-2. Read `outputs/latest_assessment.json`. Core fields come from `run_mvp()` plus a PM-facing score overlay: `overall_risk_state` (UMD/DM comparison only), `pm_posture` / `risk_state`, `deterministic_trigger_count`, `triggered_channels`, `structural_flags`, `mechanism_statuses`, `book_read`, `monitoring_severity_score`, `score_label`, `severity_emoji`, `primary_driver`, `mechanism_scores`, `score_is_probability`, evidence IDs.
-
-3. Compare with the previous assessment:
-
-   ```bash
-   python scripts/compare_monitor_state.py \
-     --current outputs/latest_assessment.json \
-     --previous runtime_state/previous_assessment.json \
-     --output-json outputs/latest_comparison.json
-   ```
-
-4. If the comparison stdout is exactly `[SILENT]`, or `material_change` is false (including the initial baseline), **respond with exactly** `[SILENT]`. Do not send a state-change alert because a baseline was created. Integer score drift inside the same band is not an alert.
-
-5. Investigate evidence only when there is a material change **or** the user explicitly asks for an explanation. Follow [investigation_policy.md](investigation_policy.md). Use only timestamp-valid evidence available by `evidence_cutoff` / `data_cutoff`. Prefer:
-
-   - retrieved items already in the compact JSON;
-   - the repository evidence pipeline (`outputs/evidence_cache/`, `data/corpus/`);
-   - the frozen case pack pointed to by `frozen_case_pack` (for 2026-05-29: `outputs/current_semi_unwind/` and `data/evaluation/current_semi_unwind/`).
-
-6. Separate supporting evidence, contradicting evidence, and missing confirmation. Map to Daniel–Moskowitz, Khandani–Lo, or fundamental repricing only when the supplied evidence justifies it. Label each claim `observed`, `inferred`, or `not confirmed`.
-
-7. If a material change requires an alert, write only the concise PM-facing messages in [alert_template.md](alert_template.md). Lead with the JSON score. Do not attach the full JSON.
+Score and follow-up templates below. Investigate only when the user explicitly asks why / evidence / not a Khandani–Lo unwind. Follow [investigation_policy.md](investigation_policy.md). Read `outputs/latest_assessment.json`. If that file is missing, run `scripts/run_monitor.py` for 2026-05-29 silently, then answer.
 
 ## Score (do not recalculate)
 
@@ -212,5 +177,5 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
-- `python scripts/run_daily_brief.py` stdout is only `[SILENT]` or the two-message alert.
+- `python scripts/run_daily_brief.py` stdout is `[SILENT]`, the two-message alert, or a stale-data notice — never a quiet tick on stale panels.
 - Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.

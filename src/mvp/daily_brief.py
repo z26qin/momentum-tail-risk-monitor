@@ -1,13 +1,11 @@
-"""Post-close daily brief: run the monitor and emit [SILENT] or a WhatsApp alert.
+"""Post-close daily brief: [SILENT] or the existing WhatsApp alert.
 
-This is a delivery wrapper, not a new model. It reuses ``run_compact_assessment``,
-``compare_assessments``, and ``format_whatsapp_alert``. Numeric drift inside the
-same severity band stays silent.
+Delivery wrapper only. Same monitor, same discrete compare. Numeric drift
+inside a severity band stays silent. Stale panels are not treated as quiet.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from typing import Any
@@ -32,30 +30,24 @@ from src.utils.market_time import NEW_YORK
 
 US_CLOSE = time(16, 0)
 SILENT_BRIEF = "[SILENT]"
+# Weekend / one-holiday slack only. Not a holiday calendar.
+MAX_CLOSE_GAP_DAYS = 4
 
 
-@dataclass(frozen=True)
-class DailyBriefResult:
-    """Stdout text plus the compact assessment used to produce it."""
+class StaleSessionError(ValueError):
+    """Processed data are too old to stand in for the last US close."""
 
-    as_of_date: str
-    evidence_cutoff: str
-    text: str
-    silent: bool
-    material_change: bool
-    is_baseline: bool
-    assessment: dict[str, Any]
-    comparison: dict[str, Any]
+    def __init__(self, close_date: str, available_date: str) -> None:
+        self.close_date = close_date
+        self.available_date = available_date
+        super().__init__(
+            f"Data through {available_date}, not the {close_date} close. "
+            "Not a daily brief."
+        )
 
 
 def last_completed_us_close(now: datetime | None = None) -> str:
-    """Return ``YYYY-MM-DD`` of the last completed 16:00 ET close.
-
-    If ``now`` is at or after 16:00 America/New_York, use that calendar date.
-    Otherwise use the previous calendar day. Naive datetimes are treated as
-    New York time. There is no holiday calendar; pair this with
-    ``last_available_session`` to walk to the last processed date.
-    """
+    """Return ``YYYY-MM-DD`` of the last completed 16:00 ET close."""
 
     if now is None:
         current = datetime.now(NEW_YORK)
@@ -74,8 +66,7 @@ def last_available_session(processed_dir: Path, limit: str) -> str:
     path = processed_dir / "leg_risk_history.parquet"
     if not path.is_file():
         raise MissingCachedDataError(
-            "required cached data is unavailable: "
-            f"{path}"
+            f"required cached data is unavailable: {path}"
         )
     frame = pd.read_parquet(path, columns=["date"])
     dates = pd.to_datetime(frame["date"]).dt.normalize()
@@ -94,17 +85,22 @@ def resolve_brief_as_of_date(
     now: datetime | None = None,
     processed_dir: Path = DEFAULT_PROCESSED_DIR,
 ) -> str:
-    """Choose the assessment date for a daily brief.
+    """Choose the assessment date for a live or demo brief.
 
-    An explicit ``as_of_date`` wins. ``demo`` pins the frozen 2026-05-29 case.
-    Otherwise use the last completed US close intersected with available data.
+    ``--as-of-date`` and ``--demo`` are explicit and skip the freshness check.
+    Live mode requires data within ``MAX_CLOSE_GAP_DAYS`` of the last close.
     """
 
     if as_of_date:
         return as_of_date
     if demo:
         return HISTORICAL_EXAMPLE_DATE
-    return last_available_session(processed_dir, last_completed_us_close(now))
+    close = last_completed_us_close(now)
+    available = last_available_session(processed_dir, close)
+    gap = (pd.Timestamp(close) - pd.Timestamp(available)).days
+    if gap > MAX_CLOSE_GAP_DAYS:
+        raise StaleSessionError(close, available)
+    return available
 
 
 def render_daily_brief(
@@ -113,46 +109,10 @@ def render_daily_brief(
 ) -> str:
     """Return ``[SILENT]`` or the two-message WhatsApp alert."""
 
-    text, _comparison = compose_daily_brief(current, previous)
-    return text
-
-
-def compose_daily_brief(
-    current: dict[str, Any],
-    previous: dict[str, Any] | None,
-) -> tuple[str, dict[str, Any]]:
     comparison = compare_assessments(current, previous)
     if comparison.get("silent"):
-        return SILENT_BRIEF, comparison
-    return format_whatsapp_alert(current, comparison), comparison
-
-
-def persist_and_render(
-    current: dict[str, Any],
-    *,
-    previous_path: Path = DEFAULT_PREVIOUS_PATH,
-    assessment_path: Path = DEFAULT_ASSESSMENT_PATH,
-    comparison_path: Path = DEFAULT_COMPARISON_PATH,
-    update_previous: bool = True,
-) -> DailyBriefResult:
-    """Compare, optionally promote runtime state, and render stdout text."""
-
-    previous = load_previous_assessment(previous_path)
-    text, comparison = compose_daily_brief(current, previous)
-    save_assessment(assessment_path, current)
-    save_assessment(comparison_path, comparison)
-    if update_previous:
-        save_assessment(previous_path, current)
-    return DailyBriefResult(
-        as_of_date=str(current.get("as_of_date") or ""),
-        evidence_cutoff=str(current.get("evidence_cutoff") or ""),
-        text=text,
-        silent=bool(comparison.get("silent")),
-        material_change=bool(comparison.get("material_change")),
-        is_baseline=bool(comparison.get("is_baseline")),
-        assessment=current,
-        comparison=comparison,
-    )
+        return SILENT_BRIEF
+    return format_whatsapp_alert(current, comparison)
 
 
 def run_daily_brief(
@@ -165,11 +125,8 @@ def run_daily_brief(
     assessment_path: Path = DEFAULT_ASSESSMENT_PATH,
     comparison_path: Path = DEFAULT_COMPARISON_PATH,
     update_previous: bool = True,
-    horizon_days: int = 20,
-    evidence_cutoff: str | None = None,
-    compare_to_date: str | None = None,
-) -> DailyBriefResult:
-    """Run the existing monitor and return a silent-or-alert brief."""
+) -> tuple[str, dict[str, Any], dict[str, Any]]:
+    """Run the existing monitor and return ``(stdout, assessment, comparison)``."""
 
     resolved = resolve_brief_as_of_date(
         as_of_date=as_of_date,
@@ -179,15 +136,14 @@ def run_daily_brief(
     )
     assessment = run_compact_assessment(
         as_of_date=resolved,
-        compare_to_date=compare_to_date or default_compare_to_date(resolved),
-        evidence_cutoff=evidence_cutoff,
-        horizon_days=horizon_days,
+        compare_to_date=default_compare_to_date(resolved),
         processed_dir=processed_dir,
     )
-    return persist_and_render(
-        assessment,
-        previous_path=previous_path,
-        assessment_path=assessment_path,
-        comparison_path=comparison_path,
-        update_previous=update_previous,
-    )
+    previous = load_previous_assessment(previous_path)
+    text = render_daily_brief(assessment, previous)
+    comparison = compare_assessments(assessment, previous)
+    save_assessment(assessment_path, assessment)
+    save_assessment(comparison_path, comparison)
+    if update_previous:
+        save_assessment(previous_path, assessment)
+    return text, assessment, comparison
