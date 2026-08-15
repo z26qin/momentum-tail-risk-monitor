@@ -1,7 +1,0 @@
-[
-  {"query": "What is the additional indebtedness limit?", "relevant_ids": ["covenant_debt_limit"]},
-  {"query": "What is the maximum leverage ratio covenant?", "relevant_ids": ["covenant_leverage", "covenant_table"]},
-  {"query": "What margin and maturity are the refinancing notes?", "relevant_ids": ["term_sheet_terms"]},
-  {"query": "What are the key risks to refinancing revenue?", "relevant_ids": ["10k_risk_refi"]},
-  {"query": "What does research say about crowded momentum trades?", "relevant_ids": ["research_crowded_trade"]}
-]

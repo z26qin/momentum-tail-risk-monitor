@@ -1,11 +1,18 @@
-# Demo runbook walkthrough — 15–20 minutes
+# PM Evidence Card — 15–20 minute walkthrough
 
 ## Pre-demo check
 
 ```bash
 uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test
+uv run python -m pytest -q
 ```
+
+Expected:
+
+- smoke output contains `"status": "ready"`;
+- default card run ID `53c34aa57bb437fc`;
+- full run fingerprint `750f22225b7d9592`.
 
 Open:
 
@@ -13,70 +20,56 @@ Open:
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
 ```
 
-The notebook is a **step-by-step runbook**: the PPT tells the story, the
-runbook produces and shows the numbers for the 2026-05-29 case. It defaults to
-`USE_LLM=True` (live DeepSeek if `DEEPSEEK_API_KEY` is present); without a key
-it fail-closes to deterministic text and never changes metrics. Set
-`USE_LLM=False` at the top of `notebooks/demo_setup.py` for a fully offline run.
+Use:
 
-## Minute 0–3 — Opening and runbook map
+```python
+CONFIG = MVPConfig(
+    as_of_date="2024-01-05",
+    compare_to_date="2023-12-01",
+    threshold_profile="default",
+    horizon_days=20,
+    use_llm=False,
+)
+```
 
-Use the first two cells to frame the demo:
+## Minute 0–3 — Problem
 
-- the system combines two momentum-crash mechanisms with an AI-assisted
-  evidence layer;
-- the workflow is monitor → inspect → challenge → discuss escalation;
-- AI is evidence interpretation, not a replacement for the deterministic
-  monitors;
-- the PPT presents the story; this notebook produces the numbers.
+Ask: is **this momentum book** becoming fragile, how does that compare with the
+published UMD backdrop, and what evidence would confirm or invalidate the view?
 
-## Minute 3–6 — Step 1: Market regime
+Emphasize:
 
-Walk the deterministic UMD / Daniel–Moskowitz context:
+1. crashes are rare and state-dependent;
+2. one aggregate score is insufficient;
+3. the S&P 10/10 book is the default **customizable PM portfolio**; UMD is the
+   **comparison benchmark**;
+4. this tool monitors fragility; it does not prescribe a trade.
 
-- market return, drawdown, recovery and volatility conditions;
-- historical analogs with tail-loss frequency and forward-return percentiles.
+## Minute 3–7 — Architecture and data
 
-Emphasize: regime state is **comparison context only**, never a PM-book crash
-probability.
+Show the notebook architecture cell and the metadata table. Stress:
 
-## Minute 6–9 — Step 2: Quant signals
+- one `MVPConfig` / one `run_mvp()` result;
+- PM portfolio scorecard is primary; UMD layer is comparison-only;
+- threshold profile scopes Phase 4 only.
 
-Show the four scorecard indicators with value, threshold, status, and change
-vs the comparison date:
+## Minute 7–12 — Macro comparison, portfolio, scorecard
 
-- status is **triggered / not triggered**, not a probability;
-- the scorecard is deterministic and unchanged by the LLM.
+Walk through:
 
-## Minute 9–12 — Step 3: Structural and mechanical unwind
+1. UMD / market comparison components (high-volatility recovery context);
+2. active long-10 / short-10 holdings in the PM book;
+3. trailing drawdown / beta-gap chart for that book;
+4. four-row scorecard statuses on the book.
 
-Cover the three mechanism scenarios, then the concentration and market
-footprint layers:
+## Minute 12–16 — Mechanisms and evidence
 
-- theme concentration and residual loss;
-- factor footprint, turnover, and liquidity absorption;
-- unwind scorecard rows.
+Show the three independent mechanism scenarios and the six-row unwind inputs on
+the PM book. Then show timestamped evidence and the constrained interpretation.
+Note that evidence cannot rewrite deterministic facts.
 
-Read these layers separately from the quant scorecard.
+## Minute 16–20 — Card, limitations, future work
 
-## Minute 12–15 — Step 4: AI evidence layer
-
-Show the narrative interpretation plus supporting / contradicting / missing
-evidence. With `DEEPSEEK_API_KEY` this is live DeepSeek; without a key it
-fail-closes to deterministic text. Then open the frozen 2026-05-29 evidence
-challenge (supported / unconfirmed / why broad action may be premature).
-
-## Minute 15–18 — Step 5: Final PM read and cross-case comparison
-
-Collapse all layers into the integrated read table:
-
-- current state, main vulnerability, why not act yet;
-- what would change the reading and the conditional response;
-- close with `outputs/cross_case_comparison.md` to show the same rules are
-  selective across cases.
-
-## Minute 18–20 — Limitations and close
-
-End with the short limitations list and the production path. Do not present
-UMD tail frequencies as the PM book’s probability, and do not claim forced
-deleveraging unless the evidence supports it.
+Render the final PM card. Close with limitations and deferred work from the
+README: true PM holdings plug-in, PIT membership, observed positioning,
+predictive validation, fuller retrieval layer.
