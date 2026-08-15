@@ -3,11 +3,20 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
 
+from src.mvp.daily_brief import (
+    last_available_session,
+    last_completed_us_close,
+    persist_and_render,
+    render_daily_brief,
+    resolve_brief_as_of_date,
+)
 from src.mvp.hermes_monitor import (
     REQUIRED_ASSESSMENT_FIELDS,
     compare_assessments,
@@ -194,5 +203,97 @@ def test_cli_scripts_exist() -> None:
     root = Path(__file__).resolve().parents[1]
     assert (root / "scripts" / "run_monitor.py").is_file()
     assert (root / "scripts" / "compare_monitor_state.py").is_file()
+    assert (root / "scripts" / "run_daily_brief.py").is_file()
+    assert (root / "src" / "mvp" / "daily_brief.py").is_file()
     assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
     assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()
+
+
+def test_last_completed_us_close_uses_1600_et() -> None:
+    ny = ZoneInfo("America/New_York")
+    utc = ZoneInfo("UTC")
+    assert last_completed_us_close(datetime(2026, 5, 29, 16, 0, tzinfo=ny)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 15, 59, tzinfo=ny)) == "2026-05-28"
+    assert last_completed_us_close(datetime(2026, 5, 30, 9, 0, tzinfo=ny)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 16, 0)) == "2026-05-29"
+    # 2026-05-29 is EDT (UTC-4): 20:00 UTC is the 16:00 ET close.
+    assert last_completed_us_close(datetime(2026, 5, 29, 20, 0, tzinfo=utc)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 19, 59, tzinfo=utc)) == "2026-05-28"
+
+
+def test_last_available_session_walks_to_last_data_date(tmp_path: Path) -> None:
+    frame = pd.DataFrame(
+        {"date": pd.to_datetime(["2026-05-27", "2026-05-28", "2026-05-29"])}
+    )
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    assert last_available_session(tmp_path, "2026-05-31") == "2026-05-29"
+    assert last_available_session(tmp_path, "2026-05-28") == "2026-05-28"
+    with pytest.raises(ValueError, match="no processed session"):
+        last_available_session(tmp_path, "2026-05-01")
+
+
+def test_resolve_brief_as_of_date_prefers_override_then_demo(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"date": pd.to_datetime(["2026-06-30"])})
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    ny = ZoneInfo("America/New_York")
+    assert (
+        resolve_brief_as_of_date(as_of_date="2026-05-29", demo=True) == "2026-05-29"
+    )
+    assert resolve_brief_as_of_date(demo=True) == "2026-05-29"
+    assert (
+        resolve_brief_as_of_date(
+            now=datetime(2026, 8, 15, 16, 30, tzinfo=ny),
+            processed_dir=tmp_path,
+        )
+        == "2026-06-30"
+    )
+
+
+def test_daily_brief_is_silent_until_band_changes() -> None:
+    current = _assessment()
+    assert render_daily_brief(current, None) == "[SILENT]"
+    assert render_daily_brief(current, current) == "[SILENT]"
+    drifted = _assessment(monitoring_severity_score=79)
+    assert render_daily_brief(drifted, current) == "[SILENT]"
+    upgraded = _assessment(
+        monitoring_severity_score=81,
+        score_label="high",
+        severity_emoji="🔴",
+    )
+    text = render_daily_brief(upgraded, current)
+    assert text != "[SILENT]"
+    assert text.startswith("🔴 MOMENTUM RISK — HIGH")
+    assert "Severity band changed: elevated → high" in text
+
+
+def test_persist_and_render_promotes_previous_unless_dry_run(tmp_path: Path) -> None:
+    assessment_path = tmp_path / "latest_assessment.json"
+    comparison_path = tmp_path / "latest_comparison.json"
+    previous_path = tmp_path / "previous_assessment.json"
+    first = persist_and_render(
+        _assessment(),
+        previous_path=previous_path,
+        assessment_path=assessment_path,
+        comparison_path=comparison_path,
+        update_previous=False,
+    )
+    assert first.silent is True
+    assert first.is_baseline is True
+    assert first.text == "[SILENT]"
+    assert not previous_path.is_file()
+    second = persist_and_render(
+        _assessment(),
+        previous_path=previous_path,
+        assessment_path=assessment_path,
+        comparison_path=comparison_path,
+    )
+    assert second.is_baseline is True
+    assert previous_path.is_file()
+    third = persist_and_render(
+        _assessment(),
+        previous_path=previous_path,
+        assessment_path=assessment_path,
+        comparison_path=comparison_path,
+    )
+    assert third.silent is True
+    assert third.is_baseline is False

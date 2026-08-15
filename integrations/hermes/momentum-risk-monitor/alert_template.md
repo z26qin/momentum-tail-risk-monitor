@@ -2,6 +2,8 @@
 
 Keep the message short enough to read on a phone. WhatsApp markdown: `*bold*`, no headings. Do not include trading instructions or methodology.
 
+The weekday daily brief CLI (`scripts/run_daily_brief.py`) already prints this `[SILENT]` token or the two-message alert. On cron, send that stdout as-is.
+
 If there is no material change, do **not** use this template. Reply with exactly:
 
 ```text

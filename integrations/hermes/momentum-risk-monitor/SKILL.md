@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
-description: Run the repository's deterministic momentum tail-risk monitor, compare it with the previous assessment, return [SILENT] when nothing material changed, and otherwise investigate timestamp-valid evidence and send a concise PM-facing WhatsApp alert. Use for monitor runs, cron, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.2.0
+description: Run the repository's deterministic momentum tail-risk monitor, compare it with the previous assessment, return [SILENT] when nothing material changed, and otherwise investigate timestamp-valid evidence and send a concise PM-facing WhatsApp alert. Use for monitor runs, the weekday post-close daily brief, cron, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
+version: 1.3.0
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -18,11 +18,30 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 ## When to use
 
 - A user or cron job asks to run the momentum risk monitor.
+- Weekday post-close daily brief / Hermes cron after the 16:00 ET cutoff.
 - WhatsApp questions about the current momentum risk score.
 - WhatsApp follow-ups about the latest assessment (mechanism, evidence, why not unwind).
-- Weekday monitoring after the 16:00 ET cutoff.
+
+## Daily post-close brief (cron)
+
+When the request is a weekday cron job, "daily brief", or "post-close brief", do **not** run the interactive investigation path. From the repository root run **only**:
+
+```bash
+python scripts/run_daily_brief.py
+```
+
+For the frozen 2026-05-29 demo, add `--demo`. Do not also run `run_monitor.py` or `compare_monitor_state.py` on this path.
+
+Read **stdout only**. Ignore stderr metadata.
+
+- If stdout is exactly `[SILENT]`, respond with exactly `[SILENT]`. Do not investigate. Do not send JSON.
+- Otherwise stdout is the two-message WhatsApp alert (messages separated by a blank line). Send those two messages as-is. Do not rewrite scores, do not add investigation, and do not print JSON.
+
+The CLI already applies the last completed 16:00 ET close, walks to the last available processed session, compares discrete state, and stays silent on numeric drift inside the same severity band.
 
 ## Procedure
+
+If this is a cron / daily brief request, follow **Daily post-close brief** above and stop. The steps below are for an interactive monitor run or an explicit user request to investigate.
 
 1. Run the existing monitor CLI (offline, `use_llm=False` inside the adapter):
 
@@ -193,4 +212,5 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
+- `python scripts/run_daily_brief.py` stdout is only `[SILENT]` or the two-message alert.
 - Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.
