@@ -204,6 +204,7 @@ def test_cli_scripts_exist() -> None:
     assert (root / "scripts" / "run_monitor.py").is_file()
     assert (root / "scripts" / "compare_monitor_state.py").is_file()
     assert (root / "scripts" / "run_daily_brief.py").is_file()
+    assert (root / "scripts" / "refresh_data.py").is_file()
     assert (root / "src" / "mvp" / "daily_brief.py").is_file()
     assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
     assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()

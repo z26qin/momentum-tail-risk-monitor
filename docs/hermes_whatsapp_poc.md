@@ -209,6 +209,15 @@ Otherwise send stdout as-is. Do not investigate, rewrite scores, or print JSON.
 
 `[SILENT]` suppresses WhatsApp delivery. Failed runs still deliver. With the bundled processed panels ending 2026-06-30, a live run after that date prints `Data through 2026-06-30, not the YYYY-MM-DD close. Not a daily brief.` Use `--demo` for the frozen case.
 
+To re-download French / VIX / S&P prices and print vintages (does **not** invent UMD or make `run_mvp` work past the last French date):
+
+```bash
+python scripts/refresh_data.py --as-of-date 2026-07-30 --dry-run
+python scripts/refresh_data.py --as-of-date 2026-07-30
+```
+
+If French is still short of the requested date, stdout says so and the process exits 2. Do not commit raw Yahoo/SSGA caches.
+
 ## 8. Using `[SILENT]`
 
 The comparison layer treats these as non-alerts:

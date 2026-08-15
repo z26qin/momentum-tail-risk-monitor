@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
 description: Run the repository daily brief CLI after the US close, return [SILENT] when nothing material changed, and otherwise send that CLI's WhatsApp alert as-is. Use for run/cron/daily brief, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.4.0
+version: 1.4.1
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -18,6 +18,7 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 ## When to use
 
 - Run / cron / daily brief after the 16:00 ET cutoff.
+- Refresh public data vintages (`python scripts/refresh_data.py`).
 - WhatsApp questions about the current momentum risk score.
 - WhatsApp follow-ups about the latest assessment (mechanism, evidence, why not unwind).
 
@@ -37,6 +38,16 @@ Read **stdout only**. Ignore stderr.
 - Otherwise send stdout as-is (the two-message alert, or a stale-data notice). Do not rewrite scores, do not investigate, and do not print JSON.
 
 `[SILENT]` means discrete state did not change. Stale processed data is **not** `[SILENT]`.
+
+## Refresh data
+
+When the user asks to download or refresh market data, from the repository root run **only**:
+
+```bash
+python scripts/refresh_data.py --as-of-date 2026-07-30
+```
+
+`--dry-run` inspects vintages with no download. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is stale / not a complete `run_mvp` date.
 
 ## Questions
 
@@ -178,4 +189,5 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
 - `python scripts/run_daily_brief.py` stdout is `[SILENT]`, the two-message alert, or a stale-data notice — never a quiet tick on stale panels.
+- `python scripts/refresh_data.py` prints source last dates and exits 2 when Ken French is short of the requested date.
 - Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.
