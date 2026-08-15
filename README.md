@@ -268,7 +268,7 @@ WhatsApp, in order:
 /momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
 ```
 
-Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Score questions (`What is the current momentum risk score?`) copy the JSON 0–100 monitoring score and must not call it a crash probability. Run / cron: `uv run python scripts/run_daily_brief.py` (or `--demo` for 2026-05-29). Refresh panels (downloads): `uv run python scripts/refresh_data.py --as-of-date 2026-07-30`. Unchanged ticks return `[SILENT]`; stale panels do not. Full steps: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
+Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Score questions (`What is the current momentum risk score?`) copy the JSON 0–100 monitoring score and must not call it a crash probability. Run / cron: `uv run python scripts/run_daily_brief.py` (or `--demo` for 2026-05-29). Refresh panels **download** through the last completed US close: `uv run python scripts/refresh_data.py`. Unchanged ticks return `[SILENT]`; stale panels do not. Full steps: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ```python
 from src.mvp.config import MVPConfig

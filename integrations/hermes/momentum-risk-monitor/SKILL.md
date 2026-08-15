@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
 description: Run the repository daily brief CLI after the US close, return [SILENT] when nothing material changed, and otherwise send that CLI's WhatsApp alert as-is. Use for run/cron/daily brief, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.4.1
+version: 1.4.2
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -44,10 +44,10 @@ Read **stdout only**. Ignore stderr.
 When the user asks to download or refresh market data, from the repository root run **only**:
 
 ```bash
-python scripts/refresh_data.py --as-of-date 2026-07-30
+python scripts/refresh_data.py
 ```
 
-That command **downloads**. Do not pass `--dry-run` unless the user only wants an inspect. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is still short of the requested date.
+That command **downloads** through the last completed 16:00 ET close. It does not list local vintages. Pass `--as-of-date YYYY-MM-DD` only if the user names a date. Do not pass `--dry-run` unless the user only wants an inspect. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is still short of the requested date.
 
 ## Questions
 

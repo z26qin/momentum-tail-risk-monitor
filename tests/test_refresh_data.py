@@ -8,6 +8,7 @@ import pandas as pd
 
 from src.data.refresh import (
     DataVintages,
+    StepResult,
     collect_vintages,
     format_refresh_report,
     parquet_last_date,
@@ -34,6 +35,31 @@ def test_fresh_french_is_ready() -> None:
     vintages = DataVintages(as_of_date="2026-06-30", french="2026-06-30")
     assert vintages.french_stale is False
     assert "Ready for run_mvp" in format_refresh_report(vintages)
+
+
+def test_default_refresh_downloads(monkeypatch, tmp_path: Path) -> None:
+    calls: dict[str, object] = {}
+
+    def fake_execute(**kwargs):
+        calls.update(kwargs)
+        return [StepResult(name="french", ok=True)]
+
+    monkeypatch.setattr("src.data.refresh._execute_refresh", fake_execute)
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    pd.DataFrame({"date": pd.to_datetime(["2026-06-30"])}).to_parquet(
+        processed / "french_momentum_factor_daily.parquet"
+    )
+    vintages = refresh_data(
+        as_of_date="2026-07-30",
+        processed_dir=processed,
+        raw_dir=tmp_path / "raw",
+        output_dir=tmp_path / "outputs",
+    )
+    assert calls["force"] is True
+    assert vintages.mode == "download"
+    assert [step.name for step in vintages.steps] == ["french"]
+    assert "Downloaded through 2026-07-30" in format_refresh_report(vintages)
 
 
 def test_dry_run_inspects_without_download(tmp_path: Path) -> None:
@@ -83,3 +109,9 @@ def test_refresh_cli_exists() -> None:
     root = Path(__file__).resolve().parents[1]
     assert (root / "scripts" / "refresh_data.py").is_file()
     assert (root / "src" / "data" / "refresh.py").is_file()
+    skill = (
+        root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "python scripts/refresh_data.py" in skill
+    assert "It does not list local vintages" in skill
+    assert "Do not pass `--dry-run`" in skill

@@ -212,8 +212,10 @@ Otherwise send stdout as-is. Do not investigate, rewrite scores, or print JSON.
 To **download** French / VIX / S&P prices and rebuild the book (does **not** invent UMD or make `run_mvp` work past the last French date):
 
 ```bash
-python scripts/refresh_data.py --as-of-date 2026-07-30
+python scripts/refresh_data.py
 ```
+
+That command downloads through the last completed 16:00 ET close. It does not list local vintages. Pass `--as-of-date YYYY-MM-DD` only for a named date. `--dry-run` inspects existing panels and skips download.
 
 If French is still short of the requested date after the download, stdout says so and the process exits 2. Do not commit raw Yahoo/SSGA caches.
 

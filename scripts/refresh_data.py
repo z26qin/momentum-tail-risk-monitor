@@ -1,10 +1,12 @@
 """Download Ken French, VIX, and S&P/SPY prices, then rebuild the 12-1 book.
 
-Default action is a live download (not a vintage listing). Does not invent
-UMD or make run_mvp work past the last Ken French date.
+Default action is a live download through the last completed US close.
+It does not list local vintages. Does not invent UMD or make run_mvp work
+past the last Ken French date.
 
-Example:
+Examples:
 
+    python scripts/refresh_data.py
     python scripts/refresh_data.py --as-of-date 2026-07-30
 """
 
@@ -25,9 +27,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Download Ken French, VIX, and S&P/SPY prices, then rebuild the "
-            "12-1 book. Default is a live download. If French is still short "
-            "of the requested date after download, exit 2. Does not change "
-            "run_mvp or invent UMD."
+            "12-1 book. Default is a live download through the last completed "
+            "US close, not a vintage listing. If French is still short of the "
+            "requested date after download, exit 2. Does not change run_mvp "
+            "or invent UMD."
         )
     )
     parser.add_argument(

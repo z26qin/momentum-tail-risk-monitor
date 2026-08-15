@@ -147,14 +147,19 @@ def format_refresh_report(vintages: DataVintages) -> str:
     return "\n".join(lines)
 
 
-def _run_step(name: str, action: Callable[[], Any]) -> StepResult:
-    print(f"downloading {name}...", file=sys.stderr, flush=True)
+def _run_step(
+    name: str,
+    action: Callable[[], Any],
+    *,
+    verb: str = "downloading",
+) -> StepResult:
+    print(f"{verb} {name}...", file=sys.stderr, flush=True)
     try:
         action()
-        print(f"downloaded {name}: ok", file=sys.stderr, flush=True)
+        print(f"{name}: ok", file=sys.stderr, flush=True)
         return StepResult(name=name, ok=True)
     except Exception as exc:
-        print(f"downloaded {name}: failed: {exc}", file=sys.stderr, flush=True)
+        print(f"{name}: failed: {exc}", file=sys.stderr, flush=True)
         return StepResult(name=name, ok=False, detail=str(exc))
 
 
@@ -309,6 +314,7 @@ def _execute_refresh(
                 processed_dir=processed_dir,
                 output_dir=output_dir / "portfolio",
             ),
+            verb="rebuilding",
         )
     )
     steps.append(
@@ -318,6 +324,7 @@ def _execute_refresh(
                 processed_dir=processed_dir,
                 output_dir=output_dir / "risk",
             ),
+            verb="rebuilding",
         )
     )
     return steps
