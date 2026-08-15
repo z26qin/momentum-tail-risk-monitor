@@ -25,16 +25,42 @@ def test_parquet_last_date_and_stale_report(tmp_path: Path) -> None:
     vintages = DataVintages(as_of_date="2026-07-30", french="2026-06-30")
     assert vintages.french_stale is True
     text = format_refresh_report(vintages)
-    assert "Downloaded through 2026-07-30" in text
-    assert "2026-06-30 — still stale after download" in text
-    assert "Not a complete run_mvp date" in text
-    assert "Do not invent UMD" in text
+    assert "Downloaded through 2026-07-30." in text
+    assert "Ken French has not published through 2026-07-30" in text
+    assert "No daily brief for 2026-07-30" in text
+    assert "Not a quiet day" in text
+    assert "run_mvp" not in text
+    assert len(text.splitlines()) <= 10
 
 
 def test_fresh_french_is_ready() -> None:
     vintages = DataVintages(as_of_date="2026-06-30", french="2026-06-30")
     assert vintages.french_stale is False
-    assert "Ready for run_mvp" in format_refresh_report(vintages)
+    assert "Ready for the daily brief" in format_refresh_report(vintages)
+
+
+def test_refresh_report_stays_phone_sized_with_steps() -> None:
+    vintages = DataVintages(
+        as_of_date="2026-07-30",
+        french="2026-06-30",
+        prices="2026-07-27",
+        spy="2026-07-27",
+        book="2026-06-30",
+        vix_aligned="2026-06-30",
+        vix_raw="2026-08-03",
+        steps=[
+            StepResult("french", True),
+            StepResult("vix", True),
+            StepResult("sp500_prices", False, "timeout"),
+            StepResult("portfolio", True),
+            StepResult("leg_risk", True),
+        ],
+        mode="download",
+    )
+    text = format_refresh_report(vintages)
+    assert "Failed steps: sp500_prices." in text
+    assert "french: ok" not in text
+    assert len(text.splitlines()) <= 10
 
 
 def test_default_refresh_downloads(monkeypatch, tmp_path: Path) -> None:

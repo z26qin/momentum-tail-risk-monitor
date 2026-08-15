@@ -1,7 +1,7 @@
 ---
 name: momentum-risk-monitor
 description: Run the repository daily brief CLI after the US close, return [SILENT] when nothing material changed, and otherwise send that CLI's WhatsApp alert as-is. Use for run/cron/daily brief, score questions such as "What is the current momentum risk score?", and follow-ups such as "Why is this not a Khandani–Lo unwind?"
-version: 1.4.2
+version: 1.4.3
 metadata:
   hermes:
     tags: [momentum, risk, whatsapp, monitor]
@@ -47,7 +47,7 @@ When the user asks to download or refresh market data, from the repository root 
 python scripts/refresh_data.py
 ```
 
-That command **downloads** through the last completed 16:00 ET close. It does not list local vintages. Pass `--as-of-date YYYY-MM-DD` only if the user names a date. Do not pass `--dry-run` unless the user only wants an inspect. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is still short of the requested date.
+That command **downloads** through the last completed 16:00 ET close. It does not list local vintages. Pass `--as-of-date YYYY-MM-DD` only if the user names a date. Do not pass `--dry-run` unless the user only wants an inspect. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says there is no daily brief / Ken French has not published.
 
 ## Questions
 
@@ -57,7 +57,7 @@ Score and follow-up templates below. Investigate only when the user explicitly a
 
 `monitoring_severity_score` is a PM-facing summary of prior-only percentiles. It is **not** a crash probability and **not** a replacement for mechanism-level analysis. `score_is_probability` is always false.
 
-Copy the number from JSON. Do not average, re-rank, override, or invent a score. If a mechanism is `null`, say **Not available** and use `unavailable_mechanism_reasons`. Do not impute.
+Copy the number from JSON. Do not average, re-rank, override, or invent a score. Always include `as_of_date` as `As of: YYYY-MM-DD`. Never describe that reading as today's close unless that date is the last completed US close. If a mechanism is `null`, say **Not available** and use `unavailable_mechanism_reasons`. Do not impute.
 
 Bands (emoji is presentation-only; always also send the text label and number):
 
@@ -78,6 +78,7 @@ If `outputs/latest_assessment.json` is missing, run `scripts/run_monitor.py` sil
 
 ```text
 {severity_emoji} Momentum monitoring severity: {monitoring_severity_score}/100 — {Score label}
+As of: {as_of_date}
 Primary driver: {Primary driver label}
 DM recovery: {band emoji} {dm_recovery}
 Crowded unwind: {band emoji} {crowded_unwind}
@@ -91,6 +92,7 @@ Example shape (numbers are format only):
 
 ```text
 🟠 Momentum monitoring severity: 78/100 — Elevated
+As of: 2026-05-29
 Primary driver: Crowded unwind
 DM recovery: 🟢 25
 Crowded unwind: 🟠 78
@@ -109,7 +111,7 @@ Do not recompute. Name `primary_driver`, then the input in `mechanism_score_comp
 Shape:
 
 ```text
-The {N} headline is the max of available mechanism scores. {Primary driver} is {band emoji} {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {band emoji} {x}; fundamental Not available; book {band emoji} {y}. Deterministic Macro State Change triggers remain {n}/4. Not a crash probability.
+As of {as_of_date}. The {N} headline is the max of available mechanism scores. {Primary driver} is {band emoji} {N} because {input name} is at the {percentile}rd prior-only percentile (current {value} vs {threshold}). Other channels: DM recovery {band emoji} {x}; fundamental Not available; book {band emoji} {y}. Deterministic Macro State Change triggers remain {n}/4. Not a crash probability.
 ```
 
 ### Is {N} the probability of a crash?
@@ -189,5 +191,5 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
 - `python scripts/run_daily_brief.py` stdout is `[SILENT]`, the two-message alert, or a stale-data notice — never a quiet tick on stale panels.
-- `python scripts/refresh_data.py` downloads French / VIX / S&P-SPY and exits 2 when Ken French is still short of the requested date.
+- `python scripts/refresh_data.py` downloads French / VIX / S&P-SPY, prints a phone-sized receipt, and exits 2 when Ken French has not published through the requested date.
 - Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.

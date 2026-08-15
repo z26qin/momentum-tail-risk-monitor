@@ -24,6 +24,7 @@ Send **one** message. Fill from JSON. `{severity_emoji}` must match the current 
 
 ```text
 {severity_emoji} Momentum monitoring severity: {monitoring_severity_score}/100 — {Score label}
+As of: {as_of_date}
 Primary driver: {Primary driver label}
 DM recovery: {band emoji} {mechanism_scores.dm_recovery}
 Crowded unwind: {band emoji} {mechanism_scores.crowded_unwind}
@@ -39,6 +40,7 @@ Filled score-card example (numbers are format only):
 
 ```text
 🟠 Momentum monitoring severity: 78/100 — Elevated
+As of: 2026-05-29
 Primary driver: Crowded unwind
 DM recovery: 🟢 25
 Crowded unwind: 🟠 78
@@ -62,6 +64,7 @@ Send **two** consecutive short messages. No extra chatter between them.
 
 ```text
 {severity_emoji} MOMENTUM RISK — {SCORE LABEL UPPERCASE}
+As of: {as_of_date}
 Severity: {severity_emoji} {monitoring_severity_score}/100
 Primary driver: {Primary driver label}
 Deterministic Macro State Change triggers: {deterministic_trigger_count}/4
@@ -89,6 +92,7 @@ Not a crash probability.
 | Line | Source |
 | --- | --- |
 | Emoji / band | `severity_emoji` and `score_label` (🟢 0–39 Low, 🟡 40–59 Watch, 🟠 60–79 Elevated, 🔴 80–100 High) |
+| As of | `as_of_date` — never omit; never call it today's close unless it is |
 | Severity | `monitoring_severity_score` out of 100; not a probability (`score_is_probability` is always false) |
 | Primary driver | `primary_driver` |
 | Deterministic Macro State Change triggers | `deterministic_trigger_count` out of 4 book scorecard channels |
@@ -100,7 +104,7 @@ Not a crash probability.
 
 ## Style checks
 
-- Lead with the JSON score and band. Do not invent a number.
+- Lead with the JSON score, band, and `as_of_date`. Do not invent a number.
 - Include contrary evidence.
 - Say what remains unconfirmed.
 - Give one or two monitoring questions.
@@ -115,6 +119,7 @@ Message 1:
 
 ```text
 🟠 MOMENTUM RISK — ELEVATED
+As of: 2026-05-29
 Severity: 🟠 78/100
 Primary driver: Crowded unwind
 Deterministic Macro State Change triggers: 0/4

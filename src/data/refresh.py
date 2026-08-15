@@ -110,40 +110,49 @@ def collect_vintages(
 
 
 def format_refresh_report(vintages: DataVintages) -> str:
+    """Phone-sized download receipt. Hermes sends this stdout as-is."""
+
     if vintages.mode == "inspect":
-        header = f"Inspect only (no download) as of {vintages.as_of_date}"
-        french_note = " — stale" if vintages.french_stale else ""
+        header = f"Inspect only (no download) as of {vintages.as_of_date}."
     elif vintages.mode == "cached":
-        header = f"Rebuilt from cache through {vintages.as_of_date}"
-        french_note = " — stale" if vintages.french_stale else ""
+        header = f"Rebuilt from cache through {vintages.as_of_date}."
     else:
-        header = f"Downloaded through {vintages.as_of_date}"
-        french_note = " — still stale after download" if vintages.french_stale else ""
-    vix_line = vintages.vix_aligned or "missing"
-    if vintages.vix_raw:
-        vix_line = f"{vix_line} (raw {vintages.vix_raw})"
-    lines = [header]
-    if vintages.steps:
-        for step in vintages.steps:
-            status = "ok" if step.ok else f"failed: {step.detail}"
-            lines.append(f"{step.name}: {status}")
-    lines.extend(
-        [
-            f"French UMD/factors landed: {vintages.french or 'missing'}{french_note}",
-            f"VIX aligned landed: {vix_line}",
-            f"S&P prices landed: {vintages.prices or 'missing'}",
-            f"SPY benchmark landed: {vintages.spy or 'missing'}",
-            f"Book leg_risk landed: {vintages.book or 'missing'}",
-        ]
-    )
+        header = f"Downloaded through {vintages.as_of_date}."
+    french = vintages.french or "missing"
     if vintages.french_stale:
-        lines.append(
-            "French is still short of the requested date after this run. "
-            "Not a complete run_mvp date. Do not invent UMD. "
-            "Scorecard rows 1 and 4 stay on the French date."
+        french_line = (
+            f"French: {french} — Ken French has not published through "
+            f"{vintages.as_of_date}"
         )
     else:
-        lines.append(f"Ready for run_mvp / daily brief on {vintages.as_of_date}.")
+        french_line = f"French: {french}"
+    prices = vintages.prices or "missing"
+    spy = vintages.spy or "missing"
+    if prices == spy:
+        price_line = f"Prices/SPY: {prices}"
+    else:
+        price_line = f"Prices: {prices}; SPY: {spy}"
+    vix = vintages.vix_aligned or "missing"
+    if vintages.vix_raw:
+        vix_line = f"VIX: {vix} (raw {vintages.vix_raw})"
+    else:
+        vix_line = f"VIX: {vix}"
+    lines = [
+        header,
+        price_line,
+        f"Book: {vintages.book or 'missing'}",
+        french_line,
+        vix_line,
+    ]
+    failed = [step.name for step in vintages.steps if not step.ok]
+    if failed:
+        lines.append("Failed steps: " + ", ".join(failed) + ".")
+    if vintages.french_stale:
+        lines.append(
+            f"No daily brief for {vintages.as_of_date}. Not a quiet day."
+        )
+    else:
+        lines.append(f"Ready for the daily brief on {vintages.as_of_date}.")
     return "\n".join(lines)
 
 

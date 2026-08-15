@@ -144,6 +144,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
     )
     text = format_whatsapp_alert(_assessment(), comparison)
     assert text.startswith("🟠 MOMENTUM RISK — ELEVATED")
+    assert "As of: 2026-05-29" in text
     assert "Severity: 🟠 78/100" in text
     assert "Primary driver: Crowded unwind" in text
     assert "Deterministic Macro State Change triggers: 0/4" in text
@@ -157,6 +158,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
 def test_score_card_uses_band_emoji_and_disclaimer() -> None:
     text = format_whatsapp_score_card(_assessment())
     assert text.startswith("🟠 Momentum monitoring severity: 78/100 — Elevated")
+    assert "As of: 2026-05-29" in text
     assert "Primary driver: Crowded unwind" in text
     assert "DM recovery: 🟢 25" in text
     assert "Crowded unwind: 🟠 78" in text

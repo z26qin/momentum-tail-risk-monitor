@@ -61,9 +61,11 @@ def main() -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except MissingCachedDataError as exc:
+        print("Cached monitor data is missing. Not a daily brief.")
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except (FileNotFoundError, ValueError) as exc:
+        print("Daily brief failed. Not a quiet day.")
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
