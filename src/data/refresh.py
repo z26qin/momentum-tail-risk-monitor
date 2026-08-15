@@ -1,13 +1,13 @@
-"""Refresh public data vintages. Does not extend run_mvp past Ken French.
+"""Download public market data. Does not extend run_mvp past Ken French.
 
-Live mode re-downloads French, VIX, and S&P/SPY prices, then rebuilds the
-12-1 book and leg-risk panels. If French still ends before ``as_of_date``,
-the report is stale and the CLI exits nonzero. It does not invent UMD or
-change scorecard thresholds.
+Default live mode re-downloads French, VIX, and S&P/SPY prices, then rebuilds
+the 12-1 book and leg-risk panels. If French still ends before ``as_of_date``
+after that download, the CLI exits nonzero. It does not invent UMD.
 """
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -51,6 +51,7 @@ class DataVintages:
     spy: str | None = None
     book: str | None = None
     steps: list[StepResult] = field(default_factory=list)
+    mode: str = "download"
 
     @property
     def french_stale(self) -> bool:
@@ -82,6 +83,7 @@ def collect_vintages(
     processed_dir: Path = DEFAULT_PROCESSED_DIR,
     raw_dir: Path = DEFAULT_RAW_DIR,
     steps: list[StepResult] | None = None,
+    mode: str = "download",
 ) -> DataVintages:
     last = {
         key: parquet_last_date(processed_dir / name) for key, name in PANEL_FILES
@@ -103,32 +105,42 @@ def collect_vintages(
         spy=last["sp500_benchmark"],
         book=last["leg_risk"] or last["portfolio_returns"],
         steps=list(steps or []),
+        mode=mode,
     )
 
 
 def format_refresh_report(vintages: DataVintages) -> str:
-    french_note = " — stale" if vintages.french_stale else ""
+    if vintages.mode == "inspect":
+        header = f"Inspect only (no download) as of {vintages.as_of_date}"
+        french_note = " — stale" if vintages.french_stale else ""
+    elif vintages.mode == "cached":
+        header = f"Rebuilt from cache through {vintages.as_of_date}"
+        french_note = " — stale" if vintages.french_stale else ""
+    else:
+        header = f"Downloaded through {vintages.as_of_date}"
+        french_note = " — still stale after download" if vintages.french_stale else ""
     vix_line = vintages.vix_aligned or "missing"
     if vintages.vix_raw:
         vix_line = f"{vix_line} (raw {vintages.vix_raw})"
-    lines = [
-        f"Refresh as of {vintages.as_of_date}",
-        f"French UMD/factors: {vintages.french or 'missing'}{french_note}",
-        f"VIX aligned: {vix_line}",
-        f"S&P prices: {vintages.prices or 'missing'}",
-        f"SPY benchmark: {vintages.spy or 'missing'}",
-        f"Book leg_risk: {vintages.book or 'missing'}",
-    ]
-    failed = [step for step in vintages.steps if not step.ok]
-    if failed:
-        lines.append(
-            "Step errors: "
-            + "; ".join(f"{step.name}: {step.detail}" for step in failed)
-        )
+    lines = [header]
+    if vintages.steps:
+        for step in vintages.steps:
+            status = "ok" if step.ok else f"failed: {step.detail}"
+            lines.append(f"{step.name}: {status}")
+    lines.extend(
+        [
+            f"French UMD/factors landed: {vintages.french or 'missing'}{french_note}",
+            f"VIX aligned landed: {vix_line}",
+            f"S&P prices landed: {vintages.prices or 'missing'}",
+            f"SPY benchmark landed: {vintages.spy or 'missing'}",
+            f"Book leg_risk landed: {vintages.book or 'missing'}",
+        ]
+    )
     if vintages.french_stale:
         lines.append(
-            "French is stale. Not a complete run_mvp date. "
-            "Do not invent UMD. Scorecard rows 1 and 4 stay on the French date."
+            "French is still short of the requested date after this run. "
+            "Not a complete run_mvp date. Do not invent UMD. "
+            "Scorecard rows 1 and 4 stay on the French date."
         )
     else:
         lines.append(f"Ready for run_mvp / daily brief on {vintages.as_of_date}.")
@@ -136,10 +148,13 @@ def format_refresh_report(vintages: DataVintages) -> str:
 
 
 def _run_step(name: str, action: Callable[[], Any]) -> StepResult:
+    print(f"downloading {name}...", file=sys.stderr, flush=True)
     try:
         action()
+        print(f"downloaded {name}: ok", file=sys.stderr, flush=True)
         return StepResult(name=name, ok=True)
     except Exception as exc:
+        print(f"downloaded {name}: failed: {exc}", file=sys.stderr, flush=True)
         return StepResult(name=name, ok=False, detail=str(exc))
 
 
@@ -152,17 +167,28 @@ def refresh_data(
     raw_dir: Path = DEFAULT_RAW_DIR,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> DataVintages:
-    """Download and/or rebuild panels, then return vintages for stdout."""
+    """Download panels, then return what landed."""
 
     resolved = as_of_date or last_completed_us_close()
     as_of = pd.Timestamp(resolved)
     steps: list[StepResult] = []
+    if dry_run:
+        mode = "inspect"
+    elif cached:
+        mode = "cached"
+    else:
+        mode = "download"
+    if mode == "download":
+        print(
+            f"downloading French, VIX, and S&P/SPY through {resolved}...",
+            file=sys.stderr,
+            flush=True,
+        )
     if not dry_run:
-        force = not cached
         steps.extend(
             _execute_refresh(
                 as_of=as_of,
-                force=force,
+                force=mode == "download",
                 processed_dir=processed_dir,
                 raw_dir=raw_dir,
                 output_dir=output_dir,
@@ -173,6 +199,7 @@ def refresh_data(
         processed_dir=processed_dir,
         raw_dir=raw_dir,
         steps=steps,
+        mode=mode,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(

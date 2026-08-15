@@ -1,10 +1,10 @@
-"""Refresh French, VIX, and S&P/SPY panels; report vintages.
+"""Download Ken French, VIX, and S&P/SPY prices, then rebuild the 12-1 book.
 
-Does not invent UMD or make run_mvp work past the last Ken French date.
+Default action is a live download (not a vintage listing). Does not invent
+UMD or make run_mvp work past the last Ken French date.
 
 Example:
 
-    python scripts/refresh_data.py --as-of-date 2026-07-30 --dry-run
     python scripts/refresh_data.py --as-of-date 2026-07-30
 """
 
@@ -24,9 +24,9 @@ from src.data.refresh import format_refresh_report, refresh_data
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Re-download Ken French, VIX, and S&P/SPY prices, rebuild the "
-            "12-1 book, and print each source's last date. If French is "
-            "short of the requested as-of date, exit 2. Does not change "
+            "Download Ken French, VIX, and S&P/SPY prices, then rebuild the "
+            "12-1 book. Default is a live download. If French is still short "
+            "of the requested date after download, exit 2. Does not change "
             "run_mvp or invent UMD."
         )
     )
@@ -39,12 +39,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Only inspect existing processed panels; no download or rebuild",
+        help="Inspect existing panels only; skip download (not the default)",
     )
     parser.add_argument(
         "--cached",
         action="store_true",
-        help="Rebuild book panels from disk without re-downloading",
+        help="Rebuild book panels from disk without downloading",
     )
     return parser
 

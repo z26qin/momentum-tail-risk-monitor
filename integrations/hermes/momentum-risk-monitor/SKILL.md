@@ -18,7 +18,7 @@ Run every command from the **momentum-tail-risk-monitor repository root**. If th
 ## When to use
 
 - Run / cron / daily brief after the 16:00 ET cutoff.
-- Refresh public data vintages (`python scripts/refresh_data.py`).
+- Refresh public data (`python scripts/refresh_data.py` downloads French, VIX, S&P/SPY).
 - WhatsApp questions about the current momentum risk score.
 - WhatsApp follow-ups about the latest assessment (mechanism, evidence, why not unwind).
 
@@ -47,7 +47,7 @@ When the user asks to download or refresh market data, from the repository root 
 python scripts/refresh_data.py --as-of-date 2026-07-30
 ```
 
-`--dry-run` inspects vintages with no download. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is stale / not a complete `run_mvp` date.
+That command **downloads**. Do not pass `--dry-run` unless the user only wants an inspect. Read **stdout only**. Send that report as-is. Do not invent UMD. Do not run `run_mvp` or the daily brief if stdout says French is still short of the requested date.
 
 ## Questions
 
@@ -189,5 +189,5 @@ Do not create, edit, or “improve” skills during a WhatsApp session.
 - CLI exits 0 and writes valid JSON with `schema_version: hermes-monitor-v1` including `monitoring_severity_score` and `score_is_probability: false`.
 - A second unchanged compare prints `[SILENT]`.
 - `python scripts/run_daily_brief.py` stdout is `[SILENT]`, the two-message alert, or a stale-data notice — never a quiet tick on stale panels.
-- `python scripts/refresh_data.py` prints source last dates and exits 2 when Ken French is short of the requested date.
+- `python scripts/refresh_data.py` downloads French / VIX / S&P-SPY and exits 2 when Ken French is still short of the requested date.
 - Alerts fit a phone screen, put a band emoji next to each 0–100 score, and include contrary evidence plus a next check.

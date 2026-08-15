@@ -24,8 +24,8 @@ def test_parquet_last_date_and_stale_report(tmp_path: Path) -> None:
     vintages = DataVintages(as_of_date="2026-07-30", french="2026-06-30")
     assert vintages.french_stale is True
     text = format_refresh_report(vintages)
-    assert "Refresh as of 2026-07-30" in text
-    assert "2026-06-30 — stale" in text
+    assert "Downloaded through 2026-07-30" in text
+    assert "2026-06-30 — still stale after download" in text
     assert "Not a complete run_mvp date" in text
     assert "Do not invent UMD" in text
 
@@ -56,6 +56,8 @@ def test_dry_run_inspects_without_download(tmp_path: Path) -> None:
     assert vintages.book == "2026-06-30"
     assert vintages.french_stale is True
     assert vintages.steps == []
+    assert vintages.mode == "inspect"
+    assert "Inspect only (no download)" in format_refresh_report(vintages)
     assert (tmp_path / "outputs" / "data_refresh.json").is_file()
 
 
