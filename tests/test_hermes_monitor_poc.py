@@ -3,11 +3,20 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
 
+from src.mvp.daily_brief import (
+    StaleSessionError,
+    last_available_session,
+    last_completed_us_close,
+    render_daily_brief,
+    resolve_brief_as_of_date,
+)
 from src.mvp.hermes_monitor import (
     REQUIRED_ASSESSMENT_FIELDS,
     compare_assessments,
@@ -135,6 +144,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
     )
     text = format_whatsapp_alert(_assessment(), comparison)
     assert text.startswith("🟠 MOMENTUM RISK — ELEVATED")
+    assert "As of: 2026-05-29" in text
     assert "Severity: 🟠 78/100" in text
     assert "Primary driver: Crowded unwind" in text
     assert "Deterministic Macro State Change triggers: 0/4" in text
@@ -148,6 +158,7 @@ def test_draft_alert_is_whatsapp_short() -> None:
 def test_score_card_uses_band_emoji_and_disclaimer() -> None:
     text = format_whatsapp_score_card(_assessment())
     assert text.startswith("🟠 Momentum monitoring severity: 78/100 — Elevated")
+    assert "As of: 2026-05-29" in text
     assert "Primary driver: Crowded unwind" in text
     assert "DM recovery: 🟢 25" in text
     assert "Crowded unwind: 🟠 78" in text
@@ -194,5 +205,82 @@ def test_cli_scripts_exist() -> None:
     root = Path(__file__).resolve().parents[1]
     assert (root / "scripts" / "run_monitor.py").is_file()
     assert (root / "scripts" / "compare_monitor_state.py").is_file()
+    assert (root / "scripts" / "run_daily_brief.py").is_file()
+    assert (root / "scripts" / "refresh_data.py").is_file()
+    assert (root / "src" / "mvp" / "daily_brief.py").is_file()
     assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
     assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()
+
+
+def test_last_completed_us_close_uses_1600_et() -> None:
+    ny = ZoneInfo("America/New_York")
+    utc = ZoneInfo("UTC")
+    assert last_completed_us_close(datetime(2026, 5, 29, 16, 0, tzinfo=ny)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 15, 59, tzinfo=ny)) == "2026-05-28"
+    assert last_completed_us_close(datetime(2026, 5, 30, 9, 0, tzinfo=ny)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 16, 0)) == "2026-05-29"
+    # 2026-05-29 is EDT (UTC-4): 20:00 UTC is the 16:00 ET close.
+    assert last_completed_us_close(datetime(2026, 5, 29, 20, 0, tzinfo=utc)) == "2026-05-29"
+    assert last_completed_us_close(datetime(2026, 5, 29, 19, 59, tzinfo=utc)) == "2026-05-28"
+
+
+def test_last_available_session_walks_to_last_data_date(tmp_path: Path) -> None:
+    frame = pd.DataFrame(
+        {"date": pd.to_datetime(["2026-05-27", "2026-05-28", "2026-05-29"])}
+    )
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    assert last_available_session(tmp_path, "2026-05-31") == "2026-05-29"
+    assert last_available_session(tmp_path, "2026-05-28") == "2026-05-28"
+    with pytest.raises(ValueError, match="no processed session"):
+        last_available_session(tmp_path, "2026-05-01")
+
+
+def test_resolve_brief_as_of_date_prefers_override_then_demo() -> None:
+    assert (
+        resolve_brief_as_of_date(as_of_date="2026-05-29", demo=True) == "2026-05-29"
+    )
+    assert resolve_brief_as_of_date(demo=True) == "2026-05-29"
+
+
+def test_live_brief_refuses_stale_panels(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"date": pd.to_datetime(["2026-06-30"])})
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    ny = ZoneInfo("America/New_York")
+    with pytest.raises(StaleSessionError, match="2026-06-30") as exc_info:
+        resolve_brief_as_of_date(
+            now=datetime(2026, 8, 15, 16, 30, tzinfo=ny),
+            processed_dir=tmp_path,
+        )
+    assert "not the 2026-08-15 close" in str(exc_info.value)
+    assert "[SILENT]" not in str(exc_info.value)
+
+
+def test_live_brief_allows_weekend_gap(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"date": pd.to_datetime(["2026-05-29"])})
+    frame.to_parquet(tmp_path / "leg_risk_history.parquet")
+    ny = ZoneInfo("America/New_York")
+    # Friday session, Monday morning: last completed close is Sunday.
+    assert (
+        resolve_brief_as_of_date(
+            now=datetime(2026, 6, 1, 10, 0, tzinfo=ny),
+            processed_dir=tmp_path,
+        )
+        == "2026-05-29"
+    )
+
+
+def test_daily_brief_is_silent_until_band_changes() -> None:
+    current = _assessment()
+    assert render_daily_brief(current, None) == "[SILENT]"
+    assert render_daily_brief(current, current) == "[SILENT]"
+    drifted = _assessment(monitoring_severity_score=79)
+    assert render_daily_brief(drifted, current) == "[SILENT]"
+    upgraded = _assessment(
+        monitoring_severity_score=81,
+        score_label="high",
+        severity_emoji="🔴",
+    )
+    text = render_daily_brief(upgraded, current)
+    assert text != "[SILENT]"
+    assert text.startswith("🔴 MOMENTUM RISK — HIGH")
+    assert "Severity band changed: elevated → high" in text

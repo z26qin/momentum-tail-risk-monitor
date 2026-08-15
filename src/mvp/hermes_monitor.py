@@ -481,6 +481,7 @@ def format_whatsapp_score_card(assessment: dict[str, Any]) -> str:
         )
     lines = [
         headline,
+        f"As of: {assessment.get('as_of_date') or 'unknown'}",
         f"Primary driver: {mechanism_label(assessment.get('primary_driver'))}",
     ]
     for key in MECHANISM_KEYS:
@@ -553,6 +554,7 @@ def format_whatsapp_alert(
     message_1 = "\n".join(
         [
             header,
+            f"As of: {assessment.get('as_of_date') or 'unknown'}",
             severity_line,
             f"Primary driver: {mechanism_label(assessment.get('primary_driver'))}",
             f"Deterministic Macro State Change triggers: {trigger_count}/4",

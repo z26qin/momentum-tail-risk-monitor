@@ -183,29 +183,41 @@ Follow-up example (same thread, so Hermes can reuse the latest JSON):
 Why is this not a Khandani–Lo unwind?
 ```
 
-## 7. Weekday cron (after the manual path works)
+## 7. Daily post-close brief (weekday cron)
+
+After the 16:00 ET close, one CLI runs the existing monitor and compare. Stdout is `[SILENT]`, the two-message WhatsApp alert, or a stale-data notice. This is not a new model: same score, same discrete compare, push only on a material change. Integer drift inside the same band stays silent. Stale panels (older than a weekend/holiday gap) are **not** treated as a quiet day.
+
+```bash
+python scripts/run_daily_brief.py            # last completed US close, if data are fresh
+python scripts/run_daily_brief.py --demo     # frozen 2026-05-29
+```
 
 Do not add a separate scheduler. Hermes cron already delivers to the gateway. Example weekday job after the 16:00 ET cutoff; adjust the expression for the **host timezone**:
 
 ```text
-hermes cron create "30 16 * * 1-5" --skill momentum-risk-monitor --deliver whatsapp --name "Momentum risk monitor"
+hermes cron create "30 16 * * 1-5" --skill momentum-risk-monitor --deliver whatsapp --name "Momentum daily brief"
 ```
 
 Use this prompt (the job runs in a fresh session):
 
 ```text
-Run the momentum risk monitor using the momentum-risk-monitor skill.
-
-Compare the result with the previous assessment.
-
-If there is no material change, respond exactly with [SILENT].
-
-If there is a material change, investigate the existing timestamp-valid evidence,
-challenge the initial hypothesis, and return only the concise PM-facing alert.
-Do not override the deterministic risk state.
+Run the monitor using the momentum-risk-monitor skill.
+Run only python scripts/run_daily_brief.py from the repository root.
+Send stdout only. If stdout is [SILENT], reply exactly [SILENT].
+Otherwise send stdout as-is. Do not investigate, rewrite scores, or print JSON.
 ```
 
-`[SILENT]` suppresses WhatsApp delivery. Failed runs still deliver.
+`[SILENT]` suppresses WhatsApp delivery. Failed runs still deliver. With the bundled processed panels ending 2026-06-30, a live run after that date prints `Data through 2026-06-30, not the YYYY-MM-DD close. Not a daily brief.` Use `--demo` for the frozen case.
+
+To **download** French / VIX / S&P prices and rebuild the book (does **not** invent UMD or make `run_mvp` work past the last French date):
+
+```bash
+python scripts/refresh_data.py
+```
+
+That command downloads through the last completed 16:00 ET close. It does not list local vintages. Pass `--as-of-date YYYY-MM-DD` only for a named date. `--dry-run` inspects existing panels and skips download.
+
+If French is still short of the requested date after the download, stdout says so and the process exits 2. Do not commit raw Yahoo/SSGA caches.
 
 ## 8. Using `[SILENT]`
 
@@ -218,12 +230,11 @@ Small numeric moves that do not cross a threshold or severity band are ignored. 
 
 ## Manual smoke test (WhatsApp QR is not automated)
 
-1. `python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "2026-05-29 16:00 ET"`
-2. `python scripts/compare_monitor_state.py` → `[SILENT]` (baseline)
-3. Repeat step 2 → `[SILENT]`
-4. Pair WhatsApp locally with `hermes gateway setup` / `hermes whatsapp` (phone required)
-5. Send the monitor request from the allowlisted chat
-6. Confirm a silent tick produces no WhatsApp message, and a material change produces only the short alert
+1. `python scripts/run_daily_brief.py --demo` → `[SILENT]` (baseline)
+2. Repeat step 1 → `[SILENT]`
+3. Pair WhatsApp locally with `hermes gateway setup` / `hermes whatsapp` (phone required)
+4. Send the monitor request from the allowlisted chat
+5. Confirm a silent tick produces no WhatsApp message, and a material change produces only the short alert
 
 ## Live WhatsApp test (2026-05-29)
 

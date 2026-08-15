@@ -19,6 +19,7 @@ outputs/llm_cache/
 runtime_state/
 outputs/latest_assessment.json
 outputs/latest_comparison.json
+outputs/data_refresh.json
 
 # Alternative-data raw caches.
 # Cached locally so later sessions make zero network calls; too large for git.
