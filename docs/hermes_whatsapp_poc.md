@@ -4,23 +4,22 @@ Thin integration around the existing deterministic momentum tail-risk monitor. H
 
 Do not commit credentials, phone numbers, API keys, QR sessions, or anything under `~/.hermes/`.
 
+The README [Use the WhatsApp skill](../README.md#use-the-whatsapp-skill) section is the user guide. This page is pairing, cron, and troubleshooting.
+
 ## Quick setup and run
 
 From this repository root:
 
 ```bash
 uv sync --locked --all-groups
-uv run python scripts/run_monitor.py \
-  --as-of-date 2026-05-29 \
-  --evidence-cutoff "2026-05-29 16:00 ET" \
-  --output-json outputs/latest_assessment.json
+uv run python scripts/run_daily_brief.py --demo
 
 mkdir -p ~/.hermes/skills
 ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
   ~/.hermes/skills/momentum-risk-monitor
 ```
 
-Hide tool bubbles in `~/.hermes/config.yaml` (quote `"off"`), then start the gateway **without** `-v`:
+The demo brief prints `[SILENT]` and writes `outputs/latest_assessment.json`. Hide tool bubbles in `~/.hermes/config.yaml` (quote `"off"`), then start the gateway **without** `-v`:
 
 ```bash
 hermes gateway setup    # WhatsApp QR
@@ -36,9 +35,9 @@ In WhatsApp:
 /momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
 ```
 
-The follow-up should be seven short lines. `book n/4` is `deterministic_trigger_count` (frozen case: **0/4**). If the chat still dumps source-code progress, the skill symlink is pointing at the wrong folder or an old auto-created skill is winning — relink to this repo and send `/new now`.
+The follow-up should be seven short lines. `book n/4` is `deterministic_trigger_count` (frozen case: **0/4**). Score question should return **🔴 96/100 — High**, `As of: 2026-05-29`. If the chat still dumps source-code progress, the skill symlink is pointing at the wrong folder or an old auto-created skill is winning — relink to this repo and send `/new now`.
 
-Demo questions after that: Daniel–Moskowitz short version; crowding evidence short version; next two checks; “Should I cut the longs overnight?” (must refuse a trade).
+Demo questions after that: `What is the current momentum risk score?`; crowding evidence short version; next two checks; “Should I cut the longs overnight?” (must refuse a trade).
 
 ---
 
@@ -77,37 +76,27 @@ hermes skills list | grep momentum-risk-monitor
 
 The working directory for monitor commands is this repository root (`uv sync --locked` if the environment is not already installed).
 
-## 3. Run the monitor manually through Hermes
+## 3. Run the monitor (one CLI)
 
-In the Hermes CLI (or after WhatsApp is connected):
-
-```text
-/momentum-risk-monitor Run the momentum risk monitor for the configured assessment date.
-```
-
-Or, without slash-loading, ask:
-
-```text
-Run the momentum risk monitor using the momentum-risk-monitor skill.
-```
-
-Frozen demo date used in this POC:
+Run / cron / “send the daily brief” uses **only**:
 
 ```bash
-python scripts/run_monitor.py \
-  --as-of-date 2026-05-29 \
-  --evidence-cutoff "2026-05-29 16:00 ET" \
-  --output-json outputs/latest_assessment.json
-
-python scripts/compare_monitor_state.py \
-  --current outputs/latest_assessment.json \
-  --previous runtime_state/previous_assessment.json \
-  --output-json outputs/latest_comparison.json
+python scripts/run_daily_brief.py
 ```
 
-The first compare creates a baseline and prints `[SILENT]`. A second unchanged compare also prints `[SILENT]`. Integer moves inside the same severity band are not alerts.
+Frozen 2026-05-29: add `--demo`. Do not run `run_monitor.py` or `compare_monitor_state.py` on this path.
 
-Ask WhatsApp: `What is the current momentum risk score?` Hermes must copy `monitoring_severity_score` from the JSON (emoji + label + 0–100), not invent a probability.
+In WhatsApp or the Hermes CLI:
+
+```text
+/momentum-risk-monitor Run the monitor using the momentum-risk-monitor skill.
+```
+
+Stdout is `[SILENT]`, the two-message alert, or a stale-data notice. The first demo tick and an unchanged tick are `[SILENT]`. Integer moves inside the same severity band are not alerts.
+
+Ask WhatsApp: `What is the current momentum risk score?` Hermes must copy `monitoring_severity_score` from `outputs/latest_assessment.json` (emoji + label + 0–100 + `As of`), not invent a probability.
+
+To rebuild that JSON without a brief, the skill may run `scripts/run_monitor.py` for 2026-05-29 silently. You do not need to run it yourself.
 
 ## 4. Configure the Hermes WhatsApp Baileys bridge
 
@@ -174,13 +163,14 @@ Optional user service: `hermes gateway install`. The gateway delivers chat repli
 From the allowlisted number:
 
 ```text
-Run the momentum risk monitor for the configured assessment date.
+Run the monitor using the momentum-risk-monitor skill.
 ```
 
 Follow-up example (same thread, so Hermes can reuse the latest JSON):
 
 ```text
 Why is this not a Khandani–Lo unwind?
+What is the current momentum risk score?
 ```
 
 ## 7. Daily post-close brief (weekday cron)
