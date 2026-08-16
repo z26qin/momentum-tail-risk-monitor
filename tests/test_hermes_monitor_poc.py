@@ -210,6 +210,11 @@ def test_cli_scripts_exist() -> None:
     assert (root / "src" / "mvp" / "daily_brief.py").is_file()
     assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
     assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert "## Use the WhatsApp skill" in readme
+    assert "uv run python scripts/run_daily_brief.py --demo" in readme
+    assert "What is the current momentum risk score?" in readme
+    assert "uv run python scripts/refresh_data.py" in readme
 
 
 def test_last_completed_us_close_uses_1600_et() -> None:
