@@ -1,4 +1,5 @@
 <p align="center">
+  <a href="#use-the-whatsapp-skill"><img src="https://img.shields.io/badge/Use-WhatsApp%20skill-25D366?style=for-the-badge" alt="WhatsApp skill"></a>
   <a href="docs/methodology.md"><img src="https://img.shields.io/badge/Docs-methodology-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="docs/demo_walkthrough.md"><img src="https://img.shields.io/badge/Demo-15--20%20min-0A7A3E?style=for-the-badge" alt="Demo walkthrough"></a>
   <a href="notebooks/final_mvp_demo.ipynb"><img src="https://img.shields.io/badge/Notebook-final__mvp__demo-1f6feb?style=for-the-badge" alt="Demo notebook"></a>
@@ -13,10 +14,120 @@ This is an approximately **20-hour research MVP**. It does **not** predict crash
 
 ### Start here
 
-1. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — step-by-step runbook for the PPT demo  
-2. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — primary example (2026-05-29)  
-3. [`docs/demo_walkthrough.md`](docs/demo_walkthrough.md) — 15–20 min review path  
-4. [`docs/methodology.md`](docs/methodology.md) · [`docs/wiki/README.md`](docs/wiki/README.md) · [`docs/limitations.md`](docs/limitations.md) · [`docs/production_path.md`](docs/production_path.md)
+| If you want to… | Do this |
+|---|---|
+| **Talk to the monitor on WhatsApp** | Read [Use the WhatsApp skill](#use-the-whatsapp-skill) below. That section is the user guide. |
+| **Review the frozen 2026-05-29 case** | [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) · [`docs/demo_walkthrough.md`](docs/demo_walkthrough.md) · [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) |
+| **Change a threshold or mechanism** | [`docs/methodology.md`](docs/methodology.md) · [`docs/wiki/README.md`](docs/wiki/README.md) · [`docs/limitations.md`](docs/limitations.md) |
+
+---
+
+## Use the WhatsApp skill
+
+This is the PM path. After these steps you can ask for a score, a daily brief, or a refresh. You do not need the notebook.
+
+The skill is [`integrations/hermes/momentum-risk-monitor`](integrations/hermes/momentum-risk-monitor). Hermes copies deterministic JSON. It must not invent a score, a crash probability, or a trade.
+
+### What you need
+
+- This repository, Python **3.11–3.14**, and [`uv`](https://docs.astral.sh/uv/)
+- [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/installation) with the **terminal** tool enabled (`hermes doctor`)
+- A **dedicated** WhatsApp number (unofficial Baileys bridge, not Meta Business API)
+
+Do not commit `~/.hermes/`, phone numbers, QR sessions, or API keys.
+
+### One-time setup
+
+From the repository root:
+
+```bash
+uv sync --locked --all-groups
+uv run python scripts/run_daily_brief.py --demo
+```
+
+The first demo run prints `[SILENT]` and writes `outputs/latest_assessment.json` (frozen **2026-05-29**). That file is what score questions read.
+
+```bash
+mkdir -p ~/.hermes/skills
+ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
+  ~/.hermes/skills/momentum-risk-monitor
+hermes skills list | grep momentum-risk-monitor
+```
+
+Symlink **this repo’s** skill. A copy under `~/integrations` or an old auto-created skill will ignore these templates.
+
+In `~/.hermes/config.yaml` (quote `"off"`; a bare `off` is ignored):
+
+```yaml
+display:
+  tool_progress: "off"
+  show_reasoning: false
+  personality: concise
+  platforms:
+    whatsapp:
+      tool_progress: "off"
+      show_reasoning: false
+      streaming: false
+whatsapp:
+  reply_prefix: ""
+```
+
+```bash
+hermes gateway setup    # pick WhatsApp, scan QR
+hermes gateway run      # no -v
+```
+
+In WhatsApp, in this order:
+
+```text
+/verbose off
+/sethome
+/new now
+/momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
+```
+
+`/sethome` must be this repository root. If the chat dumps `read_file` / paths / JSON, the symlink is wrong or `/verbose off` did not stick — relink, send `/new now`, try again.
+
+### What to type, what you get
+
+Hermes reads **CLI stdout only**. It does not rewrite numbers.
+
+| You send | WhatsApp should show |
+|---|---|
+| `Why is this not a Khandani–Lo unwind?` | Seven lines. Frozen case: **book 0/4**, CIEN–COHR–LITE, not a confirmed unwind. |
+| `What is the current momentum risk score?` | One score card. Frozen case: **🔴 96/100 — High**, `As of: 2026-05-29`, triggers **0/4**. Not a 96% crash probability. |
+| `Run the monitor` / weekday cron | `[SILENT]`, a two-message alert, or `Data through DATE, not the CLOSE close. Not a daily brief.` |
+| `Refresh the data` / `Download latest data` | A short download receipt. If Ken French has not published, it says **no daily brief** — not a quiet day. |
+| `Should I cut the longs overnight?` | Refusal. No trade, hedge, or de-risk order. |
+
+Unchanged ticks and the first baseline are `[SILENT]` (no WhatsApp push). Stale panels are **not** `[SILENT]`.
+
+To run the same CLIs yourself:
+
+```bash
+uv run python scripts/run_daily_brief.py --demo    # frozen 2026-05-29
+uv run python scripts/run_daily_brief.py           # last 16:00 ET close, if data are fresh
+uv run python scripts/refresh_data.py              # downloads French / VIX / S&P-SPY
+```
+
+`refresh_data.py` downloads. It does not invent UMD. Live brief stays blocked until Ken French reaches the close date.
+
+Weekday cron after 16:00 ET (host timezone). Hermes already delivers to WhatsApp — do not add another scheduler:
+
+```text
+hermes cron create "30 16 * * 1-5" --skill momentum-risk-monitor --deliver whatsapp --name "Momentum daily brief"
+```
+
+Prompt for that job:
+
+```text
+Run the monitor using the momentum-risk-monitor skill.
+Run only python scripts/run_daily_brief.py from the repository root.
+Send stdout only. If stdout is [SILENT], reply exactly [SILENT].
+Otherwise send stdout as-is. Do not investigate, rewrite scores, or print JSON.
+```
+
+QR pairing, allowlists, and troubleshooting: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ---
 
@@ -208,7 +319,9 @@ Full list: [`docs/limitations.md`](docs/limitations.md).
 
 ---
 
-## How to run
+## How to run the research demo
+
+WhatsApp skill setup is in [Use the WhatsApp skill](#use-the-whatsapp-skill). This section is the notebook / library path.
 
 Requirements: Python **3.11–3.14** and [`uv`](https://docs.astral.sh/uv/).
 
@@ -217,58 +330,7 @@ uv sync --locked --all-groups
 uv run python -m src.mvp.demo_smoke_test
 uv run python -m pytest -q
 uv run --with jupyterlab jupyter lab notebooks/final_mvp_demo.ipynb
-uv run python scripts/run_monitor.py --as-of-date 2026-05-29 --evidence-cutoff "2026-05-29 16:00 ET"
 ```
-
-Hermes Agent + WhatsApp POC (skill, `[SILENT]` compare, unofficial Baileys bridge): [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
-
-### Hermes + WhatsApp quick setup
-
-Local Mac only. Do not commit `~/.hermes/`, phone numbers, or QR sessions. Symlink **this repo’s** skill (not a copy under `~/integrations`).
-
-```bash
-uv sync --locked --all-groups
-uv run python scripts/run_monitor.py \
-  --as-of-date 2026-05-29 \
-  --evidence-cutoff "2026-05-29 16:00 ET" \
-  --output-json outputs/latest_assessment.json
-
-mkdir -p ~/.hermes/skills
-ln -sfn "$(pwd)/integrations/hermes/momentum-risk-monitor" \
-  ~/.hermes/skills/momentum-risk-monitor
-```
-
-In `~/.hermes/config.yaml` (quote `"off"`):
-
-```yaml
-display:
-  tool_progress: "off"
-  show_reasoning: false
-  personality: concise
-  platforms:
-    whatsapp:
-      tool_progress: "off"
-      show_reasoning: false
-      streaming: false
-whatsapp:
-  reply_prefix: ""
-```
-
-```bash
-hermes gateway setup    # pick WhatsApp, scan QR (dedicated number)
-hermes gateway run      # no -v
-```
-
-WhatsApp, in order:
-
-```text
-/verbose off
-/sethome
-/new now
-/momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
-```
-
-Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Score questions (`What is the current momentum risk score?`) copy the JSON 0–100 monitoring score and must not call it a crash probability. Run / cron: `uv run python scripts/run_daily_brief.py` (or `--demo` for 2026-05-29). Refresh panels **download** through the last completed US close: `uv run python scripts/refresh_data.py`. Unchanged ticks return `[SILENT]`; stale panels do not. Full steps: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ```python
 from src.mvp.config import MVPConfig
@@ -311,7 +373,7 @@ To enable the live path, create `.env` in the repository root with:
 
 ```text
 momentum-tail-risk-monitor/
-├── README.md
+├── README.md                    # start here; WhatsApp skill user guide
 ├── docs/
 │   ├── methodology.md           # technical methodology
 │   ├── wiki/                    # per-metric threshold wiki (why / cutoff / what a move means)
