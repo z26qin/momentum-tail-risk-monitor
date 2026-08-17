@@ -9,6 +9,7 @@ description = "Point-in-time monitoring research for US equity momentum tail ris
 requires-python = ">=3.11,<3.15"
 dependencies = [
   "numpy==2.4.4",
+  "openai==3.1.0",
   "pandas==3.0.2",
   "pyarrow==25.0.0",
   "scikit-learn==1.8.0",

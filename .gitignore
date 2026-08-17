@@ -15,6 +15,9 @@ dist/
 outputs/gdelt_evidence_cache/
 outputs/llm_cache/
 
+# Exploratory narrative-shift POC (DeepSeek Responses API; not a frozen pack).
+outputs/narrative_shift_poc/
+
 # Hermes / WhatsApp POC runtime (local state, not frozen demo packs).
 runtime_state/
 outputs/latest_assessment.json

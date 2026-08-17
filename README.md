@@ -305,6 +305,11 @@ To enable the live path, create `.env` in the repository root with:
 
     DEEPSEEK_API_KEY=sk-your-key
     ANTHROPIC_API_KEY=xxxx
+
+A separate, optional **public narrative-shift POC** uses the DeepSeek
+Responses API with server-side web search. It is exploratory only and does
+not change the scorecard. See [`docs/narrative_shift_poc.md`](docs/narrative_shift_poc.md).
+
 ---
 
 ## Repository map
@@ -318,6 +323,7 @@ momentum-tail-risk-monitor/
 │   ├── limitations.md
 │   ├── demo_walkthrough.md
 │   ├── hermes_whatsapp_poc.md   # Hermes + unofficial WhatsApp Baileys setup
+│   ├── narrative_shift_poc.md   # exploratory public-narrative POC (not scorecard)
 │   ├── production_path.md       # production path (not an internal todo list)
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
@@ -325,7 +331,8 @@ momentum-tail-risk-monitor/
 │   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
 ├── scripts/
 │   ├── run_monitor.py           # compact JSON CLI over run_mvp()
-│   └── compare_monitor_state.py # previous-state compare → [SILENT] or diff
+│   ├── compare_monitor_state.py # previous-state compare → [SILENT] or diff
+│   └── run_narrative_shift_poc.py  # exploratory DeepSeek Responses narrative POC
 ├── integrations/hermes/         # Hermes skill (copy/symlink into ~/.hermes/skills)
 ├── src/
 │   ├── mvp/                     # config, run_mvp, evidence card, PM response
