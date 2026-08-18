@@ -18,7 +18,7 @@ from src.mvp.evidence_interpretation import public_positioning_proxy_items
 from src.mvp.deepseek_evidence_interpreter import DeepSeekEvidenceInterpreter
 from src.mvp.deepseek_pm_response_interpreter import DeepSeekPMResponseInterpreter
 from src.mvp.pm_response import CATEGORY_LABELS
-from src.evidence.deepseek_explainer import _load_dotenv_if_present
+from src.utils.io import load_dotenv_if_present
 from src.risk.dm_engine import build_primary_assessment
 from src.regime.market_state import build_regime_history
 
@@ -40,7 +40,7 @@ CASE_PACKS = {
 }
 
 if CONFIG.use_llm:
-    _load_dotenv_if_present()
+    load_dotenv_if_present()
     evidence_interpreter = DeepSeekEvidenceInterpreter(
         cache_dir=ROOT / "outputs" / "llm_cache"
     )

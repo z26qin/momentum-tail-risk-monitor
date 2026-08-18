@@ -22,7 +22,13 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
-from src.utils.io import DEFAULT_OUTPUT_DIR, REPO_ROOT, read_json, write_json
+from src.utils.io import (
+    DEFAULT_OUTPUT_DIR,
+    REPO_ROOT,
+    load_dotenv_if_present,
+    read_json,
+    write_json,
+)
 
 DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
 DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com"
@@ -56,23 +62,6 @@ def _as_iso_date(value: date | datetime | str) -> str:
     if "T" in text:
         text = text.split("T", 1)[0]
     return date.fromisoformat(text[:10]).isoformat()
-
-
-def _load_dotenv_if_present(env_path: Path | None = None) -> None:
-    """Load simple KEY=VALUE pairs from a local ``.env`` without new deps."""
-
-    path = env_path if env_path is not None else REPO_ROOT / ".env"
-    if not path.exists():
-        return
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip("'").strip('"')
-        if key and key not in os.environ:
-            os.environ[key] = value
 
 
 def _cache_key(
@@ -299,7 +288,7 @@ def explain_risk_with_llm(
     """
 
     if load_dotenv:
-        _load_dotenv_if_present()
+        load_dotenv_if_present()
     env = dict(os.environ if environment is None else environment)
     selected_provider = str(provider).strip().lower()
     if selected_provider not in {"deepseek", "openai"}:

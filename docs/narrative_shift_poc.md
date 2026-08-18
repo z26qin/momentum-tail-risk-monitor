@@ -24,12 +24,14 @@ aid for the research idea, not a validated social-media factor.
 - Recent window `2026-05-01` through `2026-05-29`
 
 The existing Chat Completions DeepSeek path (`deepseek-chat` via
-`src/evidence/deepseek_explainer.py`) is unchanged.
+`src/evidence/deepseek_explainer.py`) is unchanged. The OpenAI SDK is an
+optional POC dependency (`uv sync --group poc`), not part of the core
+monitor install.
 
 ## How to run
 
 ```bash
-uv sync --locked --all-groups
+uv sync --locked --group poc
 
 # Inspect the planned call. Does not spend API credits.
 python scripts/run_narrative_shift_poc.py --dry-run

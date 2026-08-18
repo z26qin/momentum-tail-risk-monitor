@@ -308,7 +308,8 @@ To enable the live path, create `.env` in the repository root with:
 
 A separate, optional **public narrative-shift POC** uses the DeepSeek
 Responses API with server-side web search. It is exploratory only and does
-not change the scorecard. See [`docs/narrative_shift_poc.md`](docs/narrative_shift_poc.md).
+not change the scorecard. Install the extra with `uv sync --group poc`.
+See [`docs/narrative_shift_poc.md`](docs/narrative_shift_poc.md).
 
 ---
 
@@ -328,6 +329,8 @@ momentum-tail-risk-monitor/
 │   ├── production_path.md       # production path (not an internal todo list)
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
+├── prompts/
+│   └── narrative_shift_poc.txt  # editable user prompt for the narrative POC
 ├── notebooks/
 │   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
 ├── scripts/
