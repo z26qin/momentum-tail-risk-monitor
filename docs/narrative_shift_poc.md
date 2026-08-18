@@ -63,7 +63,11 @@ recent narratives, a change table, supporting and contradicting evidence, and
 explicit non-findings. The JSON file stores case dates, model, token usage if
 returned, and limitation flags.
 
-Generated files are gitignored.
+Generated live files are gitignored.
+
+A **simulated** report, built from the frozen evidence pack and not from a
+live API call, is in
+[`narrative_shift_poc_simulated.md`](narrative_shift_poc_simulated.md).
 
 ## Limitations
 

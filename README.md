@@ -324,6 +324,7 @@ momentum-tail-risk-monitor/
 │   ├── demo_walkthrough.md
 │   ├── hermes_whatsapp_poc.md   # Hermes + unofficial WhatsApp Baileys setup
 │   ├── narrative_shift_poc.md   # exploratory public-narrative POC (not scorecard)
+│   ├── narrative_shift_poc_simulated.md  # simulated POC report (not a live API result)
 │   ├── production_path.md       # production path (not an internal todo list)
 │   ├── architecture_to_value.md # component → PM question map
 │   └── figures/                 # offline PM workflow prototype
