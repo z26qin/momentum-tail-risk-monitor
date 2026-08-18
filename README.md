@@ -284,6 +284,19 @@ config = MVPConfig(
 result = run_mvp(config)
 ```
 
+Investigation loop over an already-computed risk state (does not change triggers or scores):
+
+```python
+from src.agent import run_investigation_agent
+
+agent = run_investigation_agent(
+    as_of_date="2026-05-29",
+    max_steps=4,
+    verbose=True,
+)
+print(agent.report)
+```
+
 **Date note:** the primary frozen product pack is **2026-05-29**. `demo_smoke_test` / `default_demo_config()` currently use **2026-06-30** (bundled panel coverage).
 
 ---
@@ -339,6 +352,8 @@ momentum-tail-risk-monitor/
 │   └── run_narrative_shift_poc.py  # exploratory DeepSeek Responses narrative POC
 ├── integrations/hermes/         # Hermes skill (copy/symlink into ~/.hermes/skills)
 ├── src/
+│   ├── agent.py                 # hand-written investigation loop (does not change risk state)
+│   ├── agent_prompts.py
 │   ├── mvp/                     # config, run_mvp, evidence card, PM response
 │   ├── monitoring/              # scorecard, unwind, crowding proxies
 │   ├── portfolio/               # 12-1 L10/S10 construction

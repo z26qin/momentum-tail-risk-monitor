@@ -52,6 +52,23 @@ else:
     pm_interpreter = None
 
 
+def run_investigation_demo(mvp_result, max_steps=4, verbose=True):
+    """Run the hand-written investigation loop on an already-computed MVP result.
+
+    The agent cannot change triggers, thresholds, scores, or the PM book.
+    """
+
+    from src.agent import run_investigation_agent
+
+    return run_investigation_agent(
+        as_of_date=CONFIG.as_of_date,
+        max_steps=max_steps,
+        verbose=verbose,
+        mvp_result=mvp_result,
+        use_llm=False,
+    )
+
+
 def fmt(value, signed=False):
     if value is None or value is pd.NA:
         return "unavailable"
