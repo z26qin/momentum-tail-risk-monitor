@@ -7,7 +7,7 @@ Invariant 4: LLM interpretation cannot trigger portfolio actions.
 Invariant 5: max_steps prevents runaway loops.
 
 The quantitative engine owns the risk state. This module owns the loop:
-observe → decide → act → remember → stop.
+observe → decide → execute tool → update memory → evaluate scoped evidence → stop.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from src.agent_prompts import (
     MECHANISM_LABELS,
@@ -31,7 +31,7 @@ from src.agent_prompts import (
     recovery_setup_present,
     retrieve_local_evidence,
     search_news,
-    search_social,
+    search_positioning_evidence,
     want_fundamentals,
 )
 from src.utils.market_time import assessment_timestamp
@@ -39,15 +39,12 @@ from src.utils.market_time import assessment_timestamp
 FINISH, SEARCH_KL_CROWDING = "FINISH", "SEARCH_KL_CROWDING"
 SEARCH_DM_RECOVERY, SEARCH_FUNDAMENTALS = "SEARCH_DM_RECOVERY", "SEARCH_FUNDAMENTALS"
 FOLLOWUP_SEARCH, SCORECARD_SIGNAL_COUNT = "FOLLOWUP_SEARCH", 4
-ACTION_TO_MECHANISM = {
-    SEARCH_KL_CROWDING: "kl_crowding",
-    SEARCH_DM_RECOVERY: "dm_recovery",
-    SEARCH_FUNDAMENTALS: "fundamentals",
-}
-ACTION_TO_TOOL = {
-    SEARCH_KL_CROWDING: "local_evidence",
-    SEARCH_DM_RECOVERY: "search_news",
-    SEARCH_FUNDAMENTALS: "local_evidence",
+UNRESOLVED = {"insufficient", "mixed", None}
+MECHANISM_ORDER = ("kl_crowding", "dm_recovery", "fundamentals")
+FOLLOWUP_TOOL = {
+    "kl_crowding": "search_positioning_evidence",
+    "dm_recovery": "search_news",
+    "fundamentals": "search_news",
 }
 PATH_NOTES = {
     SEARCH_KL_CROWDING: ("Detected crowding signal", "Searched positioning evidence"),
@@ -63,6 +60,7 @@ class AgentAction:
     tool: str | None = None
     query: str | None = None
     reason: str | None = None
+    mechanism: str | None = None
 
 
 @dataclass
@@ -75,6 +73,8 @@ class AgentState:
     action_history: list[dict[str, Any]] = field(default_factory=list)
     open_questions: list[str] = field(default_factory=list)
     investigated_mechanisms: set[str] = field(default_factory=set)
+    current_mechanism: str | None = None
+    followup_counts: dict[str, int] = field(default_factory=dict)
     path: list[str] = field(default_factory=list)
     logs: list[str] = field(default_factory=list)
     last_assessment: dict[str, Any] | None = None
@@ -82,7 +82,6 @@ class AgentState:
     max_steps: int = 4
     status: str = "running"
     stop_reason: str | None = None
-    followup_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -99,7 +98,11 @@ class AgentReport:
 
 
 def default_tool_registry() -> dict[str, Callable[..., list[dict[str, Any]]]]:
-    return {"search_news": search_news, "search_social": search_social, "local_evidence": retrieve_local_evidence}
+    return {
+        "search_news": search_news,
+        "search_positioning_evidence": search_positioning_evidence,
+        "local_evidence": retrieve_local_evidence,
+    }
 
 
 def _log(state: AgentState, message: str, *, verbose: bool) -> None:
@@ -114,11 +117,29 @@ def _fresh(state: AgentState, query: str) -> bool:
     return needle not in {" ".join(item.lower().split()) for item in state.query_history}
 
 
+def _unresolved(state: AgentState) -> bool:
+    return (state.last_assessment or {}).get("assessment") in UNRESOLVED
+
+
+def _call_classify(
+    classify: Callable[..., dict[str, Any]],
+    state: AgentState,
+    *,
+    mechanism: str | None,
+    evidence: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    try:
+        return classify(state, mechanism=mechanism, evidence=evidence)
+    except TypeError:
+        return classify(state)
+
+
 def observe(state: AgentState) -> dict[str, Any]:
     return {
         "trigger_count": int(state.risk_state.get("deterministic_trigger_count") or 0),
         "crowding": crowding_signal_present(state),
         "recovery": recovery_setup_present(state),
+        "current_mechanism": state.current_mechanism,
         "investigated": sorted(state.investigated_mechanisms),
         "evidence_count": len(state.evidence),
         "last_assessment": (state.last_assessment or {}).get("assessment"),
@@ -131,36 +152,39 @@ def observe(state: AgentState) -> dict[str, Any]:
 def decide_next_action(
     state: AgentState, observation: Mapping[str, Any] | None = None
 ) -> AgentAction:
-    """Next action depends on the current observation, memory, and remaining budget."""
+    """Priority: no signal → follow up the open mechanism → next mechanism → stop."""
 
     obs = observation or observe(state)
     if obs["remaining_steps"] <= 0:
         return AgentAction(FINISH, reason="MAX_STEPS")
     if no_meaningful_risk_signal(state) and not state.investigated_mechanisms:
         return AgentAction(FINISH, reason="NO_INVESTIGATION_NEEDED")
-    planned = (
-        (SEARCH_KL_CROWDING, crowding_signal_present(state) and "kl_crowding" not in state.investigated_mechanisms, "kl_crowding"),
-        (SEARCH_DM_RECOVERY, recovery_setup_present(state) and "dm_recovery" not in state.investigated_mechanisms, "dm_recovery"),
-        (SEARCH_FUNDAMENTALS, want_fundamentals(state), "fundamentals"),
-    )
-    for name, needed, mechanism in planned:
-        query = MECHANISM_QUERIES[mechanism]
-        if needed and _fresh(state, query):
-            return AgentAction(name, tool=ACTION_TO_TOOL[name], query=query)
-    incomplete = (
-        state.followup_count < 1
-        and bool(state.investigated_mechanisms)
-        and (state.last_assessment or {}).get("assessment") in {"insufficient", "mixed", None}
-    )
-    if incomplete:
+
+    current = state.current_mechanism
+    if current and _unresolved(state) and state.followup_counts.get(current, 0) < 1:
         question = (state.last_assessment or {}).get("next_question") or (
             state.open_questions[-1] if state.open_questions else None
         )
         query = query_from_question(question)
         if query and _fresh(state, query):
-            last_tool = state.action_history[-1].get("tool") if state.action_history else None
-            tool = "search_social" if last_tool == "search_news" else "search_news"
-            return AgentAction(FOLLOWUP_SEARCH, tool=tool, query=query)
+            return AgentAction(
+                FOLLOWUP_SEARCH,
+                tool=FOLLOWUP_TOOL.get(current, "search_news"),
+                query=query,
+                mechanism=current,
+                reason="narrow unresolved hypothesis",
+            )
+
+    planned = (
+        (SEARCH_KL_CROWDING, "kl_crowding", crowding_signal_present(state), "local_evidence"),
+        (SEARCH_DM_RECOVERY, "dm_recovery", recovery_setup_present(state), "search_news"),
+        (SEARCH_FUNDAMENTALS, "fundamentals", want_fundamentals(state), "local_evidence"),
+    )
+    for name, mechanism, needed, tool in planned:
+        query = MECHANISM_QUERIES[mechanism]
+        if needed and mechanism not in state.investigated_mechanisms and _fresh(state, query):
+            return AgentAction(name, tool=tool, query=query, mechanism=mechanism)
+
     if (state.last_assessment or {}).get("assessment") in {"supporting", "contradicting"}:
         return AgentAction(FINISH, reason="EVIDENCE_SUFFICIENT")
     reason = "EVIDENCE_INSUFFICIENT" if state.investigated_mechanisms else "NO_INVESTIGATION_NEEDED"
@@ -176,29 +200,45 @@ def execute_tool(action: AgentAction, state: AgentState, tools: Mapping[str, Cal
     valid = []
     for item in raw:
         doc = item if "published_at" in item else as_document(item, query=action.query, channel=action.tool)
+        doc = dict(doc)
+        if action.mechanism:
+            doc["mechanism"] = action.mechanism
         if published_by_cutoff(doc["published_at"], state.assessment_cutoff, state.as_of_date):
             valid.append(doc)
     return {"documents": valid, "valid": len(valid), "discarded": len(raw) - len(valid)}
 
 
 def update_memory(state: AgentState, action: AgentAction, result: Mapping[str, Any]) -> AgentState:
+    state.current_mechanism = action.mechanism
     state.action_history.append(
-        {"name": action.name, "tool": action.tool, "query": action.query, "retrieved": result.get("valid", 0)}
+        {
+            "name": action.name,
+            "tool": action.tool,
+            "query": action.query,
+            "mechanism": action.mechanism,
+            "retrieved": result.get("valid", 0),
+        }
     )
     if action.query:
         state.query_history.append(action.query)
-    if action.name in ACTION_TO_MECHANISM:
-        state.investigated_mechanisms.add(ACTION_TO_MECHANISM[action.name])
-    if action.name == FOLLOWUP_SEARCH:
-        state.followup_count += 1
-    seen = {item.get("evidence_id") or item.get("headline") for item in state.evidence}
+    if action.mechanism:
+        state.investigated_mechanisms.add(action.mechanism)
+    if action.name == FOLLOWUP_SEARCH and action.mechanism:
+        state.followup_counts[action.mechanism] = state.followup_counts.get(action.mechanism, 0) + 1
+    seen = {(item.get("evidence_id") or item.get("headline"), item.get("mechanism")) for item in state.evidence}
     for item in result.get("documents") or []:
-        key = item.get("evidence_id") or item.get("headline")
+        key = (item.get("evidence_id") or item.get("headline"), item.get("mechanism"))
         if key not in seen:
             state.evidence.append(item)
             seen.add(key)
     state.path.extend(PATH_NOTES.get(action.name, ()))
     return state
+
+
+def evidence_for_mechanism(state: AgentState, mechanism: str | None) -> list[dict[str, Any]]:
+    if not mechanism:
+        return []
+    return [item for item in state.evidence if item.get("mechanism") == mechanism]
 
 
 def should_stop(state: AgentState) -> bool:
@@ -208,29 +248,30 @@ def should_stop(state: AgentState) -> bool:
 def classify_evidence(
     state: AgentState,
     *,
-    classify: Callable[[AgentState], dict[str, Any]] | None = None,
+    mechanism: str | None,
+    evidence: Sequence[Mapping[str, Any]],
+    classify: Callable[..., dict[str, Any]] | None = None,
     use_llm: bool = False,
 ) -> dict[str, Any]:
-    """Invariant 3/4: classification cannot fill gaps or trigger trades."""
+    """Invariant 3/4: classification cannot fill gaps or trigger trades.
+
+    Only mechanism-scoped evidence may establish or reject a hypothesis.
+    """
 
     if classify is not None:
-        return classify(state)
-    mechanism = ACTION_TO_MECHANISM.get(
-        str((state.action_history or [{}])[-1].get("name")),
-        next(iter(state.investigated_mechanisms), None),
-    )
+        return _call_classify(classify, state, mechanism=mechanism, evidence=evidence)
     if use_llm:
         try:
-            parsed = llm_classify(state, mechanism)
+            parsed = llm_classify(state, mechanism, evidence)
             if parsed:
                 return parsed
         except Exception:  # noqa: BLE001 - fail closed to heuristic
             pass
-    return heuristic_classify(state.evidence, mechanism=mechanism)
+    return heuristic_classify(evidence, mechanism=mechanism)
 
 
 def build_pm_report(state: AgentState) -> str:
-    primary = "kl_crowding" if crowding_signal_present(state) else next(iter(state.investigated_mechanisms), None)
+    primary = next((name for name in MECHANISM_ORDER if name in state.investigated_mechanisms), None)
     return format_pm_report(
         trigger_count=int(state.risk_state.get("deterministic_trigger_count") or 0),
         total_triggers=SCORECARD_SIGNAL_COUNT,
@@ -245,15 +286,11 @@ def run_investigation_loop(
     state: AgentState,
     *,
     tools: Mapping[str, Callable[..., list]],
-    classify: Callable[[AgentState], dict[str, Any]] | None = None,
+    classify: Callable[..., dict[str, Any]] | None = None,
     use_llm: bool = False,
     verbose: bool = True,
 ) -> AgentState:
-    """The agent loop.
-
-    It observes the current state, chooses an action, executes a tool,
-    updates memory, and decides whether another investigation step is justified.
-    """
+    """observe → decide → act → remember → classify scoped evidence → repeat."""
 
     fingerprint = json.dumps(state.risk_state, sort_keys=True, default=str)
     while not should_stop(state):
@@ -265,12 +302,18 @@ def run_investigation_loop(
             _log(state, f"stop={state.stop_reason}", verbose=verbose)
             break
         state.step += 1
-        _log(state, f"action={action.name}", verbose=verbose)
+        _log(state, f"action={action.name} mechanism={action.mechanism or '-'}", verbose=verbose)
         try:
             result = execute_tool(action, state, tools)
         except Exception as exc:  # noqa: BLE001 - fail closed; do not fabricate evidence
             state.action_history.append(
-                {"name": action.name, "tool": action.tool, "query": action.query, "error": str(exc)}
+                {
+                    "name": action.name,
+                    "tool": action.tool,
+                    "query": action.query,
+                    "mechanism": action.mechanism,
+                    "error": str(exc),
+                }
             )
             state.status, state.stop_reason = "stopped", "TOOL_FAILURE"
             state.path.extend(("Tool failed; no evidence fabricated", "Stopped"))
@@ -278,7 +321,14 @@ def run_investigation_loop(
             break
         _log(state, f"retrieved={result.get('valid', 0)} valid documents", verbose=verbose)
         update_memory(state, action, result)
-        state.last_assessment = classify_evidence(state, classify=classify, use_llm=use_llm)
+        scoped = evidence_for_mechanism(state, action.mechanism)
+        state.last_assessment = classify_evidence(
+            state,
+            mechanism=action.mechanism,
+            evidence=scoped,
+            classify=classify,
+            use_llm=use_llm,
+        )
         _log(state, f"assessment={str(state.last_assessment.get('assessment', 'insufficient')).upper()}", verbose=verbose)
         question = state.last_assessment.get("next_question")
         if question:
@@ -310,7 +360,7 @@ def run_investigation_agent(
     risk_state: Mapping[str, Any] | None = None,
     mvp_result: Any | None = None,
     tools: Mapping[str, Callable[..., list]] | None = None,
-    classify: Callable[[AgentState], dict[str, Any]] | None = None,
+    classify: Callable[..., dict[str, Any]] | None = None,
     use_llm: bool = False,
 ) -> AgentReport:
     """Public entry: load immutable risk state, then run the investigation loop."""

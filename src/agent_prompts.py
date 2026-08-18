@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any, Mapping, Sequence
 
 from src.utils.io import REPO_ROOT, read_json
+from src.utils.market_time import NEW_YORK
 
 LOCAL_EVIDENCE_PATH = (
     REPO_ROOT / "data/evaluation/current_semi_unwind/candidate_evidence.json"
@@ -75,14 +76,20 @@ def published_by_cutoff(published_at: str, cutoff: str, as_of_date: str) -> bool
 
 def _parse_dt(value: str) -> datetime | None:
     text = value.strip()
-    if text.endswith(" ET"):
-        text = text[: -len(" ET")] + "-04:00"
-    text = text.replace("Z", "+00:00").replace(" ", "T", 1)
+    eastern = text.endswith(" ET")
+    if eastern:
+        text = text[: -len(" ET")].strip()
+    text = text.replace("Z", "+00:00")
+    if " " in text and "T" not in text[:19]:
+        text = text.replace(" ", "T", 1)
     for candidate in (text, text[:10]):
         try:
-            return datetime.fromisoformat(candidate)
+            parsed = datetime.fromisoformat(candidate)
         except ValueError:
             continue
+        if eastern or parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=NEW_YORK)
+        return parsed
     return None
 
 
@@ -224,8 +231,12 @@ def search_news(query: str, cutoff: str, *, as_of_date: str) -> list[dict[str, A
     ]
 
 
-def search_social(query: str, cutoff: str, *, as_of_date: str) -> list[dict[str, Any]]:
-    """Positioning commentary only. An empty result is valid; never fabricate."""
+def search_positioning_evidence(query: str, cutoff: str, *, as_of_date: str) -> list[dict[str, Any]]:
+    """Local positioning notes plus GDELT/news-style public evidence.
+
+    This is not a Reddit/X/social-media search. An empty result is valid;
+    never fabricate.
+    """
 
     local = [
         item
@@ -293,13 +304,18 @@ def format_classify_prompt(
 def heuristic_classify(
     evidence: Sequence[Mapping[str, Any]], *, mechanism: str | None
 ) -> dict[str, Any]:
+    followup = {
+        "kl_crowding": "Is there evidence of broad deleveraging?",
+        "dm_recovery": "Are losers rebounding vs winners?",
+        "fundamentals": "Did earnings or outlook deteriorate in the book names?",
+    }.get(mechanism, "What narrower public evidence would confirm the mechanism?")
     if not evidence:
         return {
             "assessment": "insufficient",
             "supported_claims": [],
             "contradicting_claims": [],
             "missing_evidence": ["No cutoff-valid documents were retrieved for this question."],
-            "next_question": "Is there evidence of broad deleveraging?",
+            "next_question": followup,
             "confidence": "low",
         }
     blob = " ".join(f"{item.get('headline', '')} {item.get('snippet', '')}" for item in evidence).lower()
@@ -307,20 +323,20 @@ def heuristic_classify(
         any(token in blob for token in group)
         for group in (_LOCAL, _FORCED, _CONTRA, _RECOVERY)
     )
-    if mechanism == "kl_crowding" or local:
+    if mechanism == "kl_crowding":
         supported = ["Localized crowding or technology exposure reduction"] if local else []
         contradicting = (
             ["Later rebuilding of technology exposure argues against an ongoing unwind"]
             if contra
             else []
         )
-        missing = [] if forced else ["Broad forced deleveraging", "DM-style loser rebound"]
+        missing = [] if forced else ["Broad forced deleveraging"]
         if forced and local and not contra:
             assessment, nxt, conf = "supporting", None, "medium"
         elif supported and contradicting:
-            assessment, nxt, conf = "mixed", "Is there evidence of broad deleveraging?", "low"
+            assessment, nxt, conf = "mixed", followup, "low"
         else:
-            assessment, nxt, conf = "insufficient", "Is there evidence of broad deleveraging?", "low"
+            assessment, nxt, conf = "insufficient", followup, "low"
         return {
             "assessment": assessment,
             "supported_claims": supported,
@@ -329,17 +345,17 @@ def heuristic_classify(
             "next_question": nxt,
             "confidence": conf,
         }
-    if mechanism == "dm_recovery" or recovery:
+    if mechanism == "dm_recovery":
         supported = ["Recovery / short-covering language in public headlines"] if recovery else []
         return {
             "assessment": "mixed" if supported else "insufficient",
             "supported_claims": supported,
             "contradicting_claims": [],
             "missing_evidence": [] if supported else ["DM-style loser rebound"],
-            "next_question": None if supported else "Are losers rebounding vs winners?",
+            "next_question": None if supported else followup,
             "confidence": "low",
         }
-    if contra:
+    if mechanism == "fundamentals" and contra:
         return {
             "assessment": "contradicting",
             "supported_claims": [],
@@ -355,12 +371,14 @@ def heuristic_classify(
         "supported_claims": [],
         "contradicting_claims": [],
         "missing_evidence": ["Mechanism-specific confirmation"],
-        "next_question": "What narrower public evidence would confirm the mechanism?",
+        "next_question": followup,
         "confidence": "low",
     }
 
 
-def llm_classify(state: Any, mechanism: str | None) -> dict[str, Any] | None:
+def llm_classify(
+    state: Any, mechanism: str | None, evidence: Sequence[Mapping[str, Any]]
+) -> dict[str, Any] | None:
     api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if not api_key:
         return None
@@ -381,7 +399,7 @@ def llm_classify(state: Any, mechanism: str | None) -> dict[str, Any] | None:
                 "content": format_classify_prompt(
                     risk_state=state.risk_state,
                     hypothesis=MECHANISM_LABELS.get(mechanism or "", mechanism or "unspecified"),
-                    evidence=state.evidence,
+                    evidence=evidence,
                     query_history=state.query_history,
                     action_history=state.action_history,
                 ),
