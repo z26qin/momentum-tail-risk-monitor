@@ -14,11 +14,10 @@ from src.evidence.deepseek_explainer import (
     DEFAULT_DEEPSEEK_MODEL,
     _coerce_singleton_list_fields,
     _extract_json_object,
-    _load_dotenv_if_present,
     _post_chat_completion,
 )
 from src.mvp.evidence_interpretation import MODEL_OUTPUT_FIELDS
-from src.utils.io import read_json, write_json
+from src.utils.io import load_dotenv_if_present, read_json, write_json
 
 
 _LIST_FIELDS = (
@@ -57,7 +56,7 @@ class DeepSeekEvidenceInterpreter:
 
     def _resolved_environment(self) -> dict[str, str]:
         if self._load_dotenv:
-            _load_dotenv_if_present()
+            load_dotenv_if_present()
         return dict(os.environ if self._environment is None else self._environment)
 
     def interpret(

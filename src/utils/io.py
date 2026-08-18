@@ -21,6 +21,23 @@ DEFAULT_PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "outputs"
 
 
+def load_dotenv_if_present(env_path: Path | None = None) -> None:
+    """Load simple KEY=VALUE pairs from a local ``.env`` without new deps."""
+
+    path = env_path if env_path is not None else REPO_ROOT / ".env"
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'").strip('"')
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def utc_now_iso() -> str:
     """Return an auditable UTC retrieval timestamp."""
 
