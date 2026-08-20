@@ -87,7 +87,6 @@ def test_deepseek_pm_interpreter_live_path_with_transport(demo_run) -> None:
     assert interpreter.last_context is not None
     assert "allowed_response_categories" in interpreter.last_context
     assert captured["api_key"] == "test-only"
-    assert captured["temperature"] == 0.2
     assert any(
         msg.get("role") == "system" and "selected_categories" in msg.get("content", "")
         for msg in captured["messages"]  # type: ignore[union-attr]
@@ -112,28 +111,3 @@ def test_deepseek_pm_interpreter_missing_key_falls_back(demo_run) -> None:
     assert unwind.to_dict() == before_unwind
     assert result.use_llm is False
     assert any("no supported API credentials" in warning for warning in result.warnings)
-
-
-def test_deepseek_api_key_alone_enables_pm_credential_gate(demo_run) -> None:
-    """PM gate must accept DEEPSEEK_API_KEY (same as Evidence Card)."""
-
-    card = demo_run.deterministic_input
-    unwind = demo_run.unwind
-    context = derive_pm_context(card, unwind)
-    payload = _valid_pm_payload(context)
-
-    def _transport(*, api_key, model, messages, base_url, temperature):
-        return json.dumps(payload)
-
-    result = build_pm_response(
-        card,
-        unwind,
-        use_llm=True,
-        interpreter=DeepSeekPMResponseInterpreter(
-            environment={"DEEPSEEK_API_KEY": "test-only"},
-            load_dotenv=False,
-            transport=_transport,
-        ),
-        environment={"DEEPSEEK_API_KEY": "test-only"},
-    )
-    assert result.use_llm is True

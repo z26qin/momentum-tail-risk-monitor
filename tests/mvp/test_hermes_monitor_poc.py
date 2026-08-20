@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -188,11 +187,3 @@ def test_compact_schema_fields_are_stable() -> None:
     dumped = json.dumps(_assessment())
     for field in REQUIRED_ASSESSMENT_FIELDS:
         assert field in dumped
-
-
-def test_cli_scripts_exist() -> None:
-    root = Path(__file__).resolve().parents[1]
-    assert (root / "scripts" / "run_monitor.py").is_file()
-    assert (root / "scripts" / "compare_monitor_state.py").is_file()
-    assert (root / "integrations" / "hermes" / "momentum-risk-monitor" / "SKILL.md").is_file()
-    assert (root / "src" / "mvp" / "monitoring_severity.py").is_file()

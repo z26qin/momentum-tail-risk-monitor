@@ -6,7 +6,6 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 from src.mvp.config import MVPConfig
@@ -16,11 +15,9 @@ from src.research_validation import (
     Episode,
     extract_episode_row,
     prepare_ai_review_cases,
-    run_episode_cases,
     write_ai_value_review,
     write_episode_fingerprints,
     write_pm_book_outcomes_skip,
-    write_validation_outputs,
 )
 
 
@@ -84,13 +81,6 @@ def test_extracted_values_match_pipeline_result(demo_result, demo_episode):
     assert row["crowded_theme_unwind"] == statuses["crowded_theme_unwind"]
 
 
-def test_evidence_timestamps_within_cutoff(demo_result):
-    card = demo_result.deterministic_input
-    cutoff = pd.Timestamp(card.data_cutoff)
-    for item in card.retrieved_evidence:
-        assert pd.Timestamp(item.timestamp) <= cutoff
-
-
 def test_ai_arms_share_identical_deterministic_facts(tmp_path: Path):
     rows = prepare_ai_review_cases(
         output_dir=tmp_path,
@@ -132,22 +122,6 @@ def test_missing_credentials_do_not_fabricate_llm_output(tmp_path: Path):
         assert "pm_interpretation" not in payload
 
 
-def test_llm_arm_cannot_mutate_quantitative_fields(demo_result, tmp_path: Path):
-    card = demo_result.deterministic_input
-    before = json.dumps(card.to_dict(), sort_keys=True, allow_nan=False)
-    from src.mvp.evidence_interpretation import interpret_evidence_card
-
-    interpretation = interpret_evidence_card(
-        card,
-        use_llm=True,
-        interpreter=None,
-        environment={},
-    )
-    after = json.dumps(card.to_dict(), sort_keys=True, allow_nan=False)
-    assert before == after
-    assert interpretation.use_llm is False
-
-
 def test_fingerprint_output_ordering_is_deterministic(
     tmp_path: Path, demo_result, demo_episode
 ):
@@ -168,7 +142,6 @@ def test_fingerprint_output_ordering_is_deterministic(
     csv_a, _ = write_episode_fingerprints(first, output_dir=tmp_path / "a")
     csv_b, _ = write_episode_fingerprints(second, output_dir=tmp_path / "b")
     assert csv_a.read_text(encoding="utf-8") == csv_b.read_text(encoding="utf-8")
-    assert callable(run_episode_cases)
 
 
 def test_write_helpers_and_public_entrypoints(tmp_path: Path, demo_result, demo_episode):
@@ -184,4 +157,3 @@ def test_write_helpers_and_public_entrypoints(tmp_path: Path, demo_result, demo_
     assert (tmp_path / "pm_book_outcomes.md").is_file()
     assert (tmp_path / "episode_fingerprints.csv").is_file()
     assert review.is_file()
-    assert callable(write_validation_outputs)

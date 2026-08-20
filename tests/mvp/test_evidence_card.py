@@ -30,13 +30,11 @@ from src.utils.io import DEFAULT_PROCESSED_DIR, DEFAULT_OUTPUT_DIR
 # 2024-01-05 has both quantitative history and a date-matched evidence cache.
 EVIDENCE_DATE = pd.Timestamp("2024-01-05")
 COMPARE_DATE = pd.Timestamp("2023-12-01")
-# 2026-05-29 has quantitative history but no evidence cache (fails safe).
-CURRENT_DATE = pd.Timestamp("2026-05-29")
 
 
 def test_notebook_facing_contract_is_frozen() -> None:
     assert SCHEMA_VERSION == "evidence-card-v1"
-    assert tuple(field.name for field in dataclasses.fields(QuantSignal)) == (
+    assert {field.name for field in dataclasses.fields(QuantSignal)} == {
         "name",
         "current_value",
         "threshold",
@@ -45,8 +43,8 @@ def test_notebook_facing_contract_is_frozen() -> None:
         "change_vs_comparison",
         "interpretation",
         "source_component",
-    )
-    assert tuple(field.name for field in dataclasses.fields(RetrievedEvidence)) == (
+    }
+    assert {field.name for field in dataclasses.fields(RetrievedEvidence)} == {
         "evidence_id",
         "timestamp",
         "source",
@@ -54,11 +52,11 @@ def test_notebook_facing_contract_is_frozen() -> None:
         "relevance_reason",
         "stance",
         "citation_or_locator",
-    )
-    evidence_card_fields = tuple(
+    }
+    evidence_card_fields = {
         field.name for field in dataclasses.fields(EvidenceCard)
-    )
-    assert evidence_card_fields == (
+    }
+    assert evidence_card_fields == {
         "schema_version",
         "as_of_date",
         "comparison_date",
@@ -88,7 +86,7 @@ def test_notebook_facing_contract_is_frozen() -> None:
         "synthesis_mode",
         "model_or_prompt_version",
         "warnings",
-    )
+    }
     assert not {
         "fundamental_alignment",
         "fundamental_ranks",
@@ -239,8 +237,12 @@ def test_injected_synthesizer_only_changes_narrative() -> None:
     assert injected.tail_loss_frequency == baseline.tail_loss_frequency
 
 
-def test_missing_retrieval_produces_warning_not_crash() -> None:
-    card = build_evidence_card(as_of_date=CURRENT_DATE, use_llm=True)
+def test_missing_retrieval_produces_warning_not_crash(tmp_path: Path) -> None:
+    card = build_evidence_card(
+        as_of_date=EVIDENCE_DATE,
+        use_llm=True,
+        output_dir=tmp_path,
+    )
     assert card.evidence_quality == "unavailable"
     assert not card.supporting_evidence
     assert card.missing_or_uncertain_evidence

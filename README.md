@@ -363,7 +363,17 @@ momentum-tail-risk-monitor/
 │   ├── features/
 │   ├── data/
 │   └── utils/
-├── tests/                       # regression guards for the MVP path
+├── tests/                       # regression guards, grouped to match src/
+│   ├── agent/
+│   ├── data/
+│   ├── evidence/
+│   ├── features/
+│   ├── monitoring/
+│   ├── mvp/
+│   ├── portfolio/
+│   ├── regime/
+│   ├── research/
+│   └── risk/
 ├── data/
 │   ├── processed/               # bundled public processed panels
 │   ├── corpus/                  # versioned evidence corpus

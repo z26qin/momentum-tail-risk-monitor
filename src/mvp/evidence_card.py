@@ -5,7 +5,7 @@ date, an optional comparison date, and a supported threshold profile, then adds
 point-in-time evidence and an optional, constrained narrative synthesis. It does
 not reimplement any indicator, threshold, score, or retrieval mechanism.
 
-Design guarantees (see ``tests/test_evidence_card.py``):
+Design guarantees (see ``tests/mvp/test_evidence_card.py``):
 
 * every quantitative value comes from the frozen Phase 1--4 code paths;
 * narrative synthesis is optional, offline by default, and can never write a

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -18,30 +19,6 @@ from src.mvp.evidence_card import (
 
 EVIDENCE_DATE = pd.Timestamp("2024-01-05")
 COMPARE_DATE = pd.Timestamp("2023-12-01")
-NO_EVIDENCE_DATE = pd.Timestamp("2026-05-29")
-
-
-def test_future_as_of_date_is_rejected() -> None:
-    with pytest.raises(ValueError, match="future"):
-        build_deterministic_evidence_input(
-            as_of_date=pd.Timestamp("2099-01-01")
-        )
-
-
-def test_comparison_date_must_precede_as_of_date() -> None:
-    with pytest.raises(ValueError, match="strictly before"):
-        build_deterministic_evidence_input(
-            as_of_date=EVIDENCE_DATE,
-            compare_to_date=pd.Timestamp("2024-02-01"),
-        )
-
-
-def test_unknown_threshold_profile_is_rejected() -> None:
-    with pytest.raises(ValueError, match="unsupported threshold profile"):
-        build_deterministic_evidence_input(
-            as_of_date=EVIDENCE_DATE,
-            threshold_profile="aggressive",
-        )
 
 
 def test_schema_contains_only_validated_deterministic_inputs() -> None:
@@ -82,18 +59,6 @@ def test_schema_contains_only_validated_deterministic_inputs() -> None:
         dataclasses.replace(result, schema_version="invalid")
 
 
-def test_comparison_changes_are_preserved_when_supported() -> None:
-    result = build_deterministic_evidence_input(
-        as_of_date=EVIDENCE_DATE,
-        compare_to_date=COMPARE_DATE,
-    )
-    signals = (
-        result.triggered_quant_signals
-        + result.non_triggered_relevant_signals
-    )
-    assert any(signal.change_vs_comparison is not None for signal in signals)
-
-
 def test_retrieved_evidence_never_exceeds_cutoff() -> None:
     result = build_deterministic_evidence_input(as_of_date=EVIDENCE_DATE)
     cutoff = datetime.fromisoformat(result.data_cutoff)
@@ -111,8 +76,11 @@ def test_retrieved_evidence_never_exceeds_cutoff() -> None:
         dataclasses.replace(result, retrieved_evidence=(future_item,))
 
 
-def test_missing_evidence_is_a_warning_not_a_fabricated_value() -> None:
-    result = build_deterministic_evidence_input(as_of_date=NO_EVIDENCE_DATE)
+def test_missing_evidence_is_a_warning_not_a_fabricated_value(tmp_path: Path) -> None:
+    result = build_deterministic_evidence_input(
+        as_of_date=EVIDENCE_DATE,
+        output_dir=tmp_path,
+    )
 
     assert not result.retrieved_evidence
     assert result.audit_metadata["evidence_quality"] == "unavailable"

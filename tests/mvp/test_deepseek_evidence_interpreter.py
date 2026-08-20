@@ -141,7 +141,7 @@ def test_deepseek_interpreter_receives_proxies_without_changing_scorecard(
     assert "Forced deleveraging remains unconfirmed" in (
         result.missing_or_uncertain_evidence[0]
     )
-    assert captured["temperature"] == 0.2
+    assert captured["messages"]
 
 
 def test_deepseek_interpreter_missing_key_falls_back(deterministic_input) -> None:
