@@ -15,38 +15,36 @@ It does **not** tell you when a crash will happen, give a crash probability, or 
 
 ### Start here
 
-1. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — what the product looks like (2026-05-29)  
+1. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — the 2026-05-29 note  
 2. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — click through the same case  
-3. WhatsApp — a seven-line note, or silence if nothing material changed  
+3. WhatsApp — the same short note on a phone  
 4. Engineers: [`src/agent.py`](src/agent.py) · [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md) · [`docs/methodology.md`](docs/methodology.md)
 
 ---
 
 ## What a PM sees
 
-The demo book is an equal-weight S&P 500 **12-1 long-10 / short-10** (a transparent proxy, not a live institutional portfolio).
+A short morning note. Not a model dump, and not a trade.
 
-On a quiet day, **nothing is sent**. On a material change, or if you ask, you get a short note like this (frozen 2026-05-29 case — not a live call):
+The demo book is an equal-weight S&P 500 **12-1 long-10 / short-10** (a transparent proxy, not a live institutional portfolio). Frozen 2026-05-29 case — not a live call:
 
 ```text
 Not a confirmed crowded unwind.
 
-Observed: CIEN–COHR–LITE cluster; crowding flag on; book 0/4 scorecard triggers.
-Inferred: localized theme pressure, not a system-wide unwind.
-Against: liquidity is still absorbing; no book-wide footprint; no short-leg squeeze.
-Not confirmed: forced deleveraging / financing stress.
+Observed: pressure in CIEN–COHR–LITE, not the whole book.
+Inferred: localized crowding, not a market-wide unwind.
+Against: liquidity is still absorbing; shorts are not being squeezed.
+Not confirmed: forced selling / financing stress.
 Next: watch whether selling spreads outside the cluster.
 ```
 
-Same read in one table:
-
 | PM question | Current read |
 |---|---|
-| Where is the risk? | Concentrated long-side cluster (`CIEN`–`COHR`–`LITE`) |
+| Where is the risk? | A concentrated long-side cluster (`CIEN`–`COHR`–`LITE`) |
 | Recovery crash? | Not confirmed |
 | Crowded unwind? | Partially supported — local, not broad |
-| What is missing? | Forced deleveraging, liquidity failure, propagation |
-| What next? | Watch breadth, selling outside the cluster, absorption |
+| What is missing? | Forced selling, liquidity failure, selling outside the cluster |
+| What next? | Watch breadth, selling outside the cluster, and whether liquidity still holds |
 
 Full write-up: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md). Offline mockup: [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html).
 
@@ -54,35 +52,30 @@ Full write-up: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_s
   <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum tail-risk monitor — PM workflow prototype" width="920">
 </p>
 
-Two other frozen dates, same rules: [March 2020](outputs/march_2020_reference/pm_case_read.md) looks like a recovery-crash setup; [January 2024](outputs/quiet_control_2024/pm_case_read.md) stays quiet. Cross-case table: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
+Same rules on two other dates: [March 2020](outputs/march_2020_reference/pm_case_read.md) looks like a recovery-crash setup; [January 2024](outputs/quiet_control_2024/pm_case_read.md) does not escalate. Cross-case table: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
 
 ---
 
 ## How it works
 
-Three layers. Only the first one can change the risk numbers.
-
 ```text
-1. Rules engine
-   Computes the book state: regime, drawdown, legs, crowding flags.
-   This is the source of truth. AI cannot rewrite it.
+1. Measure the book
+   Where losses sit, and how concentrated they are.
+   These numbers are the source of truth. AI cannot rewrite them.
 
-2. Investigation agent
-   If a flag is on, it looks up dated news / positioning / filings
-   and asks: does public evidence support, contradict, or still miss
-   the story? If the first pass is thin, it asks one narrower
-   follow-up. Then it stops.
+2. Investigate the story
+   Look up what was already public that day. Does it support the
+   crowding story, the recovery story, or neither? If the first
+   pass is thin, ask one more specific question, then stop.
 
-3. Short PM note
-   Notebook report, or WhatsApp. If nothing material changed
-   since the last check, WhatsApp stays silent.
+3. Write the note
+   Where is the pressure, what is supported, what is still missing,
+   what to check next. Notebook or WhatsApp — same read.
 ```
 
-The split in one sentence:
+> **Numbers first. Investigation second. The note cannot place a trade.**
 
-> **The rules engine owns the risk state. The agent owns the investigation. The note cannot place a trade.**
-
-Evidence must already have been public by the assessment close. Missing facts stay missing — the agent is not allowed to fill gaps.
+Only information that was already public by that day's close is used. If something is not in the record, the note says so. It does not invent it.
 
 ---
 
@@ -100,34 +93,24 @@ Fuller list: [`docs/limitations.md`](docs/limitations.md).
 
 ## Agent loop
 
-For a reviewer who wants the mechanics. A PM can skip this section.
+For a reviewer. A PM can skip this.
 
-The agent sits **on top of** the rules engine. It never writes thresholds, triggers, scores, or portfolio calculations.
+The agent sits on top of the numbers. It never changes them.
 
 ```text
-Observe the current risk flags
+Read the current book state
         ↓
-Decide the next search
-  (crowding, recovery, or fundamentals —
-   or a narrower follow-up on the open question)
+Choose what to look up next
+  (crowding, recovery, or fundamentals)
         ↓
-Retrieve dated evidence
+Read dated public evidence
         ↓
-Remember what was already asked
+If the first pass is thin, ask one narrower question
         ↓
-Stop when the story is clear, still missing, or the budget is used
+Stop and write the note
 ```
 
-The function to point at is `run_investigation_loop` in [`src/agent.py`](src/agent.py).
-
-Next action is **not** a fixed pipeline. It depends on the flags, evidence already in hand, which story has been checked, and remaining steps (default 4):
-
-1. Nothing to investigate → stop  
-2. Current story still mixed / thin → one narrower follow-up on **that same** story  
-3. Otherwise check the next uninvestigated story: crowding → recovery → fundamentals  
-4. Stop  
-
-Failed retrieval is not treated as supporting evidence. The same query is not searched twice. Anything published after the cutoff is discarded.
+Code: `run_investigation_loop` in [`src/agent.py`](src/agent.py).
 
 ```python
 from src.agent import run_investigation_agent
@@ -136,45 +119,23 @@ result = run_investigation_agent(as_of_date="2026-05-29", max_steps=4, verbose=T
 print(result.report)
 ```
 
-On the 2026-05-29 crowding case the path looks like:
-
-```text
-[Agent 0] loaded the risk flags
-[Agent 1] searched crowding / positioning evidence
-[Agent 1] mixed — tech exposure cut, but not a broad unwind
-[Agent 2] asked a narrower follow-up on deleveraging
-[Agent 2] stopped: still not established
-```
+On the 2026-05-29 case: it looked up crowding evidence, found a tech-exposure cut that did not prove a broad unwind, asked one follow-up, and stopped.
 
 ---
 
-## WhatsApp agent (Hermes)
+## WhatsApp (Hermes)
 
-Same monitor, delivered on a phone. Hermes does not recompute the book. Setup: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
+The same note, on a phone. Hermes does not recompute the book. Setup: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
-```text
-You (or a scheduled job) ask for the latest read
-        ↓
-The rules engine writes a compact snapshot
-        ↓
-Compare with yesterday
-        ↓
-Nothing material changed?  →  silence
-You asked a question, or the state changed?
-        ↓
-Investigate dated evidence, then send a seven-line note
-```
-
-Rules that matter on WhatsApp:
-
-- The 0–100 number is a **monitoring band**, not a crash probability. Copy it; do not invent one.  
-- Silence is the default. Score wiggling inside the same band is not an alert.  
+- A 0–100 monitoring band may appear in the note. It is **not** a crash probability.  
 - Claims are labeled **observed / inferred / not confirmed**.  
 - “Should I cut the longs overnight?” is refused.
 
 ---
 
 ## System design
+
+For a reviewer.
 
 ```text
                          ┌──────────── MVPConfig ────────────┐
@@ -200,12 +161,10 @@ Rules that matter on WhatsApp:
                                           │
                                           ▼
                          Investigation agent loop
-                    observe → decide → tool → memory → stop
                                           │
                            ┌──────────────┴──────────────┐
                            ▼                             ▼
-                  PM-facing report              WhatsApp skill
-                  (notebook)                    short note or silence
+                  Notebook report               WhatsApp note
 ```
 
 1. **Book and market state first.**  
@@ -298,7 +257,7 @@ WhatsApp, in order:
 /momentum-risk-monitor Why is this not a Khandani–Lo unwind? Short version only.
 ```
 
-Expect a seven-line PM note with **book 0/4** (triggered book channels, not “four metrics exist”). Score questions (`What is the current momentum risk score?`) copy the JSON 0–100 monitoring score and must not call it a crash probability. Unchanged cron ticks return `[SILENT]` and send nothing.
+Expect the same short PM note as above. Setup and operator details: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ---
 
@@ -405,7 +364,7 @@ momentum-tail-risk-monitor/
 │   └── final_mvp_demo.ipynb     # step-by-step runbook for the PPT demo
 ├── scripts/
 │   ├── run_monitor.py           # compact JSON CLI over run_mvp()
-│   ├── compare_monitor_state.py # previous-state compare → [SILENT] or diff
+│   ├── compare_monitor_state.py # previous-state compare for scheduled runs
 │   └── run_narrative_shift_poc.py  # exploratory DeepSeek Responses narrative POC
 ├── integrations/hermes/         # Hermes skill (copy/symlink into ~/.hermes/skills)
 ├── src/
