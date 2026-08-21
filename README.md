@@ -2,132 +2,175 @@
   <a href="docs/methodology.md"><img src="https://img.shields.io/badge/Docs-methodology-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="docs/demo_walkthrough.md"><img src="https://img.shields.io/badge/Demo-15--20%20min-0A7A3E?style=for-the-badge" alt="Demo walkthrough"></a>
   <a href="notebooks/final_mvp_demo.ipynb"><img src="https://img.shields.io/badge/Notebook-final__mvp__demo-1f6feb?style=for-the-badge" alt="Demo notebook"></a>
-  <a href="#what-we-refuse-to-claim"><img src="https://img.shields.io/badge/Status-Research%20MVP-orange?style=for-the-badge" alt="Research MVP"></a>
+  <a href="#what-it-will-not-do"><img src="https://img.shields.io/badge/Status-Research%20MVP-orange?style=for-the-badge" alt="Research MVP"></a>
 </p>
 
 # Momentum Tail-Risk Monitor
 
-**An AI-assisted monitor that helps a PM recognize fragile momentum setups, locate risk in the book, and challenge the read with timestamp-valid evidence — before acting.**
+A morning risk note for a momentum book.
 
-This is an approximately **20-hour research MVP**. It does **not** predict crash timing, publish a calibrated crash probability, optimize a portfolio, or issue a trade instruction.
+It helps a PM see **where the pressure is**, **which story is actually supported**, **what is still missing**, and **what to check next** — before acting.
 
-The architectural split is:
-
-> **The deterministic quantitative engine owns the risk state. The agent owns the investigation loop.**
+It does **not** tell you when a crash will happen, give a crash probability, or tell you to trade.
 
 ### Start here
 
-1. [`src/agent.py`](src/agent.py) — hand-written investigation loop (`run_investigation_loop`)  
-2. [`integrations/hermes/momentum-risk-monitor/`](integrations/hermes/momentum-risk-monitor/) — Hermes WhatsApp skill  
-3. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — step-by-step runbook (Step 8 is the agent)  
-4. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — primary example (2026-05-29)  
-5. [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md) · [`docs/methodology.md`](docs/methodology.md) · [`docs/limitations.md`](docs/limitations.md)
+1. [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md) — what the product looks like (2026-05-29)  
+2. [`notebooks/final_mvp_demo.ipynb`](notebooks/final_mvp_demo.ipynb) — click through the same case  
+3. WhatsApp — a seven-line note, or silence if nothing material changed  
+4. Engineers: [`src/agent.py`](src/agent.py) · [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md) · [`docs/methodology.md`](docs/methodology.md)
 
 ---
 
-## The problem
+## What a PM sees
 
-Momentum reversal risk is ambiguous. The same drawdown can be ordinary noise, a recovery-driven reversal, or a crowded-position unwind. The PM question is not “will momentum crash tomorrow?” It is:
+The demo book is an equal-weight S&P 500 **12-1 long-10 / short-10** (a transparent proxy, not a live institutional portfolio).
 
-> Where is the pressure, which mechanism is supported, what evidence challenges that read, and what should we check next?
+On a quiet day, **nothing is sent**. On a material change, or if you ask, you get a short note like this (frozen 2026-05-29 case — not a live call):
 
-Default monitored book: equal-weight S&P 500 **12-1 long-10 / short-10** (inspectable demo proxy, not a production portfolio). Ken French UMD / Daniel–Moskowitz market state is **comparison context only**. Mechanism detail is [below](#mechanisms); construction detail: [`docs/methodology.md`](docs/methodology.md).
+```text
+Not a confirmed crowded unwind.
+
+Observed: CIEN–COHR–LITE cluster; crowding flag on; book 0/4 scorecard triggers.
+Inferred: localized theme pressure, not a system-wide unwind.
+Against: liquidity is still absorbing; no book-wide footprint; no short-leg squeeze.
+Not confirmed: forced deleveraging / financing stress.
+Next: watch whether selling spreads outside the cluster.
+```
+
+Same read in one table:
+
+| PM question | Current read |
+|---|---|
+| Where is the risk? | Concentrated long-side cluster (`CIEN`–`COHR`–`LITE`) |
+| Recovery crash? | Not confirmed |
+| Crowded unwind? | Partially supported — local, not broad |
+| What is missing? | Forced deleveraging, liquidity failure, propagation |
+| What next? | Watch breadth, selling outside the cluster, absorption |
+
+Full write-up: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md). Offline mockup: [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html).
+
+<p align="center">
+  <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum tail-risk monitor — PM workflow prototype" width="920">
+</p>
+
+Two other frozen dates, same rules: [March 2020](outputs/march_2020_reference/pm_case_read.md) looks like a recovery-crash setup; [January 2024](outputs/quiet_control_2024/pm_case_read.md) stays quiet. Cross-case table: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md).
+
+---
+
+## How it works
+
+Three layers. Only the first one can change the risk numbers.
+
+```text
+1. Rules engine
+   Computes the book state: regime, drawdown, legs, crowding flags.
+   This is the source of truth. AI cannot rewrite it.
+
+2. Investigation agent
+   If a flag is on, it looks up dated news / positioning / filings
+   and asks: does public evidence support, contradict, or still miss
+   the story? If the first pass is thin, it asks one narrower
+   follow-up. Then it stops.
+
+3. Short PM note
+   Notebook report, or WhatsApp. If nothing material changed
+   since the last check, WhatsApp stays silent.
+```
+
+The split in one sentence:
+
+> **The rules engine owns the risk state. The agent owns the investigation. The note cannot place a trade.**
+
+Evidence must already have been public by the assessment close. Missing facts stay missing — the agent is not allowed to fill gaps.
+
+---
+
+## What it will not do
+
+- Call crash timing or publish a crash probability  
+- Issue a trade, hedge, or de-gross instruction  
+- Treat “hedge funds cut tech” as proof of forced deleveraging  
+- Treat public short-interest / news volume as ownership or leverage  
+- Pretend the demo 10/10 book is your live book  
+
+Fuller list: [`docs/limitations.md`](docs/limitations.md).
 
 ---
 
 ## Agent loop
 
-The investigation agent sits **on top of** `run_mvp()`. It never writes thresholds, triggers, scores, or portfolio calculations.
+For a reviewer who wants the mechanics. A PM can skip this section.
+
+The agent sits **on top of** the rules engine. It never writes thresholds, triggers, scores, or portfolio calculations.
 
 ```text
-state["risk"] = run_deterministic_monitor(...)   # immutable
-
-while not done:
-    observation = observe(state)
-    action      = decide_next_action(observation)
-    result      = execute_tool(action)
-    state       = update_memory(state, action, result)
-    done        = should_stop(state)
-
-return build_pm_report(state)
+Observe the current risk flags
+        ↓
+Decide the next search
+  (crowding, recovery, or fundamentals —
+   or a narrower follow-up on the open question)
+        ↓
+Retrieve dated evidence
+        ↓
+Remember what was already asked
+        ↓
+Stop when the story is clear, still missing, or the budget is used
 ```
 
-The function to point at is `run_investigation_loop` in [`src/agent.py`](src/agent.py): observe → decide → execute a tool → update episode memory → classify **mechanism-scoped** evidence → stop or continue.
+The function to point at is `run_investigation_loop` in [`src/agent.py`](src/agent.py).
 
-### What the next action depends on
+Next action is **not** a fixed pipeline. It depends on the flags, evidence already in hand, which story has been checked, and remaining steps (default 4):
 
-Not a fixed pipeline. `decide_next_action` uses the current risk state, evidence already collected, which mechanisms have been investigated, and remaining budget:
+1. Nothing to investigate → stop  
+2. Current story still mixed / thin → one narrower follow-up on **that same** story  
+3. Otherwise check the next uninvestigated story: crowding → recovery → fundamentals  
+4. Stop  
 
-1. No meaningful risk signal → `FINISH`
-2. Current mechanism is still `insufficient` / `mixed` → one narrower `FOLLOWUP_SEARCH` on **that same** mechanism
-3. Else the next uninvestigated mechanism: crowding (`SEARCH_KL_CROWDING`) → DM recovery (`SEARCH_DM_RECOVERY`) → fundamentals (`SEARCH_FUNDAMENTALS`)
-4. Otherwise stop
-
-Tools stay small: `local_evidence`, `search_news`, `search_positioning_evidence`. Duplicate queries are skipped. Evidence with `published_at` after `assessment_cutoff` is discarded.
-
-### Stopping and fail-closed behavior
-
-Stop when any of these holds: no investigation needed; evidence is sufficient; evidence remains insufficient (do not hallucinate); `max_steps = 4`; tool failure. A failed tool is **not** supporting evidence. Missing evidence stays missing. LLM `confidence` is evidence quality, not a crash probability, and cannot trigger a portfolio action.
+Failed retrieval is not treated as supporting evidence. The same query is not searched twice. Anything published after the cutoff is discarded.
 
 ```python
 from src.agent import run_investigation_agent
 
-result = run_investigation_agent(
-    as_of_date="2026-05-29",
-    max_steps=4,
-    verbose=True,
-)
+result = run_investigation_agent(as_of_date="2026-05-29", max_steps=4, verbose=True)
 print(result.report)
 ```
 
-Notebook Step 8 calls `run_investigation_demo(result)` on an already-computed `run_mvp` result.
-
-Example path on the frozen 2026-05-29 crowding case:
+On the 2026-05-29 crowding case the path looks like:
 
 ```text
-[Agent 0] deterministic state loaded: 1/4 triggers
-[Agent 1] action=SEARCH_KL_CROWDING
-[Agent 1] assessment=MIXED
-[Agent 1] next_question='Is there evidence of broad deleveraging?'
-[Agent 2] action=FOLLOWUP_SEARCH
-[Agent 2] stop=EVIDENCE_INSUFFICIENT
+[Agent 0] loaded the risk flags
+[Agent 1] searched crowding / positioning evidence
+[Agent 1] mixed — tech exposure cut, but not a broad unwind
+[Agent 2] asked a narrower follow-up on deleveraging
+[Agent 2] stopped: still not established
 ```
-
-Localized crowding can be supported without confirming broad forced deleveraging. That does **not** escalate the deterministic risk state.
 
 ---
 
-## Hermes agent design
+## WhatsApp agent (Hermes)
 
-Hermes is a thin WhatsApp / cron wrapper around the **same** deterministic monitor. It does not recalculate triggers or the 0–100 monitoring score. The unofficial Baileys WhatsApp bridge is a delivery channel only. Full setup: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
+Same monitor, delivered on a phone. Hermes does not recompute the book. Setup: [`docs/hermes_whatsapp_poc.md`](docs/hermes_whatsapp_poc.md).
 
 ```text
-cron / WhatsApp
-      │
-      ▼
-scripts/run_monitor.py  →  compact JSON  (run_mvp, use_llm=False)
-      │
-      ▼
-compare with previous assessment
-      │
-      ├── no material change → reply exactly [SILENT]
-      └── material change or explicit PM question
-                │
-                ▼
-         investigation policy
-         (support / contradict / missing)
-                │
-                ▼
-         seven-line PM note on WhatsApp
+You (or a scheduled job) ask for the latest read
+        ↓
+The rules engine writes a compact snapshot
+        ↓
+Compare with yesterday
+        ↓
+Nothing material changed?  →  silence
+You asked a question, or the state changed?
+        ↓
+Investigate dated evidence, then send a seven-line note
 ```
 
-Design rules, from [`integrations/hermes/momentum-risk-monitor/SKILL.md`](integrations/hermes/momentum-risk-monitor/SKILL.md) and [`investigation_policy.md`](integrations/hermes/momentum-risk-monitor/investigation_policy.md):
+Rules that matter on WhatsApp:
 
-- Compact JSON is the source of truth. Copy `monitoring_severity_score`; never present it as a crash probability (`score_is_probability` is always false).
-- Investigate only on a material state change **or** an explicit explanation request. Integer score drift inside the same band is not an alert.
-- Use only evidence with publication timestamp ≤ `evidence_cutoff` (US close on `as_of_date`).
-- Label claims **observed** / **inferred** / **not confirmed**. A Prime Book technology reduction is not a confirmed system-wide Khandani–Lo unwind.
-- Follow-ups stay phone-sized. Trade, hedge, or de-gross instructions are refused.
+- The 0–100 number is a **monitoring band**, not a crash probability. Copy it; do not invent one.  
+- Silence is the default. Score wiggling inside the same band is not an alert.  
+- Claims are labeled **observed / inferred / not confirmed**.  
+- “Should I cut the longs overnight?” is refused.
 
 ---
 
@@ -147,10 +190,6 @@ Design rules, from [`integrations/hermes/momentum-risk-monitor/SKILL.md`](integr
    ┌────────────────┐          ┌──────────────────┐          ┌───────────────────┐
    │ UMD / DM       │          │ PM momentum book │          │ Unwind +          │
    │ comparison     │          │ (S&P 10/10 demo) │          │ crowding monitor  │
-   │────────────────│          │──────────────────│          │───────────────────│
-   │ market state   │          │ leg attribution  │          │ recovery reversal │
-   │ panic / bear   │          │ beta comparison  │          │ concentration     │
-   │ UMD context    │          │ bounded triggers │          │ breadth / spread  │
    └───────┬────────┘          └────────┬─────────┘          └─────────┬─────────┘
            │                            │                              │
            └────────────────────────────┴──────────────────────────────┘
@@ -159,26 +198,21 @@ Design rules, from [`integrations/hermes/momentum-risk-monitor/SKILL.md`](integr
                               Deterministic risk read
                               (immutable source of truth)
                                           │
-                           ┌──────────────┴──────────────┐
-                           ▼                             ▼
-                 exact-date evidence            LLM interpretation
-                 cache replay                 OpenAI/Deepseek/Claude
-                           └──────────────┬──────────────┘
                                           ▼
                          Investigation agent loop
                     observe → decide → tool → memory → stop
                                           │
                            ┌──────────────┴──────────────┐
                            ▼                             ▼
-                  PM-facing report              Hermes WhatsApp skill
-                  (notebook Step 8)             compact JSON · [SILENT]
+                  PM-facing report              WhatsApp skill
+                  (notebook)                    short note or silence
 ```
 
-1. **Macro risk state and PM book first.**  
-2. **The agent investigates; it does not score.** Recovery risk and crowded unwind stay separate.  
-3. **AI cannot change the numbers.** It organizes and challenges evidence only.  
-4. **Missing evidence stays missing.** No hallucinated ownership, leverage, or forced selling.  
-5. **Point-in-time discipline.** Features and evidence must have been available by the selected date (complete PIT membership remains a limitation).
+1. **Book and market state first.**  
+2. **The agent investigates; it does not score.**  
+3. **AI cannot change the numbers.**  
+4. **Missing evidence stays missing.**  
+5. **Only information that was public by the selected close is allowed.**
 
 ---
 
@@ -216,7 +250,7 @@ agent = run_investigation_agent(
 print(agent.report)
 ```
 
-**Date note:** the primary frozen product pack is **2026-05-29**. `demo_smoke_test` / `default_demo_config()` currently use **2026-06-30** (bundled panel coverage).
+**Date note:** the primary frozen product pack is **2026-05-29**. `demo_smoke_test` / `default_demo_config()` currently use **2026-06-30** (bundled panel coverage). Frozen packs do not change with the notebook `CONFIG`; the live `run_mvp` cell does.
 
 ### Hermes + WhatsApp quick setup
 
@@ -293,76 +327,9 @@ See [`docs/narrative_shift_poc.md`](docs/narrative_shift_poc.md).
 
 ---
 
-## Example reads
-
-Interactive prototype of frozen research outputs in a PM workflow (Semi-unwind case as of 2026-05-29 — not a live market call):
-
-<p align="center">
-  <img src="docs/figures/dashboard_mockup_preview.png" alt="Momentum tail-risk monitor — PM workflow prototype" width="920">
-</p>
-
-Open [`docs/figures/dashboard_mockup.html`](docs/figures/dashboard_mockup.html) offline. Prototype only — not production investment advice.
-
-Recommended order: **2026-05-29 primary → 2020 validation → 2024 quiet control**.
-
-Frozen packs do not change with the notebook `CONFIG`. The live `run_mvp` cell recomputes a dated assessment when you change date / horizon / LLM flag.
-
-### Primary Example — 2026-05-29 correlated cluster
-
-> Localized crowding and structural pressure are supported; a broad recovery-driven crash or forced deleveraging is **not** confirmed.
-
-| PM question | Current read |
-|---|---|
-| Where is the risk? | Concentrated long-side cluster (`CIEN`–`COHR`–`LITE`); economic theme attribution unavailable |
-| Risk horizon | 20 trading days |
-| Monitoring severity | Potential momentum tail risk; focused review, not a crash probability |
-| Recovery-crash mechanism? | Weak / incomplete |
-| Crowded-unwind mechanism? | Partially supported |
-| What is not confirmed? | Broad propagation, liquidity failure, forced deleveraging |
-| What next? | Monitor breadth, selling propagation, absorption, and stronger positioning evidence |
-
-**Evidence note:** Quantitative fields come from the deterministic pipeline. `CSU-*` text is a separately curated, cutoff-valid pack. Exact-date classification-cache replay is unavailable for 2026-05-29 — curated text challenges the snapshot but does not alter triggers or risk state.
-
-Full read: [`outputs/current_semi_unwind/pm_case_read.md`](outputs/current_semi_unwind/pm_case_read.md)
-
-### 2020-03-24 — historical validation
-
-- Panic-recovery footprint: severe prior drawdown, elevated volatility, rapid recovery.
-- Short-leg and beta-gap pressure active in the PM book.
-- Recovery-crash mechanism triggered — interpretability check, not a forecast claim.
-
-[`outputs/march_2020_reference/pm_case_read.md`](outputs/march_2020_reference/pm_case_read.md)
-
-### 2024-01-05 — quiet control
-
-- Soft bear / low-vol context; zero PM scorecard triggers.
-- No confirmed crowded unwind; recovery mechanism incomplete.
-- Same rules stay selective — not every soft momentum period escalates.
-
-[`outputs/quiet_control_2024/pm_case_read.md`](outputs/quiet_control_2024/pm_case_read.md) · secondary card: [`outputs/quiet_control_example_risk_output/`](outputs/quiet_control_example_risk_output/)
-
-Cross-case table: [`outputs/cross_case_comparison.md`](outputs/cross_case_comparison.md)
-
----
-
-## What we refuse to claim
-
-- Exact crash timing or a calibrated crash probability  
-- Trade instructions or automatic de-risking  
-- Forced deleveraging without direct evidence  
-- That public crowding / turnover / FINRA–GDELT proxies equal ownership, leverage, or financing stress  
-- That the L10/S10 demo book is an institutional production portfolio  
-- That historical case coherence equals out-of-sample predictive skill  
-
-Full list: [`docs/limitations.md`](docs/limitations.md).
-
----
-
 ## Mechanisms
 
 The same drawdown can be ordinary noise, a **recovery-driven reversal**, or a **crowded-position unwind**. The agent investigates these lenses separately; it does not merge them into one score.
-
-### Decision workflow
 
 ```text
 1. Locate the pressure
@@ -378,8 +345,6 @@ The same drawdown can be ordinary noise, a **recovery-driven reversal**, or a **
    Maintain monitoring, inspect exposures, request better positioning data,
    or discuss whether risk escalation deserves review.
 ```
-
-Outputs stay separate and auditable. Deterministic metrics are the source of truth; AI organizes evidence only.
 
 ### 1. Recovery-driven momentum crash (Daniel–Moskowitz)
 
